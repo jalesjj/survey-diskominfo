@@ -361,7 +361,7 @@
                 <a href="{{ route('admin.footer-links.index') }}" class="menu-item @yield('active-footer-links')">
                 <i class="fas fa-link"></i>
                 <span>Footer Links</span>
-                </a>
+                </a> 
             </div>
 
             <div class="logout-section">

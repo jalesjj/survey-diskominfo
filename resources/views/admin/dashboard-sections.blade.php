@@ -8,7 +8,7 @@
 
 @section('header-actions')
 <div class="header-actions">
-    <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
+    <span class="admin-welcome">elamat datang, {{ session('admin_name') }}</span>
 </div>
 @endsection
 
@@ -323,6 +323,46 @@
         position: relative;
         height: 300px;
         margin-bottom: 20px;
+    }
+
+    /* Chart Controls */
+    .chart-controls {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .chart-toggle-btn {
+        padding: 8px 16px;
+        border: 2px solid #5a9b9e;
+        background: white;
+        color: #5a9b9e;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .chart-toggle-btn:hover {
+        background: #f0f8f8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.2);
+    }
+
+    .chart-toggle-btn.active {
+        background: #5a9b9e;
+        color: white;
+    }
+
+    .chart-toggle-btn.active:hover {
+        background: #4a8b8e;
     }
 
     /* Response Statistics Styles */
@@ -750,45 +790,52 @@
                     </div>
 
                     @if($stat['total_responses'] > 0)
-                        @if(in_array($stat['question']->question_type, ['multiple_choice', 'dropdown']))
-                            <!-- Multiple Choice / Dropdown Responses -->
+                        @if(isset($stat['chart_enabled']) && $stat['chart_enabled'] && in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
+                            <!-- Chart-enabled Question Types -->
+                            <div class="chart-controls">
+                                <button class="chart-toggle-btn active" onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                                    <i class="fas fa-chart-pie"></i> Donat
+                                </button>
+                                <button class="chart-toggle-btn" onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                                    <i class="fas fa-chart-bar"></i> Batang
+                                </button>
+                            </div>
+                            
                             <div class="chart-container">
                                 <canvas id="chart_{{ $stat['question']->id }}"></canvas>
                             </div>
+                            
                             <div class="response-stats">
                                 @foreach($stat['response_data'] as $response)
                                     <div class="response-item">
                                         <span class="response-text">{{ $response->answer }}</span>
                                         <div>
                                             <span class="response-count">{{ $response->count }}</span>
-                                            <span class="response-percentage">({{ number_format(($response->count / $stat['total_responses']) * 100, 1) }}%)</span>
+                                            @if($stat['question']->question_type === 'checkbox')
+                                                <span class="response-percentage">({{ number_format(($response->count / $stat['response_data']->sum('count')) * 100, 1) }}%)</span>
+                                            @else
+                                                <span class="response-percentage">({{ number_format(($response->count / $stat['total_responses']) * 100, 1) }}%)</span>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
 
-                        @elseif($stat['question']->question_type === 'checkbox')
-                            <!-- Checkbox Responses -->
+                        @elseif(isset($stat['chart_enabled']) && $stat['chart_enabled'] && $stat['question']->question_type === 'linear_scale')
+                            <!-- Linear Scale with Chart Toggle -->
+                            <div class="chart-controls">
+                                <button class="chart-toggle-btn active" onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                                    <i class="fas fa-chart-bar"></i> Batang
+                                </button>
+                                <button class="chart-toggle-btn" onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                                    <i class="fas fa-chart-pie"></i> Donat
+                                </button>
+                            </div>
+                            
                             <div class="chart-container">
                                 <canvas id="chart_{{ $stat['question']->id }}"></canvas>
                             </div>
-                            <div class="response-stats">
-                                @foreach($stat['response_data'] as $response)
-                                    <div class="response-item">
-                                        <span class="response-text">{{ $response->answer }}</span>
-                                        <div>
-                                            <span class="response-count">{{ $response->count }}</span>
-                                            <span class="response-percentage">({{ number_format(($response->count / $stat['response_data']->sum('count')) * 100, 1) }}%)</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                        @elseif($stat['question']->question_type === 'linear_scale')
-                            <!-- Linear Scale Responses -->
-                            <div class="chart-container">
-                                <canvas id="chart_{{ $stat['question']->id }}"></canvas>
-                            </div>
+                            
                             <div class="scale-stats">
                                 <div class="scale-average">{{ $stat['response_data']['average'] ?? 0 }}</div>
                                 <div class="scale-label">Rata-rata dari {{ $stat['response_data']['total_responses'] ?? 0 }} jawaban</div>
@@ -808,13 +855,15 @@
                         @elseif(in_array($stat['question']->question_type, ['short_text', 'long_text']))
                             <!-- Text Responses -->
                             <div class="text-responses">
-                                @foreach($stat['response_data']->take(5) as $response)
-                                    <div class="text-response">
-                                        {{ Str::limit($response, 200) }}
-                                    </div>
-                                @endforeach
+                                @if(isset($stat['sample_responses']))
+                                    @foreach($stat['sample_responses'] as $response)
+                                        <div class="text-response">
+                                            <strong>{{ $response['created_at'] }}:</strong> {{ Str::limit($response['answer'], 200) }}
+                                        </div>
+                                    @endforeach
+                                @endif
                                 
-                                @if($stat['response_data']->count() > 5)
+                                @if($stat['total_responses'] > 5)
                                     <div class="show-more-info">
                                         <small>
                                             <i class="fas fa-info-circle"></i>
@@ -827,32 +876,34 @@
                         @elseif($stat['question']->question_type === 'file_upload')
                             <!-- File Upload Responses -->
                             <div class="file-responses">
-                                @foreach($stat['response_data'] as $file)
-                                    <div class="file-response">
-                                        <i class="fas fa-file file-icon"></i>
-                                        <div class="file-info">
-                                            <div class="file-name">{{ $file['filename'] }}</div>
-                                            <div class="file-date">Diupload: {{ \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') }}</div>
-                                            @if(isset($file['file_data']['size']))
-                                                <div style="font-size: 12px; color: #7f8c8d;">
-                                                    {{ number_format($file['file_data']['size'] / 1024, 1) }} KB
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div class="file-actions">
-                                            @if(isset($file['file_data']['mime_type']) && str_starts_with($file['file_data']['mime_type'], 'image/'))
-                                                <a href="{{ route('admin.viewFile', $file['response_id']) }}" target="_blank" 
-                                                   style="background: #17a2b8; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; margin-right: 8px;">
-                                                    <i class="fas fa-eye"></i> Lihat
+                                @if(isset($stat['response_data']))
+                                    @foreach($stat['response_data'] as $file)
+                                        <div class="file-response">
+                                            <i class="fas fa-file file-icon"></i>
+                                            <div class="file-info">
+                                                <div class="file-name">{{ $file['filename'] }}</div>
+                                                <div class="file-date">Diupload: {{ \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') }}</div>
+                                                @if(isset($file['file_data']['size']))
+                                                    <div style="font-size: 12px; color: #7f8c8d;">
+                                                        {{ number_format($file['file_data']['size'] / 1024, 1) }} KB
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="file-actions">
+                                                @if(isset($file['file_data']['mime_type']) && str_starts_with($file['file_data']['mime_type'], 'image/'))
+                                                    <a href="{{ route('admin.viewFile', $file['response_id']) }}" target="_blank" 
+                                                       style="background: #17a2b8; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; margin-right: 8px;">
+                                                        <i class="fas fa-eye"></i> Lihat
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('admin.downloadFile', $file['response_id']) }}" 
+                                                   style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+                                                    <i class="fas fa-download"></i> Download
                                                 </a>
-                                            @endif
-                                            <a href="{{ route('admin.downloadFile', $file['response_id']) }}" 
-                                               style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;">
-                                                <i class="fas fa-download"></i> Download
-                                            </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                @endif
                             </div>
                         @endif
                     @else
@@ -891,107 +942,136 @@
     // Color Palette
     const colors = ['#5a9b9e', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'];
 
-    // Render charts for each question
-    @if($sectionStats && count($sectionStats) > 0)
-        @foreach($sectionStats as $sectionStat)
-            @foreach($sectionStat['questions_stats'] as $stat)
-                @if($stat['total_responses'] > 0 && in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
-                    // Chart for question {{ $stat['question']->id }}
-                    const ctx{{ $stat['question']->id }} = document.getElementById('chart_{{ $stat['question']->id }}').getContext('2d');
-                    new Chart(ctx{{ $stat['question']->id }}, {
-                        type: '{{ $stat['question']->question_type === 'checkbox' ? 'bar' : 'doughnut' }}',
-                        data: {
-                            labels: @json($stat['response_data']->pluck('answer')),
-                            datasets: [{
-                                data: @json($stat['response_data']->pluck('count')),
-                                backgroundColor: colors,
-                                @if($stat['question']->question_type !== 'checkbox')
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                                @else
-                                borderRadius: 8,
-                                borderSkipped: false,
-                                @endif
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    @if($stat['question']->question_type === 'checkbox')
-                                    display: false
-                                    @else
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
-                                        usePointStyle: true,
-                                        font: { size: 12 }
-                                    }
-                                    @endif
-                                }
-                            },
-                            @if($stat['question']->question_type === 'checkbox')
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    grid: { color: '#e9ecef' }
-                                },
-                                x: {
-                                    grid: { display: false }
-                                }
-                            }
-                            @else
-                            cutout: '50%'
-                            @endif
-                        }
-                    });
-                @elseif($stat['total_responses'] > 0 && $stat['question']->question_type === 'linear_scale' && isset($stat['response_data']['distribution']))
-                    // Linear Scale Chart for question {{ $stat['question']->id }}
-                    const ctx{{ $stat['question']->id }} = document.getElementById('chart_{{ $stat['question']->id }}').getContext('2d');
-                    const scaleLabels{{ $stat['question']->id }} = [];
-                    const scaleData{{ $stat['question']->id }} = [];
-                    @for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++)
-                        scaleLabels{{ $stat['question']->id }}.push('{{ $i }}');
-                        scaleData{{ $stat['question']->id }}.push({{ $stat['response_data']['distribution'][$i] ?? 0 }});
-                    @endfor
-                    
-                    new Chart(ctx{{ $stat['question']->id }}, {
-                        type: 'bar',
-                        data: {
-                            labels: scaleLabels{{ $stat['question']->id }},
-                            datasets: [{
-                                label: 'Jumlah Responden',
-                                data: scaleData{{ $stat['question']->id }},
-                                backgroundColor: '#5a9b9e',
-                                borderRadius: 8,
-                                borderSkipped: false,
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    grid: { color: '#e9ecef' }
-                                },
-                                x: {
-                                    grid: { display: false }
-                                }
-                            }
-                        }
-                    });
-                @endif
-            @endforeach
-        @endforeach
-    @endif
+    // Store chart instances
+    const chartInstances = {};
 
-    // Section Card Animation
+    // Chart data storage
+    const chartData = {
+        @if($sectionStats && count($sectionStats) > 0)
+            @foreach($sectionStats as $sectionStat)
+                @foreach($sectionStat['questions_stats'] as $stat)
+                    @if($stat['total_responses'] > 0 && isset($stat['chart_enabled']) && $stat['chart_enabled'])
+                        @if(in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
+                            {{ $stat['question']->id }}: {
+                                type: '{{ $stat['question']->question_type }}',
+                                labels: @json($stat['response_data']->pluck('answer')),
+                                data: @json($stat['response_data']->pluck('count')),
+                                totalResponses: {{ $stat['total_responses'] }},
+                                totalCount: {{ $stat['question']->question_type === 'checkbox' ? $stat['response_data']->sum('count') : $stat['total_responses'] }}
+                            },
+                        @elseif($stat['question']->question_type === 'linear_scale' && isset($stat['response_data']['distribution']))
+                            {{ $stat['question']->id }}: {
+                                type: 'linear_scale',
+                                labels: [@for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++)'{{ $i }}',@endfor],
+                                data: [@for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++){{ $stat['response_data']['distribution'][$i] ?? 0 }},@endfor],
+                                totalResponses: {{ $stat['response_data']['total_responses'] ?? 0 }}
+                            },
+                        @endif
+                    @endif
+                @endforeach
+            @endforeach
+        @endif
+    };
+
+    // Function to create chart
+    function createChart(questionId, chartType) {
+        const ctx = document.getElementById('chart_' + questionId);
+        if (!ctx) return;
+
+        const data = chartData[questionId];
+        if (!data) return;
+
+        // Destroy existing chart if it exists
+        if (chartInstances[questionId]) {
+            chartInstances[questionId].destroy();
+        }
+
+        let chartConfig = {
+            type: chartType,
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    backgroundColor: colors.slice(0, data.labels.length),
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: chartType === 'doughnut' ? 'bottom' : 'top',
+                        display: chartType === 'doughnut',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Configure specific chart type options
+        if (chartType === 'doughnut') {
+            chartConfig.options.cutout = '50%';
+            chartConfig.data.datasets[0].borderWidth = 2;
+            chartConfig.data.datasets[0].borderColor = '#ffffff';
+        } else if (chartType === 'bar') {
+            chartConfig.data.datasets[0].borderRadius = 8;
+            chartConfig.data.datasets[0].borderSkipped = false;
+            chartConfig.data.datasets[0].backgroundColor = data.type === 'linear_scale' ? '#5a9b9e' : colors.slice(0, data.labels.length);
+            chartConfig.options.scales = {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#e9ecef' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            };
+        }
+
+        // For linear scale, always add label
+        if (data.type === 'linear_scale') {
+            chartConfig.data.datasets[0].label = 'Jumlah Responden';
+        }
+
+        // Create and store chart instance
+        chartInstances[questionId] = new Chart(ctx.getContext('2d'), chartConfig);
+    }
+
+    // Function to toggle chart type
+    function toggleChart(questionId, chartType) {
+        // Update button states
+        const buttons = document.querySelectorAll(`[onclick*="toggleChart(${questionId}"]`);
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.onclick.toString().includes(`'${chartType}'`)) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Recreate chart with new type
+        createChart(questionId, chartType);
+    }
+
+    // Initialize all charts when page loads
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts with default types
+        Object.keys(chartData).forEach(questionId => {
+            const data = chartData[questionId];
+            let defaultType = 'doughnut';
+            
+            // Set default chart type based on question type
+            if (data.type === 'checkbox' || data.type === 'linear_scale') {
+                defaultType = 'bar';
+            }
+            
+            createChart(questionId, defaultType);
+        });
+
+        // Section Card Animation
         const sectionCards = document.querySelectorAll('.section-card');
         
         // Animate section cards on scroll

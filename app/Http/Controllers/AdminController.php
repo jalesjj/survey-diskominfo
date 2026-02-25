@@ -191,12 +191,24 @@ class AdminController extends Controller
                 'response_rate' => $totalSurveys > 0 ? round(($validResponses->count() / $totalSurveys) * 100, 1) : 0
             ];
 
-            // Analisis jawaban berdasarkan tipe pertanyaan
+            // Analisis jawaban berdasarkan tipe pertanyaan - SAMA dengan getSectionData
             if ($question->question_type === 'multiple_choice' && $validResponses->count() > 0) {
                 $answers = $validResponses->pluck('answer')->filter();
                 $distribution = $answers->countBy();
+                
+                // Format data untuk chart
+                $chartData = collect();
+                foreach ($distribution as $answer => $count) {
+                    $chartData->push((object)[
+                        'answer' => $answer,
+                        'count' => $count
+                    ]);
+                }
+                $stats['response_data'] = $chartData;
+                $stats['chart_enabled'] = true;
                 $stats['data'] = $distribution->toArray();
                 $stats['most_popular'] = $distribution->keys()->first();
+                
             } elseif ($question->question_type === 'checkbox' && $validResponses->count() > 0) {
                 $allAnswers = [];
                 foreach ($validResponses as $response) {
@@ -204,18 +216,59 @@ class AdminController extends Controller
                         $allAnswers = array_merge($allAnswers, $response->answer_data);
                     }
                 }
-                $stats['data'] = array_count_values($allAnswers);
+                $distribution = array_count_values($allAnswers);
+                
+                // Format data untuk chart
+                $chartData = collect();
+                foreach ($distribution as $answer => $count) {
+                    $chartData->push((object)[
+                        'answer' => $answer,
+                        'count' => $count
+                    ]);
+                }
+                $stats['response_data'] = $chartData;
+                $stats['chart_enabled'] = true;
+                $stats['data'] = $distribution;
+                
+            } elseif ($question->question_type === 'dropdown' && $validResponses->count() > 0) {
+                $answers = $validResponses->pluck('answer')->filter();
+                $distribution = $answers->countBy();
+                
+                // Format data untuk chart
+                $chartData = collect();
+                foreach ($distribution as $answer => $count) {
+                    $chartData->push((object)[
+                        'answer' => $answer,
+                        'count' => $count
+                    ]);
+                }
+                $stats['response_data'] = $chartData;
+                $stats['chart_enabled'] = true;
+                $stats['data'] = $distribution->toArray();
+                
             } elseif ($question->question_type === 'linear_scale' && $validResponses->count() > 0) {
                 $responses = $validResponses->pluck('answer')->filter()->map(function($item) {
                     return (int) $item;
                 });
                 
+                $distribution = $responses->countBy();
+                
                 $stats['data'] = [
                     'average' => round($responses->avg(), 2),
                     'min' => $responses->min(),
                     'max' => $responses->max(),
-                    'distribution' => $responses->countBy()->toArray()
+                    'distribution' => $distribution->toArray()
                 ];
+                
+                $stats['response_data'] = [
+                    'average' => round($responses->avg(), 2),
+                    'min' => $responses->min(),
+                    'max' => $responses->max(),
+                    'distribution' => $distribution->toArray(),
+                    'total_responses' => $responses->count()
+                ];
+                $stats['chart_enabled'] = true;
+                
             } elseif ($question->question_type === 'file_upload' && $validResponses->count() > 0) {
                 $fileResponses = $validResponses->filter(function($response) {
                     return $response->answer_data !== null;
@@ -223,12 +276,14 @@ class AdminController extends Controller
                 
                 $stats['response_data'] = $fileResponses->map(function($response) {
                     return [
-                        'response_id' => $response->id, // FIX: Key yang hilang
+                        'response_id' => $response->id,
                         'filename' => $response->answer,
                         'upload_date' => $response->created_at,
                         'file_data' => $response->answer_data
                     ];
                 })->toArray();
+                $stats['chart_enabled'] = false;
+                
             } else {
                 // Untuk tipe lainnya (text, textarea, dll)
                 $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
@@ -237,6 +292,7 @@ class AdminController extends Controller
                         'created_at' => $response->created_at->format('d/m/Y H:i')
                     ];
                 })->toArray();
+                $stats['chart_enabled'] = false;
             }
 
             $sectionQuestionStats[] = $stats;
@@ -250,7 +306,6 @@ class AdminController extends Controller
         ];
     }
 
-    // FIX: Gunakan view yang sudah ada (admin.dashboard) bukan admin.dashboard-questions
     return view('admin.dashboard', compact(
         'totalSurveys',
         'questions',
@@ -285,20 +340,97 @@ private function getSectionData($totalSurveys, $questions)
                 'response_rate' => $totalSurveys > 0 ? round(($validResponses->count() / $totalSurveys) * 100, 1) : 0
             ];
 
-            // Sama seperti getQuestionsData untuk konsistensi
-            if ($question->question_type === 'file_upload' && $validResponses->count() > 0) {
+            // Analisis jawaban berdasarkan tipe pertanyaan untuk chart
+            if ($question->question_type === 'multiple_choice' && $validResponses->count() > 0) {
+                $answers = $validResponses->pluck('answer')->filter();
+                $distribution = $answers->countBy();
+                
+                // Format data untuk chart
+                $chartData = collect();
+                foreach ($distribution as $answer => $count) {
+                    $chartData->push((object)[
+                        'answer' => $answer,
+                        'count' => $count
+                    ]);
+                }
+                $stats['response_data'] = $chartData;
+                $stats['chart_enabled'] = true;
+                
+            } elseif ($question->question_type === 'checkbox' && $validResponses->count() > 0) {
+                $allAnswers = [];
+                foreach ($validResponses as $response) {
+                    if ($response->answer_data && is_array($response->answer_data)) {
+                        $allAnswers = array_merge($allAnswers, $response->answer_data);
+                    }
+                }
+                $distribution = array_count_values($allAnswers);
+                
+                // Format data untuk chart
+                $chartData = collect();
+                foreach ($distribution as $answer => $count) {
+                    $chartData->push((object)[
+                        'answer' => $answer,
+                        'count' => $count
+                    ]);
+                }
+                $stats['response_data'] = $chartData;
+                $stats['chart_enabled'] = true;
+                
+            } elseif ($question->question_type === 'dropdown' && $validResponses->count() > 0) {
+                $answers = $validResponses->pluck('answer')->filter();
+                $distribution = $answers->countBy();
+                
+                // Format data untuk chart
+                $chartData = collect();
+                foreach ($distribution as $answer => $count) {
+                    $chartData->push((object)[
+                        'answer' => $answer,
+                        'count' => $count
+                    ]);
+                }
+                $stats['response_data'] = $chartData;
+                $stats['chart_enabled'] = true;
+                
+            } elseif ($question->question_type === 'linear_scale' && $validResponses->count() > 0) {
+                $responses = $validResponses->pluck('answer')->filter()->map(function($item) {
+                    return (int) $item;
+                });
+                
+                $distribution = $responses->countBy();
+                
+                $stats['response_data'] = [
+                    'average' => round($responses->avg(), 2),
+                    'min' => $responses->min(),
+                    'max' => $responses->max(),
+                    'distribution' => $distribution->toArray(),
+                    'total_responses' => $responses->count()
+                ];
+                $stats['chart_enabled'] = true;
+                
+            } elseif ($question->question_type === 'file_upload' && $validResponses->count() > 0) {
                 $fileResponses = $validResponses->filter(function($response) {
                     return $response->answer_data !== null;
                 });
                 
                 $stats['response_data'] = $fileResponses->map(function($response) {
                     return [
-                        'response_id' => $response->id, // FIX: Key yang hilang
+                        'response_id' => $response->id,
                         'filename' => $response->answer,
                         'upload_date' => $response->created_at,
                         'file_data' => $response->answer_data
                     ];
                 })->toArray();
+                $stats['chart_enabled'] = false;
+                
+            } else {
+                // Untuk tipe lainnya (text, textarea, dll) - tidak mendukung chart
+                $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
+                    return [
+                        'answer' => $response->answer,
+                        'created_at' => $response->created_at->format('d/m/Y H:i')
+                    ];
+                })->toArray();
+                $stats['chart_enabled'] = false;
             }
 
             $sectionQuestionStats[] = $stats;

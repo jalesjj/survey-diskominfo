@@ -8,7 +8,7 @@
 
 @section('header-actions')
 <div class="header-actions">
-    <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
+    <span class="admin-welcome">Selamat atang, {{ session('admin_name') }}</span>
 </div>
 @endsection
 
@@ -36,6 +36,11 @@
         align-items: center;
         gap: 8px;
         font-size: 16px;
+    }
+
+    /* Hover lembut, tidak lebay */
+    .btn:hover {
+        filter: brightness(1.05);
     }
 
     .btn-primary {
@@ -94,6 +99,7 @@
     .tab-nav {
         display: flex;
         background: #f8f9fa;
+        flex-wrap: wrap;
     }
 
     .tab-item {
@@ -110,6 +116,7 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
+        min-width: 50%;
     }
 
     .tab-item:last-child {
@@ -162,7 +169,7 @@
     }
 
     /* ========== PERBAIKAN UTAMA: SECTION DAN QUESTION CARDS ========== */
-    
+
     /* Section Cards dengan counter reset untuk nomor pertanyaan */
     .section-card {
         background: white;
@@ -210,6 +217,14 @@
         position: relative;
         z-index: 2;
     }
+
+    /* Konsistensi radius */
+.section-card,
+.question-card,
+.chart-container,
+.summary-card {
+    border-radius: 14px;
+}
 
     /* PERBAIKAN UTAMA: question-card dengan pemisah yang jelas */
     .question-card {
@@ -310,8 +325,54 @@
     /* Response stats dengan grid yang lebih responsive */
     .response-stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .response-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        border-left: 4px solid #5a9b9e;
+        transition: all 0.3s ease;
+    }
+
+    .response-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .response-text {
+        flex: 1;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+
+    .response-count {
+        background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 700;
+        margin-left: 15px;
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .response-percentage {
+        font-size: 12px;
+        color: #7f8c8d;
+        margin-left: 10px;
+    }
+
+    .chart-canvas-container {
+        position: relative;
+        height: 280px;
         margin-bottom: 20px;
     }
 
@@ -374,6 +435,8 @@
         margin-top: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid #f1f3f4;
+        position: relative;
+        height: 350px; /* Fixed height for canvas */
     }
 
     .chart-container h4 {
@@ -384,6 +447,46 @@
         display: flex;
         align-items: center;
         gap: 10px;
+    }
+
+    /* Chart Controls */
+    .chart-controls {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .chart-toggle-btn {
+        padding: 8px 16px;
+        border: 2px solid #5a9b9e;
+        background: white;
+        color: #5a9b9e;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .chart-toggle-btn:hover {
+        background: #f0f8f8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.2);
+    }
+
+    .chart-toggle-btn.active {
+        background: #5a9b9e;
+        color: white;
+    }
+
+    .chart-toggle-btn.active:hover {
+        background: #4a8b8e;
     }
 
     .distribution-item {
@@ -562,6 +665,7 @@
         border-radius: 12px;
         margin: 20px;
         border: 2px dashed #dee2e6;
+        animation: fadeInUp 0.5s ease-out;
     }
 
     .empty-state i {
@@ -584,6 +688,7 @@
         max-width: 400px;
         margin-left: auto;
         margin-right: auto;
+        word-break: break-word;
     }
 
     .admin-welcome {
@@ -591,96 +696,52 @@
         color: #7f8c8d;
     }
 
-    /* Mobile responsive */
-    @media (max-width: 768px) {
-        .action-buttons {
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .summary-stats {
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        }
-
-        .tab-item {
-            padding: 15px 10px;
-            font-size: 14px;
-        }
-
-        .question-card {
-            padding: 25px 20px;
-            margin: 10px 15px 20px 15px;
-        }
-
-        .question-header {
-            padding-left: 40px;
-        }
-
-        .question-text {
-            font-size: 16px;
-        }
-
-        .question-meta {
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-start;
-        }
-
-        .question-meta span {
-            font-size: 12px;
-            padding: 4px 8px;
-        }
-
-        .response-stats {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .section-header {
-            padding: 20px 25px;
-        }
-
-        .section-title {
-            font-size: 20px;
-        }
-
-        .section-description {
-            font-size: 14px;
-        }
-
-        .response-data {
-            padding: 20px 15px;
-        }
-
-        .chart-container {
-            padding: 20px 15px;
-        }
-
-        .distribution-item {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .distribution-bar {
-            width: 100%;
-            margin-left: 0;
-            height: 20px;
-        }
-
-        .empty-state {
-            padding: 40px 15px;
-            margin: 15px;
-        }
-        
-        .empty-state i {
-            font-size: 36px;
-        }
-        
-        .empty-state h3 {
-            font-size: 20px;
-        }
+@media (max-width: 576px) {
+    .tab-item {
+        font-size: 13px;
+        padding: 12px 8px;
     }
+}
+
+    /* Mobile responsive */
+@media (max-width: 992px) {
+    .response-split {
+        grid-template-columns: 1fr;
+    }
+
+    .response-list .response-stats {
+        max-height: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .question-card::before {
+        top: 10px;
+        left: 10px;
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+
+    .response-split {
+        grid-template-columns: 1fr;
+    }
+
+    .question-header {
+        padding-left: 45px;
+    }
+
+    .response-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .response-count {
+        margin-left: 0;
+    }
+}
+
 
     /* Animation untuk smooth loading */
     .question-card {
@@ -702,6 +763,73 @@
     html {
         scroll-behavior: smooth;
     }
+
+/**/
+/* Pastikan teks tidak terpotong */
+.question-text,
+.section-title,
+.section-description {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Meta tidak saling tindih */
+.question-meta {
+    row-gap: 8px;
+}
+
+/* Header section aman untuk teks panjang */
+.section-header {
+    min-height: auto;
+}
+
+.chart-canvas-container {
+    width: 100%;
+    min-height: 260px;
+}
+
+.chart-container {
+    overflow-x: auto;
+}
+
+/* Layout kiri-kanan */
+.response-split {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+/* Card kanan biar konsisten */
+.response-list {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid #f1f3f4;
+}
+
+/* Scroll kalau jawaban banyak */
+.response-list .response-stats {
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.response-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.response-list::-webkit-scrollbar-thumb {
+    background: #5a9b9e;
+    border-radius: 10px;
+}
+
+.response-chart {
+    width: 100%;
+}
+
+
 </style>
 @endpush
 
@@ -800,9 +928,92 @@
                         </div>
 
                         <div class="response-data">
-                            @if(isset($stat['data']) && is_array($stat['data']) && count($stat['data']) > 0)
+                            @if(isset($stat['chart_enabled']) && $stat['chart_enabled'] && isset($stat['response_data']))
                                 @if($stat['question']->question_type === 'linear_scale')
-                                    <!-- Linear Scale Display -->
+                                    <!-- Linear Scale Display dengan Chart Toggle -->
+                                    <div class="chart-container">
+                                        <h4><i class="fas fa-chart-bar"></i> Statistik Skala</h4>
+                                        
+                                        <div class="chart-controls">
+                                            <button class="chart-toggle-btn active" onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                                                <i class="fas fa-chart-bar"></i> Batang
+                                            </button>
+                                            <button class="chart-toggle-btn" onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                                                <i class="fas fa-chart-pie"></i> Donat
+                                            </button>
+                                        </div>
+
+                                        <div class="chart-canvas-container">
+                                            <canvas id="chart_{{ $stat['question']->id }}"></canvas>
+                                        </div>
+
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 15px 0;">
+                                            <div class="stat-item">
+                                                <div class="stat-number">{{ $stat['data']['average'] ?? 0 }}</div>
+                                                <div class="stat-label">Rata-rata</div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-number">{{ $stat['data']['min'] ?? 0 }}</div>
+                                                <div class="stat-label">Minimum</div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-number">{{ $stat['data']['max'] ?? 0 }}</div>
+                                                <div class="stat-label">Maximum</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                @elseif(in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
+                                    <!-- Chart-enabled Question Types dengan Toggle -->
+                                    <div class="response-split">
+
+    <!-- KIRI: CHART -->
+    <div class="response-chart">
+        <div class="chart-container">
+            <h4><i class="fas fa-chart-pie"></i> Distribusi Jawaban</h4>
+
+            <div class="chart-controls">
+                <button class="chart-toggle-btn active"
+                    onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                    <i class="fas fa-chart-pie"></i> Donat
+                </button>
+                <button class="chart-toggle-btn"
+                    onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                    <i class="fas fa-chart-bar"></i> Batang
+                </button>
+            </div>
+
+            <div class="chart-canvas-container">
+                <canvas id="chart_{{ $stat['question']->id }}"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- KANAN: LIST -->
+    <div class="response-list">
+        <div class="response-stats">
+            @foreach($stat['response_data'] as $response)
+                <div class="response-item">
+                    <span class="response-text">{{ $response->answer }}</span>
+                    <div>
+                        <span class="response-count">{{ $response->count }}</span>
+                        <span class="response-percentage">
+                            ({{ number_format(($response->count / $stat['total_responses']) * 100, 1) }}%)
+                        </span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+</div>
+
+
+                                @endif
+                            
+                            @elseif(isset($stat['data']) && is_array($stat['data']) && count($stat['data']) > 0)
+                                @if($stat['question']->question_type === 'linear_scale')
+                                    <!-- Linear Scale Fallback Display (without chart) -->
                                     <div class="chart-container">
                                         <h4><i class="fas fa-chart-bar"></i> Statistik Skala</h4>
                                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 15px 0;">
@@ -833,7 +1044,7 @@
                                         @endif
                                     </div>
                                 @else
-                                    <!-- Multiple Choice / Checkbox Display -->
+                                    <!-- Multiple Choice / Checkbox Fallback Display -->
                                     <div class="chart-container">
                                         <h4><i class="fas fa-chart-pie"></i> Distribusi Jawaban</h4>
                                         @foreach($stat['data'] as $answer => $count)
@@ -1059,10 +1270,150 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
+    // Chart.js Configuration
+    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    Chart.defaults.color = '#2c3e50';
+
+    // Color Palette
+    const colors = ['#5a9b9e', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'];
+
+    // Store chart instances
+    const chartInstances = {};
+
+    // Chart data storage
+    const chartData = {
+        @if(isset($sectionStats) && count($sectionStats) > 0)
+            @foreach($sectionStats as $sectionStat)
+                @foreach($sectionStat['questions_stats'] as $stat)
+                    @if($stat['total_responses'] > 0 && isset($stat['chart_enabled']) && $stat['chart_enabled'])
+                        @if(in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
+                            {{ $stat['question']->id }}: {
+                                type: '{{ $stat['question']->question_type }}',
+                                labels: @json($stat['response_data']->pluck('answer')),
+                                data: @json($stat['response_data']->pluck('count')),
+                                totalResponses: {{ $stat['total_responses'] }},
+                                totalCount: {{ $stat['question']->question_type === 'checkbox' ? $stat['response_data']->sum('count') : $stat['total_responses'] }}
+                            },
+                        @elseif($stat['question']->question_type === 'linear_scale' && isset($stat['response_data']['distribution']))
+                            {{ $stat['question']->id }}: {
+                                type: 'linear_scale',
+                                labels: [@for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++)'{{ $i }}',@endfor],
+                                data: [@for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++){{ $stat['response_data']['distribution'][$i] ?? 0 }},@endfor],
+                                totalResponses: {{ $stat['response_data']['total_responses'] ?? 0 }}
+                            },
+                        @endif
+                    @endif
+                @endforeach
+            @endforeach
+        @endif
+    };
+
+    // Function to create chart
+    function createChart(questionId, chartType) {
+        const ctx = document.getElementById('chart_' + questionId);
+        if (!ctx) return;
+
+        const data = chartData[questionId];
+        if (!data) return;
+
+        // Destroy existing chart if it exists
+        if (chartInstances[questionId]) {
+            chartInstances[questionId].destroy();
+        }
+
+        let chartConfig = {
+            type: chartType,
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.data,
+                    backgroundColor: colors.slice(0, data.labels.length),
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: chartType === 'doughnut' ? 'bottom' : 'top',
+                        display: chartType === 'doughnut',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Configure specific chart type options
+        if (chartType === 'doughnut') {
+            chartConfig.options.cutout = '50%';
+            chartConfig.data.datasets[0].borderWidth = 2;
+            chartConfig.data.datasets[0].borderColor = '#ffffff';
+        } else if (chartType === 'bar') {
+            chartConfig.data.datasets[0].borderRadius = 8;
+            chartConfig.data.datasets[0].borderSkipped = false;
+            chartConfig.data.datasets[0].backgroundColor = data.type === 'linear_scale' ? '#5a9b9e' : colors.slice(0, data.labels.length);
+            chartConfig.options.scales = {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#e9ecef' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            };
+        }
+
+        // For linear scale, always add label
+        if (data.type === 'linear_scale') {
+            chartConfig.data.datasets[0].label = 'Jumlah Responden';
+        }
+
+        // Create and store chart instance
+        chartInstances[questionId] = new Chart(ctx.getContext('2d'), chartConfig);
+    }
+
+    // Function to toggle chart type
+    function toggleChart(questionId, chartType) {
+        // Update button states
+        const buttons = document.querySelectorAll(`[onclick*="toggleChart(${questionId}"]`);
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.onclick.toString().includes(`'${chartType}'`)) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Recreate chart with new type
+        createChart(questionId, chartType);
+    }
+
+    // Initialize all charts when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts with default types
+        Object.keys(chartData).forEach(questionId => {
+            const data = chartData[questionId];
+            let defaultType = 'doughnut';
+            
+            // Set default chart type based on question type
+            if (data.type === 'checkbox' || data.type === 'linear_scale') {
+                defaultType = 'bar';
+            }
+            
+            createChart(questionId, defaultType);
+        });
+    });
+
     // Auto refresh setiap 30 detik untuk data real-time
     setTimeout(function() {
         // location.reload();
     }, 30000);
+
+    
 </script>
 @endpush
