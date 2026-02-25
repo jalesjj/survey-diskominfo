@@ -18,14 +18,19 @@ class SurveyQuestion extends Model
         'settings',
         'order_index',
         'is_required',
-        'is_active'
+        'is_active',
+        'enable_saw',
+        'criteria_name',
+        'criteria_weight',
+        'criteria_type'
     ];
 
     protected $casts = [
         'options' => 'array',
         'settings' => 'array',
         'is_required' => 'boolean',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'enable_saw' => 'boolean'
     ];
 
     public function section()

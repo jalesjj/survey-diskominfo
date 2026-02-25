@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/SurveyQuestionController.php
+// app/Http/Controllers/SurveyQuestionController.php - FINAL FIXED VERSION
 namespace App\Http\Controllers;
 
 use App\Models\SurveySection;
@@ -86,17 +86,37 @@ class SurveyQuestionController extends Controller
 
         $section = SurveySection::findOrFail($sectionId);
 
-        $request->validate([
+        // Validasi dasar
+        $validationRules = [
             'question_text' => 'required|string',
-            'question_description' => 'nullable|string|max:1000', // Field baru untuk deskripsi
+            'question_description' => 'nullable|string|max:1000',
             'question_type' => 'required|in:short_text,long_text,multiple_choice,checkbox,dropdown,file_upload,linear_scale',
             'is_required' => 'boolean',
             'options' => 'nullable|array',
             'scale_min' => 'nullable|integer|min:1',
             'scale_max' => 'nullable|integer|max:10',
             'scale_min_label' => 'nullable|string',
-            'scale_max_label' => 'nullable|string'
-        ]);
+            'scale_max_label' => 'nullable|string',
+            // SAW fields validation
+            'enable_saw' => 'boolean',
+            'criteria_selection' => 'nullable|string',
+            'criteria_name' => 'nullable|string|max:255',
+            'criteria_weight' => 'nullable|numeric|min:0.1|max:10',
+            'criteria_type' => 'nullable|in:benefit,cost'
+        ];
+
+        // Conditional validation untuk SAW
+        if ($request->boolean('enable_saw') && $request->question_type === 'linear_scale') {
+            $validationRules['criteria_selection'] = 'required|string';
+            $validationRules['criteria_weight'] = 'required|numeric|min:0.1|max:10';
+            $validationRules['criteria_type'] = 'required|in:benefit,cost';
+            
+            if ($request->criteria_selection === 'new') {
+                $validationRules['criteria_name'] = 'required|string|max:255';
+            }
+        }
+
+        $request->validate($validationRules);
 
         $maxOrder = SurveyQuestion::where('section_id', $sectionId)->max('order_index') ?? 0;
 
@@ -118,16 +138,39 @@ class SurveyQuestionController extends Controller
             ];
         }
 
-        SurveyQuestion::create([
+        // Prepare SAW fields
+        $sawFields = [];
+        
+        if ($request->boolean('enable_saw') && $request->question_type === 'linear_scale') {
+            $sawFields['enable_saw'] = true;
+            $sawFields['criteria_weight'] = $request->criteria_weight;
+            $sawFields['criteria_type'] = $request->criteria_type;
+            
+            if ($request->criteria_selection === 'new') {
+                // Gunakan kriteria baru
+                $sawFields['criteria_name'] = $request->criteria_name;
+            } else {
+                // Gunakan kriteria yang sudah ada
+                $sawFields['criteria_name'] = $request->criteria_selection;
+            }
+        } else {
+            $sawFields['enable_saw'] = false;
+            $sawFields['criteria_name'] = null;
+            $sawFields['criteria_weight'] = null;
+            $sawFields['criteria_type'] = null;
+        }
+
+        // Create question dengan SAW fields
+        SurveyQuestion::create(array_merge([
             'section_id' => $sectionId,
             'question_text' => $request->question_text,
-            'question_description' => $request->question_description, // Tambahkan field ini
+            'question_description' => $request->question_description,
             'question_type' => $request->question_type,
             'options' => $options,
             'settings' => $settings,
             'order_index' => $maxOrder + 1,
             'is_required' => $request->boolean('is_required')
-        ]);
+        ], $sawFields));
 
         return redirect()->route('admin.questions.index')
                         ->with('success', 'Pertanyaan berhasil ditambahkan.');
@@ -144,7 +187,7 @@ class SurveyQuestionController extends Controller
         return view('admin.questions.edit-question', compact('question'));
     }
 
-    // Update pertanyaan
+    // Update pertanyaan - FINAL FIXED VERSION
     public function updateQuestion(Request $request, $questionId)
     {
         $authCheck = $this->checkAdminAuth();
@@ -152,17 +195,42 @@ class SurveyQuestionController extends Controller
 
         $question = SurveyQuestion::findOrFail($questionId);
 
-        $request->validate([
+        // SOLUSI: Handle criteria_type dari backup field jika field utama disabled
+        if ($request->has('criteria_type_backup') && !$request->filled('criteria_type')) {
+            $request->merge(['criteria_type' => $request->criteria_type_backup]);
+        }
+
+        // Validasi dasar
+        $validationRules = [
             'question_text' => 'required|string',
-            'question_description' => 'nullable|string|max:1000', // Field baru untuk deskripsi
+            'question_description' => 'nullable|string|max:1000',
             'question_type' => 'required|in:short_text,long_text,multiple_choice,checkbox,dropdown,file_upload,linear_scale',
             'is_required' => 'boolean',
             'options' => 'nullable|array',
             'scale_min' => 'nullable|integer|min:1',
             'scale_max' => 'nullable|integer|max:10',
             'scale_min_label' => 'nullable|string',
-            'scale_max_label' => 'nullable|string'
-        ]);
+            'scale_max_label' => 'nullable|string',
+            // SAW fields validation
+            'enable_saw' => 'boolean',
+            'criteria_selection' => 'nullable|string',
+            'criteria_name' => 'nullable|string|max:255',
+            'criteria_weight' => 'nullable|numeric|min:0.1|max:10',
+            'criteria_type' => 'nullable|in:benefit,cost'
+        ];
+
+        // Conditional validation untuk SAW
+        if ($request->boolean('enable_saw') && $request->question_type === 'linear_scale') {
+            $validationRules['criteria_selection'] = 'required|string';
+            $validationRules['criteria_weight'] = 'required|numeric|min:0.1|max:10';
+            $validationRules['criteria_type'] = 'required|in:benefit,cost';
+            
+            if ($request->criteria_selection === 'new') {
+                $validationRules['criteria_name'] = 'required|string|max:255';
+            }
+        }
+
+        $request->validate($validationRules);
 
         $options = null;
         $settings = [];
@@ -182,14 +250,37 @@ class SurveyQuestionController extends Controller
             ];
         }
 
-        $question->update([
+        // Prepare SAW fields
+        $sawFields = [];
+        
+        if ($request->boolean('enable_saw') && $request->question_type === 'linear_scale') {
+            $sawFields['enable_saw'] = true;
+            $sawFields['criteria_weight'] = $request->criteria_weight;
+            $sawFields['criteria_type'] = $request->criteria_type; // Sudah dihandle dari backup
+            
+            if ($request->criteria_selection === 'new') {
+                // Gunakan kriteria baru
+                $sawFields['criteria_name'] = $request->criteria_name;
+            } else {
+                // Gunakan kriteria yang sudah ada
+                $sawFields['criteria_name'] = $request->criteria_selection;
+            }
+        } else {
+            $sawFields['enable_saw'] = false;
+            $sawFields['criteria_name'] = null;
+            $sawFields['criteria_weight'] = null;
+            $sawFields['criteria_type'] = null;
+        }
+
+        // Update question dengan SAW fields
+        $question->update(array_merge([
             'question_text' => $request->question_text,
-            'question_description' => $request->question_description, // Tambahkan field ini
+            'question_description' => $request->question_description,
             'question_type' => $request->question_type,
             'options' => $options,
             'settings' => $settings,
             'is_required' => $request->boolean('is_required')
-        ]);
+        ], $sawFields));
 
         return redirect()->route('admin.questions.index')
                         ->with('success', 'Pertanyaan berhasil diperbarui.');
@@ -208,20 +299,7 @@ class SurveyQuestionController extends Controller
                         ->with('success', 'Pertanyaan berhasil dihapus.');
     }
 
-    // Hapus bagian
-    public function deleteSection($sectionId)
-    {
-        $authCheck = $this->checkAdminAuth();
-        if ($authCheck) return $authCheck;
-
-        $section = SurveySection::findOrFail($sectionId);
-        $section->delete(); // Akan cascade delete questions
-
-        return redirect()->route('admin.questions.index')
-                        ->with('success', 'Bagian dan semua pertanyaan di dalamnya berhasil dihapus.');
-    }
-
-    // Toggle status aktif pertanyaan
+    // Toggle status pertanyaan
     public function toggleQuestion($questionId)
     {
         $authCheck = $this->checkAdminAuth();
@@ -232,10 +310,23 @@ class SurveyQuestionController extends Controller
 
         $status = $question->is_active ? 'diaktifkan' : 'dinonaktifkan';
         return redirect()->route('admin.questions.index')
-                        ->with('success', "Pertanyaan berhasil $status.");
+                        ->with('success', "Pertanyaan berhasil {$status}.");
     }
 
-    // Toggle status aktif bagian
+    // Hapus section
+    public function deleteSection($sectionId)
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+
+        $section = SurveySection::findOrFail($sectionId);
+        $section->delete(); // Akan menghapus pertanyaan juga karena foreign key cascade
+
+        return redirect()->route('admin.questions.index')
+                        ->with('success', 'Bagian dan semua pertanyaannya berhasil dihapus.');
+    }
+
+    // Toggle status section
     public function toggleSection($sectionId)
     {
         $authCheck = $this->checkAdminAuth();
@@ -246,10 +337,10 @@ class SurveyQuestionController extends Controller
 
         $status = $section->is_active ? 'diaktifkan' : 'dinonaktifkan';
         return redirect()->route('admin.questions.index')
-                        ->with('success', "Bagian berhasil $status.");
+                        ->with('success', "Bagian berhasil {$status}.");
     }
 
-    // Update urutan bagian
+    // Update urutan section
     public function updateSectionOrder(Request $request)
     {
         $authCheck = $this->checkAdminAuth();
@@ -261,14 +352,13 @@ class SurveyQuestionController extends Controller
         ]);
 
         foreach ($request->sections as $index => $sectionId) {
-            SurveySection::where('id', $sectionId)
-                        ->update(['order_index' => $index + 1]);
+            SurveySection::where('id', $sectionId)->update(['order_index' => $index + 1]);
         }
 
         return response()->json(['success' => true]);
     }
 
-    // Update urutan pertanyaan
+    // Update urutan pertanyaan dalam section
     public function updateQuestionOrder(Request $request, $sectionId)
     {
         $authCheck = $this->checkAdminAuth();
