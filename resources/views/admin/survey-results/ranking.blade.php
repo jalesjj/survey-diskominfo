@@ -1,4 +1,4 @@
-{{-- resources/views/admin/survey-results/ranking.blade.php --}}
+{{-- resources/views/admin/survey-results/ranking.blade.php
 @extends('layouts.admin')
 
 @section('title', 'Ranking Responden - Admin')
@@ -364,14 +364,14 @@
                     @foreach($rankings as $ranking)
                         @php
                             $scoreClass = $ranking['total_score'] >= 0.8 ? 'excellent' : 
-                                         ($ranking['total_score'] >= 0.6 ? 'good' : 
-                                         ($ranking['total_score'] >= 0.4 ? 'fair' : 
-                                         ($ranking['total_score'] >= 0.2 ? 'poor' : 'very-poor')));
+                                        ($ranking['total_score'] >= 0.6 ? 'good' : 
+                                        ($ranking['total_score'] >= 0.4 ? 'fair' : 
+                                        ($ranking['total_score'] >= 0.2 ? 'poor' : 'very-poor')));
                             
                             $scoreLabel = $ranking['total_score'] >= 0.8 ? 'Sangat Baik' : 
-                                         ($ranking['total_score'] >= 0.6 ? 'Baik' : 
-                                         ($ranking['total_score'] >= 0.4 ? 'Cukup' : 
-                                         ($ranking['total_score'] >= 0.2 ? 'Kurang' : 'Sangat Kurang')));
+                                        ($ranking['total_score'] >= 0.6 ? 'Baik' : 
+                                        ($ranking['total_score'] >= 0.4 ? 'Cukup' : 
+                                        ($ranking['total_score'] >= 0.2 ? 'Kurang' : 'Sangat Kurang')));
                             
                             $rankClass = $ranking['rank'] <= 3 ? 'rank-' . $ranking['rank'] : '';
                         @endphp
@@ -487,4 +487,4 @@
         document.head.appendChild(styleSheet);
     });
 </script>
-@endpush
+@endpush --}}

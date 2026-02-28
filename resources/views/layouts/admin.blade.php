@@ -1,4 +1,4 @@
-{{-- resources/views/layouts/admin.blade.php --}}
+{{-- resources/views/layouts/admin.blade.php - MENU LANGSUNG KE TABEL SAW --}}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -18,6 +18,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
             color: #2c3e50;
+            line-height: 1.6;
         }
 
         .admin-layout {
@@ -25,7 +26,7 @@
             min-height: 100vh;
         }
 
-        /* Mobile Menu Toggle Button */
+        /* Mobile Menu Toggle */
         .mobile-menu-toggle {
             display: none;
             position: fixed;
@@ -36,25 +37,16 @@
             color: white;
             border: none;
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 18px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1);
         }
 
         .mobile-menu-toggle:hover {
             background: #34495e;
-        }
-
-        .mobile-menu-toggle.hidden {
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(0.5);
-            pointer-events: none;
+            transform: scale(1.05);
         }
 
         /* Mobile Overlay */
@@ -73,11 +65,12 @@
 
         .mobile-overlay.active {
             opacity: 1;
+            pointer-events: auto;
         }
 
         /* Sidebar */
         .sidebar {
-            width: 250px;
+            width: 280px;
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
             position: fixed;
@@ -85,16 +78,29 @@
             overflow-y: auto;
             transition: transform 0.3s ease;
             z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
         }
 
         .sidebar-header {
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 25px 20px;
+            background: rgba(0, 0, 0, 0.15);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
 
-        /* Close button inside sidebar for mobile */
         .sidebar-close-btn {
             display: none;
             position: absolute;
@@ -104,10 +110,10 @@
             background: transparent;
             border: none;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
             padding: 8px;
-            border-radius: 3px;
+            border-radius: 4px;
             transition: all 0.3s ease;
         }
 
@@ -116,27 +122,31 @@
         }
 
         .sidebar-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #ecf0f1;
         }
 
         .sidebar-subtitle {
-            font-size: 12px;
+            font-size: 13px;
             opacity: 0.8;
+            color: #bdc3c7;
         }
 
         .sidebar-menu {
-            padding: 20px 0;
+            padding: 25px 0;
         }
 
         .menu-item {
-            display: block;
-            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            padding: 16px 25px;
             color: white;
             text-decoration: none;
             transition: all 0.3s ease;
-            border-left: 3px solid transparent;
+            border-left: 4px solid transparent;
+            margin-bottom: 2px;
         }
 
         .menu-item:hover {
@@ -144,17 +154,27 @@
             border-left-color: #5a9b9e;
             color: white;
             text-decoration: none;
+            transform: translateX(5px);
         }
 
         .menu-item.active {
             background: rgba(90, 155, 158, 0.2);
             border-left-color: #5a9b9e;
+            color: #5a9b9e;
         }
 
         .menu-icon {
-            display: inline-block;
-            width: 20px;
-            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            margin-right: 15px;
+            font-size: 16px;
+        }
+
+        .menu-text {
+            font-weight: 500;
+            font-size: 15px;
         }
 
         .logout-section {
@@ -165,83 +185,61 @@
         }
 
         .logout-btn {
-            display: block;
-            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
             background: rgba(231, 76, 60, 0.2);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 8px;
             text-align: center;
             transition: all 0.3s ease;
+            border: 2px solid rgba(231, 76, 60, 0.3);
         }
 
         .logout-btn:hover {
-            background: rgba(231, 76, 60, 0.3);
+            background: rgba(231, 76, 60, 0.4);
             color: white;
             text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
         }
 
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 250px;
+            margin-left: 280px;
             background: #f8f9fa;
-            transition: margin-left 0.3s ease;
+            min-height: 100vh;
         }
 
         .content-header {
             background: white;
-            padding: 20px 30px;
-            border-bottom: 1px solid #e9ecef;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 25px 35px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-bottom: 3px solid #5a9b9e;
         }
 
-        .page-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 5px;
+        .content-header-left {
+            flex: 1;
         }
 
-        .page-subtitle {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-
-        .content-body {
-            padding: 30px;
-        }
-
-        /* Success & Error Messages */
-        .success-message {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        /* Breadcrumb */
         .breadcrumb {
-            margin-bottom: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
         }
 
         .breadcrumb a {
             color: #5a9b9e;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .breadcrumb a:hover {
@@ -249,26 +247,84 @@
         }
 
         .breadcrumb-separator {
-            margin: 0 8px;
-            color: #7f8c8d;
+            margin: 0 10px;
+            color: #bdc3c7;
         }
 
-        /* Mobile Responsive */
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-size: 15px;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .content-body {
+            padding: 35px;
+        }
+
+        /* Success/Error Messages */
+        .success-message, .error-message {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .error-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .error-list li {
+            margin-bottom: 6px;
+        }
+
+        .error-list li:before {
+            content: "• ";
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .mobile-menu-toggle {
-                display: block;
-            }
-
-            .mobile-overlay.active {
-                display: block;
-            }
-
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px;
             }
 
             .sidebar.open {
                 transform: translateX(0);
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .mobile-overlay {
+                display: block;
             }
 
             .sidebar-close-btn {
@@ -276,7 +332,7 @@
             }
 
             .sidebar-header {
-                padding-right: 60px;
+                padding-right: 70px;
             }
 
             .main-content {
@@ -284,32 +340,48 @@
             }
 
             .content-header {
-                padding: 20px;
+                padding: 20px 25px;
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
             }
 
             .content-body {
-                padding: 20px 15px;
+                padding: 25px 20px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .page-subtitle {
+                font-size: 14px;
             }
         }
 
         @media (max-width: 480px) {
             .content-header {
-                padding: 15px;
+                padding: 20px;
             }
 
             .content-body {
-                padding: 15px 10px;
+                padding: 20px 15px;
             }
 
             .page-title {
-                font-size: 20px;
+                font-size: 22px;
             }
 
-            .page-subtitle {
-                font-size: 13px;
+            .sidebar {
+                width: 260px;
+            }
+
+            .menu-item {
+                padding: 14px 20px;
+            }
+
+            .menu-text {
+                font-size: 14px;
             }
         }
     </style>
@@ -332,41 +404,50 @@
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="sidebar-title">Admin Panel</div>
-                <div class="sidebar-subtitle">Survei Kepuasan Diskominfo</div>
+                <div class="sidebar-subtitle">Survei Kepuasan Diskominfo Lamongan</div>
             </div>
 
             <div class="sidebar-menu">
                 <a href="{{ route('admin.dashboard') }}" class="menu-item @yield('active-dashboard')">
                     <span class="menu-icon"><i class="fas fa-tachometer-alt"></i></span>
-                    Dashboard
+                    <span class="menu-text">Dashboard</span>
                 </a>
+                
                 <a href="{{ route('admin.questions.index') }}" class="menu-item @yield('active-questions')">
                     <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-                    Pertanyaan
+                    <span class="menu-text">Pertanyaan</span>
                 </a>
+                
+                <a href="{{ route('admin.hasil-survey') }}" class="menu-item @yield('active-hasil-survey')">
+                    <span class="menu-icon"><i class="fas fa-chart-bar"></i></span>
+                    <span class="menu-text">Hasil Survey</span>
+                </a>
+                
                 <a href="{{ route('admin.users.index') }}" class="menu-item @yield('active-users')">
                     <span class="menu-icon"><i class="fas fa-users"></i></span>
-                    Users
+                    <span class="menu-text">Manajemen User</span>
                 </a>
+                
                 <a href="{{ route('admin.assets.index') }}" class="menu-item @yield('active-assets')">
                     <span class="menu-icon"><i class="fas fa-images"></i></span>
-                    Assets
-                </a>
-
-                <a href="{{ route('admin.contact-info.edit') }}" class="menu-item @yield('active-contact-info')">
-                <i class="fas fa-address-book"></i>
-                <span>Informasi Kontak</span>
+                    <span class="menu-text">Upload Assets</span>
                 </a>
                 
                 <a href="{{ route('admin.footer-links.index') }}" class="menu-item @yield('active-footer-links')">
-                <i class="fas fa-link"></i>
-                <span>Footer Links</span>
-                </a> 
+                    <span class="menu-icon"><i class="fas fa-link"></i></span>
+                    <span class="menu-text">Footer Links</span>
+                </a>
+                
+                <a href="{{ route('admin.contact-info.edit') }}" class="menu-item @yield('active-contact')">
+                    <span class="menu-icon"><i class="fas fa-address-book"></i></span>
+                    <span class="menu-text">Contact Info</span>
+                </a>
             </div>
 
             <div class="logout-section">
                 <a href="{{ route('admin.logout') }}" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>
+                    Logout
                 </a>
             </div>
         </div>
@@ -374,35 +455,39 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="content-header">
-                <div>
-                    <h1 class="page-title">@yield('page-title', 'Dashboard Administrator')</h1>
-                    <p class="page-subtitle">@yield('page-subtitle', 'Kelola survei kepuasan masyarakat')</p>
+                <div class="content-header-left">
+                    @yield('breadcrumb')
+                    <h1 class="page-title">@yield('page-title')</h1>
+                    <p class="page-subtitle">@yield('page-subtitle')</p>
                 </div>
-                @yield('header-actions')
             </div>
 
             <div class="content-body">
-                @yield('breadcrumb')
-
-                @if (session('success'))
+                @if(session('success'))
                     <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
                         {{ session('success') }}
                     </div>
                 @endif
 
-                @if (session('error'))
+                @if(session('error'))
                     <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
                         {{ session('error') }}
                     </div>
                 @endif
 
                 @if ($errors->any())
                     <div class="error-message">
-                        <ul style="margin: 0; padding-left: 20px;">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Terjadi kesalahan:</strong>
+                            <ul class="error-list">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
                 @endif
 
@@ -451,14 +536,20 @@
             
             if (successMessage) {
                 setTimeout(() => {
-                    successMessage.style.display = 'none';
+                    successMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 300);
                 }, 5000);
             }
             
             if (errorMessage) {
                 setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 5000);
+                    errorMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                    }, 300);
+                }, 7000);
             }
 
             // Handle window resize

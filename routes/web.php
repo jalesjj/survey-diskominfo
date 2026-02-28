@@ -1,9 +1,10 @@
 <?php
-// routes/web.php
+// routes/web.php - ROUTE LANGSUNG KE TABEL SAW
 
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SurveyQuestionController;
+use App\Http\Controllers\SurveyResultController;
 use App\Http\Controllers\DynamicSurveyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetController;
@@ -27,8 +28,6 @@ Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.log
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 Route::get('/admin/export', [AdminController::class, 'export'])->name('admin.export');
 Route::delete('/admin/survey/{id}', [AdminController::class, 'deleteSurvey'])->name('admin.deleteSurvey');
-
-// TAMBAHAN: Route untuk detail survei individual - PERBAIKAN ERROR
 Route::get('/admin/survey/{id}/detail', [AdminController::class, 'getSurveyDetail'])->name('admin.survey.detail');
 
 // Admin File Management Routes
@@ -52,6 +51,9 @@ Route::prefix('admin/questions')->name('admin.questions.')->group(function () {
     Route::put('/question/{id}/toggle', [SurveyQuestionController::class, 'toggleQuestion'])->name('toggle-question');
     Route::post('/section/{sectionId}/questions/reorder', [SurveyQuestionController::class, 'updateQuestionOrder'])->name('reorder-questions');
 });
+
+// HASIL SURVEY ROUTE - LANGSUNG KE TABEL SAW
+Route::get('/admin/hasil-survey', [SurveyResultController::class, 'dashboard'])->name('admin.hasil-survey');
 
 // Admin User Management Routes
 Route::prefix('admin/users')->name('admin.users.')->group(function () {

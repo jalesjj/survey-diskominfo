@@ -1,373 +1,325 @@
-{{-- resources/views/admin/survey-results/index.blade.php --}}
+{{-- resources/views/admin/survey-results/index.blade.php - DAFTAR SURVEY
 @extends('layouts.admin')
 
 @section('title', 'Hasil Survey - Admin')
 @section('active-results', 'active')
 @section('page-title', 'Hasil Survey')
-@section('page-subtitle', 'Daftar hasil survey dan perhitungan SAW')
+@section('page-subtitle', 'Daftar Survey dan Akses ke Halaman Output Nilai Akhir Kriteria SAW')
 
 @section('breadcrumb')
 <div class="breadcrumb">
+    <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+    <span class="breadcrumb-separator">></span>
     <span>Hasil Survey</span>
 </div>
 @endsection
 
 @push('styles')
 <style>
-    .results-container {
+    .surveys-container {
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         overflow: hidden;
     }
 
-    .results-header {
+    .surveys-header {
         background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
         color: white;
         padding: 25px 30px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
     }
 
-    .results-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin-bottom: 8px;
+    .surveys-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
     }
 
-    .results-subtitle {
-        font-size: 14px;
-        opacity: 0.9;
-    }
-
-    .results-body {
+    .surveys-body {
         padding: 30px;
     }
 
-    .filters-section {
-        display: flex;
-        gap: 15px;
-        align-items: center;
-        margin-bottom: 25px;
+    .surveys-info {
+        background: #f8f9fa;
+        border-left: 4px solid #5a9b9e;
         padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        margin-bottom: 30px;
+        border-radius: 0 8px 8px 0;
     }
 
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .filter-label {
-        font-size: 12px;
-        color: #6c757d;
-        font-weight: 500;
-    }
-
-    .filter-input {
-        padding: 8px 12px;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-
-    .results-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    .results-table th {
-        background: #f8f9fa;
+    .surveys-info h4 {
         color: #2c3e50;
-        font-weight: 600;
-        padding: 15px 12px;
-        border-bottom: 2px solid #e9ecef;
-        text-align: left;
+        margin-bottom: 10px;
+        font-size: 16px;
     }
 
-    .results-table td {
-        padding: 15px 12px;
-        border-bottom: 1px solid #f1f3f4;
-        vertical-align: middle;
-    }
-
-    .results-table tr:hover {
-        background: #f8f9fa;
-    }
-
-    .survey-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .survey-id {
-        font-weight: 600;
-        color: #2c3e50;
-    }
-
-    .survey-date {
-        font-size: 13px;
-        color: #6c757d;
-    }
-
-    .survey-ip {
-        font-size: 12px;
-        color: #9ca3af;
-    }
-
-    .responses-count {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    .surveys-info p {
+        color: #495057;
+        margin: 0;
+        line-height: 1.6;
         font-size: 14px;
-    }
-
-    .responses-count i {
-        color: #5a9b9e;
-    }
-
-    .saw-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .saw-enabled {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .saw-disabled {
-        background: #f8d7da;
-        color: #721c24;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-    }
-
-    .btn-action {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        color: white;
-        text-decoration: none;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .btn-view {
-        background: #5a9b9e;
-    }
-
-    .btn-view:hover {
-        background: #4a8b8e;
-        transform: translateY(-1px);
-    }
-
-    .btn-export {
-        background: #28a745;
-    }
-
-    .btn-export:hover {
-        background: #218838;
-        transform: translateY(-1px);
-    }
-
-    .pagination-wrapper {
-        margin-top: 25px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: #6c757d;
-    }
-
-    .empty-state i {
-        font-size: 48px;
-        margin-bottom: 15px;
-        color: #dee2e6;
     }
 
     .stats-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
     }
 
     .stat-card {
         background: white;
-        border: 1px solid #e9ecef;
         border-radius: 8px;
         padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #5a9b9e;
         text-align: center;
     }
 
-    .stat-value {
-        font-size: 24px;
+    .stats-number {
+        font-size: 28px;
         font-weight: 700;
         color: #2c3e50;
         margin-bottom: 5px;
     }
 
-    .stat-label {
-        font-size: 13px;
+    .stats-label {
         color: #6c757d;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .surveys-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .surveys-table thead th {
+        background: #2c3e50;
+        color: white;
+        padding: 15px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .surveys-table thead th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .surveys-table thead th:last-child {
+        border-radius: 0 8px 0 0;
+        text-align: center;
+    }
+
+    .surveys-table tbody td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #dee2e6;
+        vertical-align: middle;
+    }
+
+    .surveys-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .survey-id {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+
+    .survey-date {
+        color: #495057;
+        font-size: 14px;
+    }
+
+    .survey-ip {
+        color: #6c757d;
+        font-size: 13px;
+        font-family: monospace;
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+
+    .survey-responses {
+        text-align: center;
+        font-weight: 600;
+        color: #5a9b9e;
+    }
+
+    .saw-status {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .saw-status.active {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .saw-status.inactive {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .survey-actions {
+        text-align: center;
+    }
+
+    .btn-view-result {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-view-result:hover {
+        background: linear-gradient(135deg, #4a8b8e 0%, #3a7b7e 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.3);
+    }
+
+    .no-surveys {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .no-surveys i {
+        font-size: 64px;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+
+    .no-surveys h4 {
+        color: #495057;
+        margin-bottom: 10px;
+    }
+
+    .pagination-wrapper {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .surveys-body {
+            padding: 20px;
+        }
+
+        .surveys-table {
+            font-size: 12px;
+        }
+
+        .surveys-table th,
+        .surveys-table td {
+            padding: 10px 8px;
+        }
+
+        .stats-cards {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 @endpush
 
 @section('content')
-<div class="results-container">
-    <div class="results-header">
-        <div class="results-title"><i class="fas fa-chart-bar"></i> Hasil Survey & Analisis SAW</div>
-        <div class="results-subtitle">Kelola dan analisis hasil survey dengan perhitungan Simple Additive Weighting</div>
+<div class="surveys-container">
+    <div class="surveys-header">
+        <i class="fas fa-chart-bar"></i>
+        <h1 class="surveys-title">Hasil Survey SAW</h1>
     </div>
 
-    <div class="results-body">
-        <!-- Statistics Cards -->
-        @php
-            $totalSurveys = $surveys->total();
-            $sawEnabledSurveys = $surveys->filter(function($survey) {
-                return $survey->responses->some(function($response) {
-                    return $response->question->enable_saw ?? false;
-                });
-            })->count();
-            $completedSurveys = $surveys->filter(function($survey) {
-                return $survey->responses->count() > 0;
-            })->count();
-        @endphp
-
-        <div class="stats-cards">
-            <div class="stat-card">
-                <div class="stat-value">{{ $totalSurveys }}</div>
-                <div class="stat-label">Total Survey</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">{{ $completedSurveys }}</div>
-                <div class="stat-label">Survey Selesai</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">{{ $sawEnabledSurveys }}</div>
-                <div class="stat-label">Menggunakan SAW</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">
-                    <a href="{{ route('admin.survey-results.ranking') }}" class="btn btn-view">
-                        <i class="fas fa-trophy"></i> Lihat Ranking
-                    </a>
-                </div>
-                <div class="stat-label">Peringkat Responden</div>
-            </div>
+    <div class="surveys-body">
+        <div class="surveys-info">
+            <h4><i class="fas fa-info-circle"></i> Tentang Output Nilai Akhir Kriteria SAW</h4>
+            <p>
+                Halaman ini menampilkan daftar semua survey yang telah diisi. Klik tombol "Lihat Hasil SAW" 
+                untuk mengakses halaman output nilai akhir kriteria menggunakan metode Simple Additive Weighting (SAW). 
+                <strong>Output berupa tabel per kriteria (bukan sub-kriteria)</strong> dengan perhitungan agregasi, 
+                normalisasi, dan nilai preferensi sesuai rumus SAW.
+            </p>
         </div>
 
-        <!-- Filters -->
-        <div class="filters-section">
-            <div class="filter-group">
-                <label class="filter-label">Cari Survey ID</label>
-                <input type="text" class="filter-input" placeholder="Masukkan ID survey...">
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stats-number">{{ $surveys->total() }}</div>
+                <div class="stats-label">Total Survey</div>
             </div>
-            <div class="filter-group">
-                <label class="filter-label">Filter Tanggal</label>
-                <input type="date" class="filter-input">
+            <div class="stat-card">
+                <div class="stats-number">{{ $surveys->where('has_saw', true)->count() }}</div>
+                <div class="stats-label">Survey dengan SAW</div>
             </div>
-            <div class="filter-group">
-                <label class="filter-label">Status SAW</label>
-                <select class="filter-input">
-                    <option value="">Semua</option>
-                    <option value="enabled">Menggunakan SAW</option>
-                    <option value="disabled">Tanpa SAW</option>
-                </select>
+            <div class="stat-card">
+                <div class="stats-number">{{ $surveys->sum('response_count') }}</div>
+                <div class="stats-label">Total Responses</div>
             </div>
-            <div class="filter-group">
-                <label class="filter-label">&nbsp;</label>
-                <button class="btn-action btn-view">
-                    <i class="fas fa-filter"></i> Filter
-                </button>
+            <div class="stat-card">
+                <div class="stats-number">{{ $surveys->where('response_count', '>', 0)->count() }}</div>
+                <div class="stats-label">Survey Selesai</div>
             </div>
         </div>
 
         @if($surveys->count() > 0)
-            <!-- Results Table -->
-            <table class="results-table">
+            <table class="surveys-table">
                 <thead>
                     <tr>
                         <th>Survey</th>
-                        <th>Jumlah Jawaban</th>
+                        <th>Tanggal</th>
+                        <th>Responses</th>
                         <th>Status SAW</th>
-                        <th>Total Skor</th>
+                        <th>Alamat IP</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($surveys as $survey)
-                        @php
-                            $hasSAW = $survey->responses->some(function($response) {
-                                return $response->question->enable_saw ?? false;
-                            });
-                            $responsesCount = $survey->responses->count();
-                        @endphp
                         <tr>
                             <td>
-                                <div class="survey-info">
-                                    <div class="survey-id"># {{ $survey->id }}</div>
-                                    <div class="survey-date">{{ $survey->created_at->format('d/m/Y H:i') }}</div>
-                                    <div class="survey-ip">IP: {{ $survey->ip_address ?: 'Unknown' }}</div>
-                                </div>
+                                <div class="survey-id">Survey #{{ $survey->id }}</div>
+                                <div class="survey-date">{{ $survey->created_at->format('d F Y, H:i') }} WIB</div>
+                            </td>
+                            <td>{{ $survey->created_at->format('d/m/Y') }}</td>
+                            <td class="survey-responses">{{ $survey->response_count }}</td>
+                            <td>
+                                <span class="saw-status {{ $survey->has_saw ? 'active' : 'inactive' }}">
+                                    {{ $survey->has_saw ? 'SAW Aktif' : 'SAW Nonaktif' }}
+                                </span>
                             </td>
                             <td>
-                                <div class="responses-count">
-                                    <i class="fas fa-comment"></i>
-                                    <span>{{ $responsesCount }} jawaban</span>
-                                </div>
+                                <span class="survey-ip">{{ $survey->ip_address ?? 'N/A' }}</span>
                             </td>
-                            <td>
-                                @if($hasSAW)
-                                    <span class="saw-indicator saw-enabled">
-                                        <i class="fas fa-check-circle"></i>
-                                        SAW Aktif
-                                    </span>
-                                @else
-                                    <span class="saw-indicator saw-disabled">
-                                        <i class="fas fa-times-circle"></i>
-                                        SAW Nonaktif
-                                    </span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($hasSAW)
-                                    <span style="font-weight: 600; color: #5a9b9e;">Lihat Detail</span>
-                                @else
-                                    <span style="color: #6c757d;">-</span>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="{{ route('admin.survey-results.show', $survey->id) }}" class="btn-action btn-view">
-                                        <i class="fas fa-eye"></i> Lihat
-                                    </a>
-                                    @if($hasSAW)
-                                        <button class="btn-action btn-export" onclick="exportSurvey({{ $survey->id }})">
-                                            <i class="fas fa-download"></i> Export
-                                        </button>
-                                    @endif
-                                </div>
+                            <td class="survey-actions">
+                                <a href="{{ route('admin.survey-results.show', $survey->id) }}" 
+                                   class="btn-view-result"
+                                   title="Lihat Output Nilai Akhir Kriteria SAW #{{ $survey->id }}">
+                                    <i class="fas fa-calculator"></i>
+                                    Lihat Hasil SAW
+                                </a>
                             </td>
                         </tr>
                     @endforeach
@@ -379,10 +331,10 @@
                 {{ $surveys->links() }}
             </div>
         @else
-            <div class="empty-state">
+            <div class="no-surveys">
                 <i class="fas fa-inbox"></i>
-                <h4>Belum Ada Data Survey</h4>
-                <p>Survey yang sudah diisi akan muncul di halaman ini.</p>
+                <h4>Belum Ada Survey</h4>
+                <p>Belum ada survey yang tersedia untuk dilihat hasil SAW-nya. Survey akan muncul di sini setelah ada responden yang mengisi.</p>
             </div>
         @endif
     </div>
@@ -391,15 +343,21 @@
 
 @push('scripts')
 <script>
-    function exportSurvey(surveyId) {
-        // TODO: Implement export functionality
-        alert('Fitur export akan segera tersedia');
-    }
-
-    // Filter functionality
     document.addEventListener('DOMContentLoaded', function() {
-        // TODO: Implement real-time filtering
-        console.log('Survey results page loaded');
+        console.log('📋 Halaman Index Hasil Survey SAW dimuat:', {
+            totalSurveys: {{ $surveys->total() }},
+            surveysWithSAW: {{ $surveys->where('has_saw', true)->count() }},
+            currentPage: {{ $surveys->currentPage() }}
+        });
+
+        // Add confirmation for viewing SAW results
+        const viewButtons = document.querySelectorAll('.btn-view-result');
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const surveyId = this.href.split('/').pop();
+                console.log('🎯 Mengakses output nilai akhir kriteria SAW:', surveyId);
+            });
+        });
     });
 </script>
-@endpush
+@endpush --}}

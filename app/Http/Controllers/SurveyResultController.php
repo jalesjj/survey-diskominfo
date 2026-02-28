@@ -1,206 +1,183 @@
 <?php
-// app/Http/Controllers/SurveyResultController.php
+// app/Http/Controllers/SurveyResultController.php - LANGSUNG TABEL SAW
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyResponse;
+use App\Models\SurveySection;
 use Illuminate\Support\Collection;
 
 class SurveyResultController extends Controller
 {
+    /**
+     * Check admin authentication - FLEXIBLE
+     */
     private function checkAdminAuth()
     {
-        if (!session('admin_user')) {
-            return redirect()->route('admin.login')
-                           ->with('error', 'Silakan login terlebih dahulu.');
+        // Support multiple session keys
+        if (!session('admin_id') && !session('admin_user') && !session('admin')) {
+            return redirect()->route('admin.login')->with('error', 'Silakan login sebagai admin terlebih dahulu.');
         }
         return null;
     }
 
-    public function index()
+    /**
+     * DASHBOARD LANGSUNG TABEL SAW
+     * 
+     * Halaman utama yang langsung menampilkan tabel:
+     * | Kriteria | Skor (x) | Bobot Normalisasi (wᵢ) | Normalisasi (rᵢ) | Nilai Terbobot (wᵢ×rᵢ) | Keterangan |
+     * 
+     * Tanpa perlu pilih survey ID, langsung agregasi semua data
+     */
+    public function dashboard()
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        // Ambil semua survey yang sudah submit
-        $surveys = Survey::with(['responses.question'])
-                        ->orderBy('created_at', 'desc')
-                        ->paginate(20);
-
-        return view('admin.survey-results.index', compact('surveys'));
-    }
-
-    public function show($surveyId)
-    {
-        $authCheck = $this->checkAdminAuth();
-        if ($authCheck) return $authCheck;
-
-        $survey = Survey::with(['responses.question'])->findOrFail($surveyId);
-        
-        // Get only linear scale questions with SAW enabled
-        $sawQuestions = SurveyQuestion::where('question_type', 'linear_scale')
-                                    ->where('enable_saw', true)
+        // Get all SAW enabled questions
+        $sawQuestions = SurveyQuestion::where('enable_saw', true)
+                                    ->where('question_type', 'linear_scale')
                                     ->whereNotNull('criteria_name')
                                     ->with('responses')
                                     ->get();
 
         if ($sawQuestions->isEmpty()) {
-            return view('admin.survey-results.show', [
-                'survey' => $survey,
-                'sawResults' => collect(),
+            return view('admin.hasil-survey.dashboard', [
+                'criteriaResults' => collect(),
                 'hasSAW' => false,
-                'message' => 'Survey ini tidak menggunakan perhitungan SAW'
+                'totalVi' => 0,
+                'totalResponses' => 0,
+                'message' => 'Tidak ada pertanyaan dengan pengaturan SAW yang aktif. 
+                             Silakan aktifkan fitur SAW pada pertanyaan dengan tipe skala linier.'
             ]);
         }
 
-        // Calculate SAW results
-        $sawResults = $this->calculateSAWResults($survey, $sawQuestions);
+        // Calculate aggregate SAW results from all surveys
+        $criteriaResults = $this->calculateAggregateSAWResults($sawQuestions);
+        $totalVi = $criteriaResults->sum('weighted_score');
 
-        return view('admin.survey-results.show', compact('survey', 'sawResults') + ['hasSAW' => true]);
+        // Count total responses
+        $totalResponses = SurveyResponse::whereHas('question', function($query) {
+            $query->where('enable_saw', true);
+        })->distinct('survey_id')->count();
+
+        return view('admin.hasil-survey.dashboard', compact('criteriaResults', 'totalVi', 'totalResponses') + ['hasSAW' => true]);
     }
 
-    private function calculateSAWResults($survey, $sawQuestions)
+    /**
+     * PERHITUNGAN AGREGAT SAW DARI SEMUA SURVEY
+     * 
+     * Menghitung nilai rata-rata per kriteria dari seluruh survey,
+     * kemudian menerapkan rumus SAW untuk mendapatkan nilai akhir
+     */
+    private function calculateAggregateSAWResults($sawQuestions)
     {
         $results = collect();
-        $criteriaData = collect();
-
+        
         // Group questions by criteria
         $questionsByCriteria = $sawQuestions->groupBy('criteria_name');
+        $criteriaAggregates = collect();
 
         foreach ($questionsByCriteria as $criteriaName => $questions) {
-            $criteriaWeight = $questions->first()->criteria_weight;
-            $criteriaType = $questions->first()->criteria_type;
+            // Collect all responses for this criteria from all surveys
+            $allScores = collect();
             
-            // Calculate aggregated score for this criteria (average of all sub-criteria)
-            $subCriteriaScores = [];
-            $subCriteriaData = [];
-
             foreach ($questions as $question) {
-                $response = $survey->responses()->where('question_id', $question->id)->first();
-                $score = $response ? (float) $response->answer : 0;
+                // Get all responses for this question
+                $questionResponses = $question->responses;
                 
-                $scaleMax = $question->settings['scale_max'] ?? 5;
-                $normalized = $scaleMax > 0 ? ($score / $scaleMax) : 0;
-
-                $subCriteriaScores[] = $score;
-                $subCriteriaData[] = [
-                    'sub_criteria' => $question->question_text,
-                    'score' => $score,
-                    'normalized' => $normalized,
-                    'scale_max' => $scaleMax
-                ];
+                foreach ($questionResponses as $response) {
+                    $allScores->push((float) $response->answer);
+                }
             }
 
-            // Calculate average score for criteria
-            $criteriaScore = count($subCriteriaScores) > 0 ? array_sum($subCriteriaScores) / count($subCriteriaScores) : 0;
-            
-            $criteriaData->push([
-                'name' => $criteriaName,
-                'weight' => $criteriaWeight,
-                'type' => $criteriaType,
-                'score' => $criteriaScore,
-                'sub_criteria' => $subCriteriaData
-            ]);
-        }
-
-        // Normalize weights
-        $totalWeight = $criteriaData->sum('weight');
-        $criteriaData = $criteriaData->map(function ($criteria) use ($totalWeight) {
-            $criteria['weight_normalized'] = $totalWeight > 0 ? ($criteria['weight'] / $totalWeight) : 0;
-            return $criteria;
-        });
-
-        // Calculate SAW normalization and final scores
-        foreach ($criteriaData as &$criteria) {
-            foreach ($criteria['sub_criteria'] as &$subCriteria) {
-                // SAW Normalization based on criteria type
-                if ($criteria['type'] === 'benefit') {
-                    // For benefit: normalize = score / max_score_in_criteria
-                    $maxScore = $criteriaData->where('name', $criteria['name'])->first()['score'];
-                    $subCriteria['saw_normalized'] = $maxScore > 0 ? ($subCriteria['score'] / $maxScore) : 0;
-                } else {
-                    // For cost: normalize = min_score_in_criteria / score
-                    $minScore = max(0.1, $criteriaData->where('name', $criteria['name'])->first()['score']);
-                    $subCriteria['saw_normalized'] = $subCriteria['score'] > 0 ? ($minScore / $subCriteria['score']) : 0;
-                }
+            if ($allScores->isNotEmpty()) {
+                // Calculate average score for this criteria across all responses
+                $criteriaAverage = $allScores->avg();
                 
-                // Calculate weighted score
-                $subCriteria['weight_normalized'] = $criteria['weight_normalized'];
-                $subCriteria['weighted_score'] = $subCriteria['saw_normalized'] * $criteria['weight_normalized'];
+                $firstQuestion = $questions->first();
                 
-                // Add interpretation
-                $subCriteria['interpretation'] = $this->getScoreInterpretation($subCriteria['saw_normalized']);
-                
-                $results->push([
-                    'criteria' => $criteria['name'],
-                    'sub_criteria' => $subCriteria['sub_criteria'],
-                    'score' => $subCriteria['score'],
-                    'weight_normalized' => $subCriteria['weight_normalized'],
-                    'normalized' => $subCriteria['saw_normalized'],
-                    'weighted_score' => $subCriteria['weighted_score'],
-                    'interpretation' => $subCriteria['interpretation']
+                $criteriaAggregates->push([
+                    'criteria_name' => $criteriaName ?: 'Tidak Dikategorikan',
+                    'criteria_weight' => $firstQuestion->criteria_weight ?? 0,
+                    'criteria_type' => $firstQuestion->criteria_type ?? 'benefit',
+                    'average_score' => $criteriaAverage,
+                    'total_responses' => $allScores->count(),
+                    'questions_count' => $questions->count()
                 ]);
             }
         }
 
-        return $results->sortBy('criteria');
+        // STEP 1: NORMALISASI BOBOT KRITERIA
+        $totalWeight = $criteriaAggregates->sum('criteria_weight');
+        if ($totalWeight == 0) {
+            return $results;
+        }
+
+        // STEP 2: NORMALISASI SAW DAN PERHITUNGAN NILAI TERBOBOT
+        foreach ($criteriaAggregates as $criteria) {
+            // Bobot ternormalisasi
+            $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
+            
+            // Normalisasi SAW - menggunakan skor rata-rata sebagai Xij
+            if ($criteria['criteria_type'] === 'benefit') {
+                // Untuk benefit: rij = Xij / Max{Xij}
+                $maxScore = $criteriaAggregates->max('average_score');
+                $normalized = $maxScore > 0 ? ($criteria['average_score'] / $maxScore) : 0;
+            } else {
+                // Untuk cost: rij = Min{Xij} / Xij
+                $minScore = $criteriaAggregates->min('average_score');
+                $normalized = $criteria['average_score'] > 0 ? ($minScore / $criteria['average_score']) : 0;
+            }
+            
+            // Ensure normalized score is between 0 and 1
+            $normalized = max(0, min(1, $normalized));
+            
+            // Nilai Terbobot (wj × rij)
+            $weightedScore = $weightNormalized * $normalized;
+            
+            // Keterangan interpretasi
+            $interpretation = $this->getSAWInterpretation($normalized);
+            
+            // Build result untuk tabel
+            $results->push([
+                'criteria' => $criteria['criteria_name'],
+                'score' => round($criteria['average_score'], 2), // Skor (x) - rata-rata
+                'weight_normalized' => round($weightNormalized, 3), // Bobot Normalisasi (wᵢ)
+                'normalized' => round($normalized, 3), // Normalisasi (rᵢ)
+                'weighted_score' => round($weightedScore, 4), // Nilai Terbobot (wᵢ×rᵢ)
+                'interpretation' => $interpretation, // Keterangan
+                'total_responses' => $criteria['total_responses'],
+                'questions_count' => $criteria['questions_count'],
+                'criteria_type' => $criteria['criteria_type']
+            ]);
+        }
+
+        return $results;
     }
 
-    private function getScoreInterpretation($normalizedScore)
+    /**
+     * INTERPRETASI KUALITITATIF UNTUK SAW
+     */
+    private function getSAWInterpretation($normalizedScore)
     {
-        if ($normalizedScore >= 0.8) return 'Sangat Baik';
-        if ($normalizedScore >= 0.6) return 'Baik';
-        if ($normalizedScore >= 0.4) return 'Cukup';
-        if ($normalizedScore >= 0.2) return 'Kurang';
+        if ($normalizedScore >= 0.9) return 'Sangat Baik';
+        if ($normalizedScore >= 0.8) return 'Baik';
+        if ($normalizedScore >= 0.6) return 'Cukup';
+        if ($normalizedScore >= 0.4) return 'Kurang';
         return 'Sangat Kurang';
     }
 
-    public function exportResults(Request $request)
-    {
-        $authCheck = $this->checkAdminAuth();
-        if ($authCheck) return $authCheck;
-
-        // TODO: Implement export functionality (Excel, PDF)
-        return response()->json(['message' => 'Export feature will be implemented']);
-    }
-
-    public function ranking()
-    {
-        $authCheck = $this->checkAdminAuth();
-        if ($authCheck) return $authCheck;
-
-        // Get all surveys and calculate ranking
-        $surveys = Survey::with(['responses.question'])->get();
-        $rankings = collect();
-
-        foreach ($surveys as $survey) {
-            $sawQuestions = SurveyQuestion::where('question_type', 'linear_scale')
-                                        ->where('enable_saw', true)
-                                        ->whereNotNull('criteria_name')
-                                        ->get();
-
-            if ($sawQuestions->isNotEmpty()) {
-                $sawResults = $this->calculateSAWResults($survey, $sawQuestions);
-                $totalScore = $sawResults->sum('weighted_score');
-                
-                $rankings->push([
-                    'survey_id' => $survey->id,
-                    'survey_date' => $survey->created_at,
-                    'total_score' => round($totalScore, 4),
-                    'rank' => 0 // Will be calculated after sorting
-                ]);
-            }
-        }
-
-        // Sort by total_score descending and assign ranks
-        $rankings = $rankings->sortByDesc('total_score')->values();
-        $rankings = $rankings->map(function ($item, $index) {
-            $item['rank'] = $index + 1;
-            return $item;
-        });
-
-        return view('admin.survey-results.ranking', compact('rankings'));
-    }
+    /**
+     * CONTOH OUTPUT YANG DIHASILKAN:
+     * 
+     * | Kriteria     | Skor (x) | Bobot Normalisasi (wᵢ) | Normalisasi (rᵢ) | Nilai Terbobot (wᵢ×rᵢ) | Keterangan |
+     * |--------------|----------|------------------------|-------------------|------------------------|------------|
+     * | Afektif      | 78.50    | 0.300                  | 0.870             | 0.261                  | Baik       |
+     * | Kognitif     | 82.10    | 0.400                  | 0.910             | 0.364                  | Sangat Baik|
+     * | Psikomotorik | 75.30    | 0.300                  | 0.834             | 0.250                  | Baik       |
+     */
 }
