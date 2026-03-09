@@ -85,23 +85,16 @@
         .logo-image {
             width: 80px;
             height: 80px;
-            border-radius: 12px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .logo-image img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            border-radius: 10px;
         }
 
         .logo-placeholder {
@@ -420,15 +413,6 @@
                         </div>
                     @endif
                 </div>
-                
-                <div class="program-badges">
-                    <span class="badge">📋 Survei Digital</span>
-                    <span class="badge">🏛️ Pemerintah Daerah</span>
-                    <span class="badge">⚡ Real-time</span>
-                    @if($logoCount > 0)
-                    <span class="badge">🎨 {{ $logoCount }} Logo Aktif</span>
-                    @endif
-                </div>
             </div>
 
             <div class="title-section">
@@ -462,7 +446,7 @@
                 <div class="footer-grid">
                     <!-- Kolom 1: Layanan -->
                     <div class="footer-section">
-                        <h3>🔗 Layanan</h3>
+                        <h3>Layanan</h3>
                         @if($layananLinks->count() > 0)
                             <ul>
                                 @foreach($layananLinks as $link)
@@ -479,7 +463,7 @@
                     
                     <!-- Kolom 2: Informasi -->
                     <div class="footer-section">
-                        <h3>ℹ️ Informasi</h3>
+                        <h3>Informasi</h3>
                         @if($informasiLinks->count() > 0)
                             <ul>
                                 @foreach($informasiLinks as $link)
@@ -496,30 +480,24 @@
                     
                     <!-- Kolom 3: Kontak Info -->
                     <div class="footer-section">
-                        <h3>📞 Kontak Kami</h3>
+                        <h3>Kontak Kami</h3>
                         @if($contactInfo)
                             <div class="contact-item">
-                                <div class="contact-icon">🏢</div>
                                 <p><strong>{{ $contactInfo->department_name }}</strong></p>
                             </div>
                             <div class="contact-item">
-                                <div class="contact-icon">🏛️</div>
                                 <p>{{ $contactInfo->regency_name }}</p>
                             </div>
                             <div class="contact-item">
-                                <div class="contact-icon">📍</div>
                                 <p>{{ $contactInfo->address }}</p>
                             </div>
                             <div class="contact-item">
-                                <div class="contact-icon">🌏</div>
                                 <p>{{ $contactInfo->province }}</p>
                             </div>
                             <div class="contact-item">
-                                <div class="contact-icon">📱</div>
                                 <p>{{ $contactInfo->whatsapp }}</p>
                             </div>
                             <div class="contact-item">
-                                <div class="contact-icon">📧</div>
                                 <p>{{ $contactInfo->email }}</p>
                             </div>
                         @else

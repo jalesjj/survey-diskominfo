@@ -69,21 +69,15 @@
     .progress-logo {
         width: 50px;
         height: 50px;
-        background: white;
-        border: 3px solid #5a9b9e;
-        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         position: relative;
     }
 
     .logo-placeholder {
-        width: 40px;
-        height: 40px;
-        background: #f8f9fa;
-        border-radius: 50%;
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -521,8 +515,8 @@
         }
 
         .logo-placeholder {
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             font-size: 10px;
         }
 
@@ -543,7 +537,7 @@
             <div class="progress-speech-bubble" id="progressBubble">0%</div>
             <div class="progress-logo">
                 <div class="logo-placeholder" id="logoPlaceholder">
-                    <img src="{{ asset('images/logos/logo-diskominfo.png') }}" alt="Logo Diskominfo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <img src="{{ asset('images/logos/logo-diskominfo.png') }}" alt="Logo Diskominfo" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <span style="display: none;">%</span>
                 </div>
             </div>
