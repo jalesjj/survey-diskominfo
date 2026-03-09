@@ -85,39 +85,39 @@
     /* Summary Stats */
     .summary-stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 40px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
         text-align: center;
     }
 
     .summary-card {
         background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-left: 4px solid #5a9b9e;
+        padding: 18px 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e9ecef;
     }
 
     .summary-number {
-        font-size: 36px;
+        font-size: 32px;
         font-weight: 700;
         color: #5a9b9e;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
     }
 
     .summary-label {
-        font-size: 14px;
+        font-size: 13px;
         color: #7f8c8d;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
     }
 
     /* Tab Navigation */
     .tab-navigation {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         margin-bottom: 30px;
         overflow: hidden;
     }
@@ -164,10 +164,10 @@
     /* Search and Filter Bar */
     .search-filter-bar {
         background: white;
-        border-radius: 12px;
-        padding: 25px;
+        border-radius: 10px;
+        padding: 18px 20px;
         margin-bottom: 30px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         display: flex;
         gap: 15px;
         flex-wrap: wrap;
@@ -186,7 +186,7 @@
 
     .search-input:focus {
         outline: none;
-        border-color: #5a9b9e;
+        border-color: #e0e0e0;
         box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
     }
 
@@ -194,7 +194,7 @@
         padding: 12px 15px;
         border: 2px solid #e9ecef;
         border-radius: 8px;
-        font-size: 14px;
+        font-size: 13px;
         color: #495057;
         background: white;
         cursor: pointer;
@@ -203,7 +203,7 @@
 
     .filter-select:focus {
         outline: none;
-        border-color: #5a9b9e;
+        border-color: #e0e0e0;
         box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
     }
 
@@ -230,7 +230,7 @@
     .response-card {
         background: white;
         border-radius: 15px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         margin-bottom: 25px;
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -257,8 +257,8 @@
 
     .respondent-meta {
         display: flex;
-        gap: 20px;
-        font-size: 14px;
+        gap: 15px;
+        font-size: 13px;
         opacity: 0.9;
         flex-wrap: wrap;
     }
@@ -275,8 +275,8 @@
 
     .response-summary {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
         margin-bottom: 25px;
     }
 
@@ -284,7 +284,7 @@
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         padding: 20px;
         border-radius: 10px;
-        border-left: 4px solid #5a9b9e;
+        border: 1px solid #e9ecef;
         text-align: center;
     }
 
@@ -296,7 +296,7 @@
     }
 
     .summary-title {
-        font-size: 14px;
+        font-size: 13px;
         color: #7f8c8d;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -321,7 +321,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .detail-btn {
@@ -350,7 +350,7 @@
         padding: 80px 20px;
         background: white;
         border-radius: 15px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         margin: 40px 0;
     }
 
@@ -405,13 +405,13 @@
     .page-link:hover {
         background: #5a9b9e;
         color: white;
-        border-color: #5a9b9e;
+        border-color: #e0e0e0;
     }
 
     .page-item.active .page-link {
         background: #5a9b9e;
         color: white;
-        border-color: #5a9b9e;
+        border-color: #e0e0e0;
     }
 
     .page-item.disabled .page-link {
@@ -541,7 +541,7 @@
         padding: 20px;
         border-radius: 10px;
         margin-bottom: 20px;
-        border-left: 4px solid #5a9b9e;
+        border: 1px solid #e9ecef;
     }
 
     .detail-info h4 {
@@ -668,9 +668,9 @@
                     </h5>
                     @foreach($survey->responses->take(3) as $response)
                         @if($response->question && $response->answer)
-                        <div style="background: #f8f9fa; padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid #5a9b9e;">
-                            <strong style="color: #2c3e50; font-size: 14px;">{{ $response->question->question_text }}</strong>
-                            <div style="color: #495057; font-size: 14px; margin-top: 5px;">
+                        <div style="background: #f8f9fa; padding: 12px 15px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                            <strong style="color: #2c3e50; font-size: 13px;">{{ $response->question->question_text }}</strong>
+                            <div style="color: #495057; font-size: 13px; margin-top: 5px;">
                                 {{ Str::limit($response->answer, 100) }}
                             </div>
                         </div>
@@ -785,7 +785,7 @@
                 let detailHTML = `
                     <div class="detail-info">
                         <h4><i class="fas fa-info-circle"></i> Informasi Responden</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
                             <div><strong>ID Survei:</strong> #${data.survey.id}</div>
                             <div><strong>Tanggal:</strong> ${data.survey.created_at}</div>
                             <div><strong>IP Address:</strong> ${data.survey.ip_address}</div>
@@ -801,7 +801,7 @@
                                     <i class="fas fa-layer-group"></i>
                                     ${section.title}
                                 </h4>
-                                ${section.description ? `<p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 14px;">${section.description}</p>` : ''}
+                                ${section.description ? `<p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 13px;">${section.description}</p>` : ''}
                             </div>
                             <div style="border: 1px solid #e9ecef; border-top: none; border-radius: 0 0 8px 8px;">
                     `;
@@ -815,11 +815,11 @@
                                 <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 12px;">
                                     <h5 style="margin: 0; color: #2c3e50; flex: 1; font-size: 16px;">${response.question_text}</h5>
                                     <div style="display: flex; gap: 10px; align-items: center;">
-                                        <span style="background: #5a9b9e; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; text-transform: uppercase;">${response.question_type_label}</span>
+                                        <span style="background: #5a9b9e; color: white; padding: 4px 8px; border-radius: 10px; font-size: 11px; text-transform: uppercase;">${response.question_type_label}</span>
                                         ${response.is_required ? '<span style="color: #dc3545; font-size: 12px;"><i class="fas fa-star"></i> Wajib</span>' : '<span style="color: #6c757d; font-size: 12px;"><i class="fas fa-star-o"></i> Opsional</span>'}
                                     </div>
                                 </div>
-                                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #5a9b9e;">
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef;">
                         `;
 
                         if (response.answer) {
@@ -827,7 +827,7 @@
                                 detailHTML += `
                                     <div style="text-align: center;">
                                         <div style="font-size: 24px; font-weight: 700; color: #5a9b9e; margin-bottom: 10px;">${response.answer}</div>
-                                        <div style="font-size: 14px; color: #7f8c8d;">
+                                        <div style="font-size: 13px; color: #7f8c8d;">
                                             Skala ${response.scale_info.min} - ${response.scale_info.max}
                                             ${response.scale_info.min_label || response.scale_info.max_label ? `<br><small>${response.scale_info.min_label} - ${response.scale_info.max_label}</small>` : ''}
                                         </div>
@@ -840,7 +840,7 @@
                                             <i class="fas fa-file" style="font-size: 24px; color: #689f38;"></i>
                                             <div>
                                                 <div style="font-weight: 600; color: #2c3e50;">${response.formatted_answer}</div>
-                                                <div style="font-size: 14px; color: #7f8c8d;">
+                                                <div style="font-size: 13px; color: #7f8c8d;">
                                                     ${response.file_info.size ? (response.file_info.size / 1024).toFixed(1) + ' KB' : 'Ukuran tidak diketahui'} 
                                                     ${response.file_info.mime_type ? '• ' + response.file_info.mime_type : ''}
                                                 </div>

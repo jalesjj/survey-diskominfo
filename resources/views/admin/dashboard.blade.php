@@ -90,8 +90,8 @@
     /* Tab Navigation */
     .tab-navigation {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         margin-bottom: 30px;
         overflow: hidden;
     }
@@ -140,32 +140,32 @@
     /* Summary Stats */
     .summary-stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 40px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
         text-align: center;
     }
 
     .summary-card {
         background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-left: 4px solid #5a9b9e;
+        padding: 18px 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e9ecef;
     }
 
     .summary-number {
-        font-size: 36px;
+        font-size: 32px;
         font-weight: 700;
         color: #5a9b9e;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
     }
 
     .summary-label {
-        font-size: 14px;
+        font-size: 13px;
         color: #7f8c8d;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
     }
 
     /* ========== PERBAIKAN UTAMA: SECTION DAN QUESTION CARDS ========== */
@@ -174,8 +174,8 @@
     .section-card {
         background: white;
         border-radius: 15px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-        margin-bottom: 40px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
         overflow: hidden;
         counter-reset: question-counter; /* Reset counter untuk setiap section */
     }
@@ -233,7 +233,7 @@
         margin: 15px 20px 25px 20px; /* Margin untuk memberikan jarak dari tepi section */
         position: relative;
         background: #ffffff;
-        border-radius: 12px;
+        border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         transition: all 0.3s ease;
     }
@@ -263,7 +263,7 @@
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
         z-index: 3;
         box-shadow: 0 2px 8px rgba(90, 155, 158, 0.3);
     }
@@ -277,7 +277,7 @@
         transform: translateX(-50%);
         width: 80%;
         height: 2px;
-        background: linear-gradient(90deg, transparent 0%, #5a9b9e 20%, #7fb3b6 50%, #5a9b9e 80%, transparent 100%);
+        background: #e9ecef;
         border-radius: 1px;
         z-index: 1;
     }
@@ -300,7 +300,7 @@
         display: flex;
         gap: 15px;
         color: #7f8c8d;
-        font-size: 14px;
+        font-size: 13px;
         flex-wrap: wrap;
         align-items: center;
     }
@@ -336,7 +336,7 @@
         padding: 15px 20px;
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border-radius: 10px;
-        border-left: 4px solid #5a9b9e;
+        border: 1px solid #e9ecef;
         transition: all 0.3s ease;
     }
 
@@ -357,7 +357,7 @@
         color: white;
         padding: 8px 16px;
         border-radius: 25px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
         margin-left: 15px;
         min-width: 50px;
@@ -394,13 +394,13 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #5a9b9e, #7fb3b6);
+        background: #e9ecef;
         border-radius: 10px 10px 0 0;
     }
 
     .stat-item:hover {
-        border-color: #5a9b9e;
-        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.15);
+        border-color: #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         transform: translateY(-2px);
     }
 
@@ -423,14 +423,14 @@
     .response-data {
         margin-top: 20px;
         background: #f8f9fa;
-        padding: 25px;
-        border-radius: 12px;
-        border-left: 4px solid #5a9b9e;
+        padding: 18px 20px;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
     }
 
     .chart-container {
         background: white;
-        padding: 25px;
+        padding: 18px 20px;
         border-radius: 10px;
         margin-top: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -459,7 +459,7 @@
 
     .chart-toggle-btn {
         padding: 8px 16px;
-        border: 2px solid #5a9b9e;
+        border: 1px solid #e0e0e0;
         background: white;
         color: #5a9b9e;
         border-radius: 25px;
@@ -517,7 +517,7 @@
     .distribution-bar {
         height: 24px;
         background: linear-gradient(90deg, #5a9b9e 0%, #7fb3b6 100%);
-        border-radius: 12px;
+        border-radius: 10px;
         margin-left: 15px;
         min-width: 30px;
         box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -557,7 +557,7 @@
     }
 
     .file-response:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transform: translateY(-1px);
     }
 
@@ -662,7 +662,7 @@
         padding: 60px 20px;
         color: #7f8c8d;
         background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        border-radius: 12px;
+        border-radius: 10px;
         margin: 20px;
         border: 2px dashed #dee2e6;
         animation: fadeInUp 0.5s ease-out;
@@ -692,7 +692,7 @@
     }
 
     .admin-welcome {
-        font-size: 14px;
+        font-size: 13px;
         color: #7f8c8d;
     }
 
@@ -803,7 +803,7 @@
 /* Card kanan biar konsisten */
 .response-list {
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     border: 1px solid #f1f3f4;
