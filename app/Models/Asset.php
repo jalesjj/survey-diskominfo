@@ -1,5 +1,5 @@
 <?php
-// app/Models/Asset.php - Windows Compatible Version
+// app/Models/Asset.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -224,13 +224,11 @@ class Asset extends Model
         return self::active()->ofType($type)->latest()->first();
     }
 
-    // Tipe-tipe asset yang tersedia
+    // Tipe-tipe asset yang tersedia - HANYA LOGO
     public static function getAvailableTypes()
     {
         return [
             'logo' => 'Logo',
-            'banner' => 'Banner',
-            'icon' => 'Icon',
         ];
     }
 

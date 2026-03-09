@@ -1,4 +1,4 @@
-{{-- resources/views/admin/questions/edit-question.blade.php - FIXED DISABLED FIELD SUBMISSION --}}
+{{-- resources/views/admin/questions/edit-question.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Edit Pertanyaan - Admin Survei')

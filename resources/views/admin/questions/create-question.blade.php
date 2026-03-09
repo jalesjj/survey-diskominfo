@@ -1,4 +1,4 @@
-{{-- resources/views/admin/questions/create-question.blade.php - ORIGINAL DESIGN WITH SAW FIX --}}
+{{-- resources/views/admin/questions/create-question.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Tambah Pertanyaan - Admin Survei')

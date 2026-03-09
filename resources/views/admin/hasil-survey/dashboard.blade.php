@@ -1,4 +1,4 @@
-{{-- resources/views/admin/hasil-survey/dashboard.blade.php - LANGSUNG TABEL SAW --}}
+{{-- resources/views/admin/hasil-survey/dashboard.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Hasil Survey SAW - Admin')

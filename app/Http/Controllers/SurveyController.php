@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/SurveyController.php - Fixed File Upload Section
+// app/Http/Controllers/SurveyController.php
 namespace App\Http\Controllers;
 
 use App\Models\Survey;

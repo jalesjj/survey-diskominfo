@@ -3,8 +3,8 @@
 
 @section('title', 'Upload Asset - Admin Survei')
 @section('active-assets', 'active')
-@section('page-title', 'Upload Asset Baru')
-@section('page-subtitle', 'Upload logo atau asset gambar untuk sistem')
+@section('page-title', 'Upload Logo Baru')
+@section('page-subtitle', 'Upload logo untuk sistem')
 
 @section('header-actions')
 <div class="header-actions">
@@ -241,47 +241,6 @@
         border: 1px solid #f1aeb5;
     }
 
-    .type-info {
-        background: #e8f6f3;
-        border: 1px solid #5a9b9e;
-        border-radius: 8px;
-        padding: 15px;
-        margin-top: 10px;
-        animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            max-height: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-        }
-        to {
-            opacity: 1;
-            max-height: 200px;
-            padding-top: 15px;
-            padding-bottom: 15px;
-        }
-    }
-
-    .type-info h5 {
-        color: #2c3e50;
-        margin-bottom: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .type-info p {
-        color: #5a9b9e;
-        font-size: 12px;
-        margin: 0;
-        line-height: 1.4;
-    }
-
     .form-actions {
         display: flex;
         gap: 15px;
@@ -292,56 +251,34 @@
     }
 
     .btn {
-        padding: 12px 24px;
+        padding: 12px 30px;
         border-radius: 8px;
-        text-decoration: none;
+        font-size: 14px;
         font-weight: 600;
-        transition: all 0.3s ease;
-        border: none;
         cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        font-size: 14px;
-        min-width: 120px;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-    }
-
-    .btn::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transition: all 0.3s ease;
-        transform: translate(-50%, -50%);
-    }
-
-    .btn:hover:not(:disabled)::before {
-        width: 300px;
-        height: 300px;
+        text-decoration: none;
     }
 
     .btn-primary {
-        background: #5a9b9e;
+        background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
         color: white;
     }
 
     .btn-primary:hover:not(:disabled) {
-        background: #4a8b8e;
+        background: linear-gradient(135deg, #4a8b8e 0%, #3a7b7e 100%);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(90, 155, 158, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+        opacity: 0.6;
     }
 
     .btn-secondary {
@@ -358,23 +295,27 @@
         padding: 15px 20px;
         border-radius: 8px;
         margin-bottom: 20px;
-        font-size: 14px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        font-weight: 500;
         animation: slideIn 0.3s ease;
     }
 
     .success-message {
         background: #d4edda;
-        color: #155724;
         border: 1px solid #c3e6cb;
+        color: #155724;
     }
 
     .error-message {
         background: #f8d7da;
-        color: #721c24;
         border: 1px solid #f1aeb5;
+        color: #721c24;
+    }
+
+    .success-message span, .error-message span {
+        font-size: 20px;
     }
 
     @keyframes slideIn {
@@ -424,8 +365,8 @@
 @section('content')
 <div class="form-container">
     <div class="form-header">
-        <div class="form-title">Upload Asset Baru</div>
-        <div class="form-subtitle">Upload logo atau asset gambar untuk sistem survei</div>
+        <div class="form-title">Upload Logo Baru</div>
+        <div class="form-subtitle">Upload logo untuk sistem survei</div>
     </div>
 
     <div class="form-body">
@@ -446,41 +387,16 @@
         <form method="POST" action="{{ route('admin.assets.store') }}" enctype="multipart/form-data" id="uploadForm">
             @csrf
             
-            <div class="form-group">
-                <label class="form-label" for="type">Tipe Asset</label>
-                <select id="type" name="type" class="form-select" required onchange="showTypeInfo()">
-                    <option value="">Pilih Tipe Asset</option>
-                    @foreach($availableTypes as $key => $label)
-                    <option value="{{ $key }}" {{ old('type') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
-                @error('type')
-                    <div class="form-error">{{ $message }}</div>
-                @enderror
-
-                <div id="type-logo-info" class="type-info" style="display: none;">
-                    <h5>📷 Logo</h5>
-                    <p>Logo yang akan ditampilkan di header halaman survei. Anda bisa menambahkan beberapa logo sekaligus dan mengatur statusnya.</p>
-                </div>
-
-                <div id="type-banner-info" class="type-info" style="display: none;">
-                    <h5>🎨 Banner</h5>
-                    <p>Banner atau spanduk untuk keperluan tampilan khusus di sistem.</p>
-                </div>
-
-                <div id="type-icon-info" class="type-info" style="display: none;">
-                    <h5>🔰 Icon</h5>
-                    <p>Icon kecil untuk keperluan navigasi atau penanda di sistem.</p>
-                </div>
-            </div>
+            <!-- Hidden input untuk type, langsung set sebagai 'logo' -->
+            <input type="hidden" name="type" value="logo">
 
             <div class="form-group">
-                <label class="form-label" for="file">File Gambar</label>
+                <label class="form-label" for="file">File Gambar Logo</label>
                 <div class="file-upload-area" id="fileUploadArea">
                     <div class="file-upload-icon"></div>
                     <div class="file-upload-text" id="uploadText">Klik atau seret file gambar ke sini</div>
                     <div class="file-upload-subtext" id="uploadSubtext">Format: JPEG, PNG, JPG, GIF, SVG, WebP (Max: 2MB)</div>
-                    <input type="file" id="file" name="file" class="file-input" accept="image/*" required>
+                    <input type="file" id="file" name="file" class="file-input" accept="image/*">
                 </div>
                 
                 <div class="file-preview" id="filePreview">
@@ -519,23 +435,6 @@
 
 <script>
 let selectedFile = null;
-
-function showTypeInfo() {
-    // Hide all info boxes
-    const infoBoxes = document.querySelectorAll('.type-info');
-    infoBoxes.forEach(box => box.style.display = 'none');
-    
-    // Show selected info box
-    const selectedType = document.getElementById('type').value;
-    if (selectedType) {
-        const infoBox = document.getElementById('type-' + selectedType + '-info');
-        if (infoBox) {
-            infoBox.style.display = 'block';
-        }
-    }
-    
-    updateSubmitButton();
-}
 
 function previewFile(file) {
     if (!file) return;
@@ -623,27 +522,17 @@ function updateSubmitButton() {
     const submitBtn = document.getElementById('submitBtn');
     const submitIcon = document.getElementById('submitIcon');
     const submitText = document.getElementById('submitText');
-    const typeSelect = document.getElementById('type');
     
     const hasFile = selectedFile !== null;
-    const hasType = typeSelect.value !== '';
     
-    if (hasFile && hasType) {
+    if (hasFile) {
         submitBtn.disabled = false;
         submitIcon.textContent = '📤';
-        submitText.textContent = 'Upload ' + (typeSelect.options[typeSelect.selectedIndex].text || 'Asset');
-    } else if (hasFile && !hasType) {
-        submitBtn.disabled = true;
-        submitIcon.textContent = '⚠️';
-        submitText.textContent = 'Pilih Tipe Dulu';
-    } else if (!hasFile && hasType) {
-        submitBtn.disabled = true;
-        submitIcon.textContent = '📁';
-        submitText.textContent = 'Pilih File Dulu';
+        submitText.textContent = 'Upload Logo';
     } else {
         submitBtn.disabled = true;
         submitIcon.textContent = '📁';
-        submitText.textContent = 'Pilih File & Tipe';
+        submitText.textContent = 'Pilih File Dulu';
     }
 }
 
@@ -728,17 +617,10 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     
     // Final validation before submit
     const fileInput = document.getElementById('file');
-    const typeSelect = document.getElementById('type');
     
     if (!fileInput.files || fileInput.files.length === 0 || !selectedFile) {
         e.preventDefault();
         alert('❌ Silakan pilih file gambar terlebih dahulu!');
-        return false;
-    }
-    
-    if (!typeSelect.value) {
-        e.preventDefault();
-        alert('❌ Silakan pilih tipe asset terlebih dahulu!');
         return false;
     }
     
@@ -770,8 +652,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Console info
-console.log('📤 Asset Upload System - Single Click Fixed');
-console.log('🎯 One click file selection');
-console.log('🚀 Enhanced user experience');
+console.log('📤 Asset Upload System - Logo Only Version');
+console.log('🎯 Dropdown removed, type auto-set to logo');
+console.log('🚀 Simplified user experience');
 </script>
 @endsection
