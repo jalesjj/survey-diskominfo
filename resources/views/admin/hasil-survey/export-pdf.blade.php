@@ -6,6 +6,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>{{ $title }}</title>
     <style>
+        @page {
+            margin: 1in 1in 1in 1in; /* Top Right Bottom Left - semua 1 inch */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,8 +18,8 @@
 
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
+            font-size: 9pt;
+            line-height: 1.5;
             color: #333;
         }
 
@@ -23,80 +27,71 @@
             page-break-after: always;
         }
 
-        /* Cover Page */
+        /* Cover Page - Simple */
         .cover-page {
             text-align: center;
-            padding: 100px 40px;
+            padding-top: 150px;
         }
 
         .cover-title {
-            font-size: 28pt;
+            font-size: 24pt;
             font-weight: bold;
-            margin-bottom: 40px;
-            color: #1a1a1a;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .cover-info {
-            font-size: 12pt;
-            margin: 15px 0;
-            color: #555;
-        }
-
-        .cover-info strong {
+            margin-bottom: 60px;
             color: #000;
         }
 
-        .cover-date {
-            margin-top: 60px;
+        .cover-info {
             font-size: 11pt;
+            margin: 12px 0;
+            color: #333;
+        }
+
+        .cover-date {
+            margin-top: 80px;
+            font-size: 10pt;
             color: #666;
         }
 
-        /* Section Headers */
+        /* Section Headers - Simple */
         .section-header {
-            background: #2c3e50;
-            color: white;
-            padding: 12px 15px;
-            margin: 30px 0 15px 0;
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: bold;
+            margin: 25px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #000;
+            color: #000;
         }
 
         .sub-header {
-            background: #34495e;
-            color: white;
-            padding: 8px 15px;
-            margin: 20px 0 10px 0;
             font-size: 11pt;
             font-weight: bold;
+            margin: 20px 0 10px 0;
+            color: #333;
         }
 
-        /* Tables */
+        /* Tables - Simple */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 10px 0 20px 0;
             font-size: 9pt;
         }
 
         table th {
-            background: #ecf0f1;
-            padding: 8px 6px;
-            border: 1px solid #bdc3c7;
+            background: #f5f5f5;
+            padding: 8px;
+            border: 1px solid #ccc;
             font-weight: bold;
             text-align: left;
-            font-size: 9pt;
         }
 
         table td {
-            padding: 7px 6px;
+            padding: 6px 8px;
             border: 1px solid #ddd;
         }
 
         table tr:nth-child(even) {
-            background: #f9f9f9;
+            background: #fafafa;
         }
 
         .text-center {
@@ -107,171 +102,165 @@
             text-align: right;
         }
 
-        /* Badges */
+        /* Badges - Simple */
         .badge {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
+            padding: 2px 8px;
+            border-radius: 2px;
             font-size: 8pt;
-            font-weight: bold;
+            font-weight: normal;
+            border: 1px solid #999;
         }
 
         .badge-sangat-baik {
-            background: #27ae60;
-            color: white;
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
         }
 
         .badge-baik {
-            background: #3498db;
-            color: white;
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1565c0;
         }
 
         .badge-cukup {
-            background: #f39c12;
-            color: white;
+            background: #fff9e6;
+            border-color: #ffc107;
+            color: #f57c00;
         }
 
         .badge-kurang {
-            background: #e74c3c;
-            color: white;
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
         }
 
         .badge-sangat-kurang {
-            background: #c0392b;
-            color: white;
+            background: #fce4ec;
+            border-color: #e91e63;
+            color: #ad1457;
         }
 
-        /* Rank Badge */
-        .rank-badge {
-            background: #f39c12;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-            font-size: 8pt;
+        .badge-excellent {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
         }
 
-        /* Stats Box */
+        .badge-perlu-perbaikan {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        /* Stats Box - Simple */
         .stats-grid {
             display: table;
             width: 100%;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .stat-item {
             display: table-cell;
             width: 25%;
-            padding: 15px;
-            background: #ecf0f1;
-            border: 1px solid #bdc3c7;
+            padding: 12px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
             text-align: center;
         }
 
         .stat-label {
             font-size: 8pt;
             color: #666;
-            text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .stat-value {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
-            color: #2c3e50;
+            color: #000;
         }
 
-        /* Info Box */
+        /* Info Box - Simple */
         .info-box {
-            background: #e8f4f8;
-            border-left: 4px solid #3498db;
-            padding: 12px 15px;
-            margin: 15px 0;
+            background: #f5f5f5;
+            padding: 10px 12px;
+            margin: 12px 0;
             font-size: 9pt;
             line-height: 1.5;
+            border: 1px solid #ddd;
         }
 
-        /* Responden Detail */
+        /* Responden Detail - Simple */
         .responden-box {
-            background: #f8f9fa;
-            padding: 12px;
-            margin: 15px 0;
-            border-left: 4px solid #3498db;
+            margin: 12px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: #fafafa;
         }
 
         .responden-header {
             font-weight: bold;
-            font-size: 11pt;
-            margin-bottom: 8px;
-            color: #2c3e50;
+            font-size: 10pt;
+            margin-bottom: 6px;
+            color: #000;
         }
 
         .responden-meta {
             font-size: 8pt;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .question-item {
-            margin: 10px 0;
-            padding-left: 10px;
+            margin: 8px 0;
         }
 
         .question-label {
             font-weight: bold;
-            color: #34495e;
-            margin-bottom: 3px;
+            color: #000;
+            margin-bottom: 2px;
             font-size: 9pt;
         }
 
         .answer-text {
-            color: #555;
-            padding-left: 15px;
+            color: #333;
+            margin-left: 10px;
             font-size: 9pt;
         }
 
         .saw-detail {
             font-size: 8pt;
-            color: #7f8c8d;
+            color: #666;
             font-style: italic;
-            padding-left: 15px;
+            margin-left: 10px;
             margin-top: 2px;
         }
 
-        /* Section Divider */
+        /* Section Divider - Simple */
         .section-divider {
-            border-bottom: 2px solid #ecf0f1;
-            margin: 20px 0;
+            border-bottom: 1px solid #ddd;
+            margin: 12px 0;
         }
 
-        /* Chart placeholders */
+        /* Chart placeholders - Simple */
         .chart-placeholder {
-            background: #f8f9fa;
-            border: 2px dashed #bdc3c7;
-            padding: 40px;
+            background: #f9f9f9;
+            border: 1px dashed #ccc;
+            padding: 30px;
             text-align: center;
-            margin: 15px 0;
-            color: #7f8c8d;
-            font-style: italic;
+            margin: 12px 0;
+            color: #666;
+            font-size: 9pt;
         }
 
-        /* Footer */
-        .pdf-footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 8pt;
-            color: #999;
-            padding: 10px 0;
-            border-top: 1px solid #ddd;
-        }
-
-        /* Formulas */
+        /* Formulas - Simple */
         .formula-box {
-            background: #fff;
+            background: #fafafa;
             border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px 0;
+            padding: 8px 10px;
+            margin: 8px 0;
             font-family: 'Courier New', monospace;
             font-size: 9pt;
         }
@@ -284,15 +273,15 @@
         <div class="cover-title">{{ $title }}</div>
         
         <div class="cover-info">
-            <strong>Periode:</strong> {{ $period_start }} - {{ $period_end }}
+            Periode: {{ $period_start }} - {{ $period_end }}
         </div>
         
         <div class="cover-info">
-            <strong>Total Responden:</strong> {{ $total_responses }} orang
+            Total Responden: {{ $total_responses }} orang
         </div>
         
         <div class="cover-date">
-            <strong>Tanggal Generate:</strong><br>
+            Tanggal Generate:<br>
             {{ $generated_at }}
         </div>
     </div>
@@ -322,93 +311,10 @@
         </div>
     </div>
 
-    {{-- A. Tabel Rangking Hasil SAW --}}
-    <div class="sub-header">A. Tabel Rangking Hasil SAW</div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="text-center" width="8%">Rank</th>
-                <th width="30%">Nama Responden</th>
-                <th width="30%">Email</th>
-                <th class="text-center" width="15%">Skor SAW</th>
-                <th class="text-center" width="17%">Keterangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($surveysWithSAW as $index => $survey)
-            <tr>
-                <td class="text-center">
-                    <span class="rank-badge">{{ $index + 1 }}</span>
-                </td>
-                <td>{{ $survey->nama }}</td>
-                <td style="font-size: 8pt;">{{ Str::limit($survey->responses->firstWhere('question.question_text', 'like', '%email%')?->answer ?? '-', 35) }}</td>
-                <td class="text-center" style="font-weight: bold;">{{ number_format($survey->saw_score, 4) }}</td>
-                <td class="text-center">
-                    @php
-                        $interpretation = $survey->saw_score >= 0.9 ? 'Sangat Baik' : 
-                                        ($survey->saw_score >= 0.8 ? 'Baik' : 
-                                        ($survey->saw_score >= 0.6 ? 'Cukup' : 
-                                        ($survey->saw_score >= 0.4 ? 'Kurang' : 'Sangat Kurang')));
-                    @endphp
-                    <span class="badge badge-{{ strtolower(str_replace(' ', '-', $interpretation)) }}">
-                        {{ $interpretation }}
-                    </span>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    {{-- B. Grafik Distribusi Skor SAW --}}
-    <div class="sub-header">B. Grafik Distribusi Skor SAW</div>
-    
-    <div class="chart-placeholder">
-        <strong>Bar Chart: Distribusi Skor SAW</strong><br>
-        [Grafik menampilkan skor SAW untuk setiap responden]
-    </div>
-
-    <div class="chart-placeholder">
-        <strong>Pie Chart: Kategori Hasil SAW</strong><br>
-        @php
-            $categories = [
-                'Sangat Baik' => $surveysWithSAW->filter(fn($s) => $s->saw_score >= 0.9)->count(),
-                'Baik' => $surveysWithSAW->filter(fn($s) => $s->saw_score >= 0.8 && $s->saw_score < 0.9)->count(),
-                'Cukup' => $surveysWithSAW->filter(fn($s) => $s->saw_score >= 0.6 && $s->saw_score < 0.8)->count(),
-                'Kurang' => $surveysWithSAW->filter(fn($s) => $s->saw_score < 0.6)->count(),
-            ];
-        @endphp
-        @foreach($categories as $cat => $count)
-            {{ $cat }}: {{ $count }} ({{ $total_responses > 0 ? round(($count/$total_responses)*100, 1) : 0 }}%) |
-        @endforeach
-    </div>
-
-    {{-- C. Statistik SAW --}}
-    <div class="sub-header">C. Statistik SAW</div>
-    
-    <table>
-        <tr>
-            <td width="30%" style="font-weight: bold;">Skor Tertinggi</td>
-            <td>{{ number_format($surveysWithSAW->max('saw_score'), 4) }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Skor Terendah</td>
-            <td>{{ number_format($surveysWithSAW->min('saw_score'), 4) }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Rata-rata</td>
-            <td>{{ number_format($surveysWithSAW->avg('saw_score'), 4) }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Median</td>
-            <td>{{ number_format($surveysWithSAW->median('saw_score'), 4) }}</td>
-        </tr>
-    </table>
-
     <div class="page-break"></div>
 
     {{-- TABEL KRITERIA SAW --}}
-    <div class="sub-header">D. Tabel Kriteria SAW</div>
+    <div class="sub-header">A. Tabel Kriteria SAW</div>
 
     <table>
         <thead>
@@ -461,40 +367,8 @@
         Berikut adalah detail jawaban lengkap dari setiap responden, termasuk nilai SAW untuk pertanyaan yang memiliki bobot penilaian.
     </div>
 
-    {{-- A. Informasi Responden --}}
-    <div class="sub-header">A. Informasi Responden</div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="text-center" width="5%">No</th>
-                <th width="25%">Nama</th>
-                <th width="30%">Email</th>
-                <th class="text-center" width="20%">Tanggal Submit</th>
-                <th class="text-center" width="10%">Skor SAW</th>
-                <th class="text-center" width="10%">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($surveysWithSAW as $index => $survey)
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $survey->nama }}</td>
-                <td style="font-size: 8pt;">{{ Str::limit($survey->responses->firstWhere('question.question_text', 'like', '%email%')?->answer ?? '-', 30) }}</td>
-                <td class="text-center" style="font-size: 8pt;">{{ $survey->created_at->format('d/m/Y H:i') }}</td>
-                <td class="text-center" style="font-weight: bold;">{{ number_format($survey->saw_score, 4) }}</td>
-                <td class="text-center">
-                    <span class="badge badge-baik">Complete</span>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <div class="page-break"></div>
-
-    {{-- B. Detail Jawaban per Responden --}}
-    <div class="sub-header">B. Detail Jawaban per Responden</div>
+    {{-- A. Detail Jawaban per Responden --}}
+    <div class="sub-header">A. Detail Jawaban per Responden</div>
 
     @foreach($surveysWithSAW->take(20) as $index => $survey)
         <div class="responden-box">
