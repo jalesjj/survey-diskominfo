@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - ROUTE LANGSUNG KE TABEL SAW
+// routes/web.php 
 
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\AdminController;
@@ -52,8 +52,9 @@ Route::prefix('admin/questions')->name('admin.questions.')->group(function () {
     Route::post('/section/{sectionId}/questions/reorder', [SurveyQuestionController::class, 'updateQuestionOrder'])->name('reorder-questions');
 });
 
-// HASIL SURVEY ROUTE - LANGSUNG KE TABEL SAW
+// HASIL SURVEY ROUTES
 Route::get('/admin/hasil-survey', [SurveyResultController::class, 'dashboard'])->name('admin.hasil-survey');
+Route::get('/admin/hasil-survey/export-pdf', [SurveyResultController::class, 'exportPDF'])->name('admin.hasil-survey.export-pdf');
 
 // Admin User Management Routes
 Route::prefix('admin/users')->name('admin.users.')->group(function () {

@@ -9,6 +9,7 @@ use App\Models\SurveyQuestion;
 use App\Models\SurveyResponse;
 use App\Models\SurveySection;
 use Illuminate\Support\Collection;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SurveyResultController extends Controller
 {
@@ -57,9 +58,6 @@ class SurveyResultController extends Controller
 
         // Calculate aggregate SAW results from all surveys
         $criteriaResults = $this->calculateAggregateSAWResults($sawQuestions);
-        
-        // TOTAL NILAI PREFERENSI (Vi)
-        // Vi = Σ(wᵢ × rᵢ) untuk semua kriteria
         $totalVi = $criteriaResults->sum('weighted_score');
 
         // Count total responses
@@ -71,218 +69,99 @@ class SurveyResultController extends Controller
     }
 
     /**
-     * ============================================================================
      * PERHITUNGAN AGREGAT SAW DARI SEMUA SURVEY
-     * ============================================================================
      * 
-     * Metode SAW (Simple Additive Weighting) untuk Decision Support System
-     * 
-     * RUMUS UTAMA:
-     * Vi = Σ(wⱼ × rᵢⱼ)
-     * 
-     * Di mana:
-     * - Vi  = Nilai preferensi akhir untuk alternatif ke-i
-     * - wⱼ  = Bobot ternormalisasi untuk kriteria ke-j
-     * - rᵢⱼ = Nilai ternormalisasi dari alternatif i pada kriteria j
-     * 
-     * ============================================================================
+     * Menghitung nilai rata-rata per kriteria dari seluruh survey,
+     * kemudian menerapkan rumus SAW untuk mendapatkan nilai akhir
      */
     private function calculateAggregateSAWResults($sawQuestions)
     {
         $results = collect();
         
-        // ========================================================================
-        // TAHAP 0: PERSIAPAN DATA
-        // ========================================================================
-        // Grouping semua pertanyaan berdasarkan nama kriteria
+        // Group questions by criteria
         $questionsByCriteria = $sawQuestions->groupBy('criteria_name');
         $criteriaAggregates = collect();
 
-        // ========================================================================
-        // TAHAP 1: AGREGASI SKOR PER KRITERIA
-        // ========================================================================
-        // Mengumpulkan dan menghitung rata-rata skor dari semua responden
-        // untuk setiap kriteria
-        
         foreach ($questionsByCriteria as $criteriaName => $questions) {
-            // Kumpulkan semua jawaban untuk kriteria ini dari semua survey
+            // Collect all responses for this criteria from all surveys
             $allScores = collect();
             
             foreach ($questions as $question) {
-                // Ambil semua response untuk pertanyaan ini
+                // Get all responses for this question
                 $questionResponses = $question->responses;
                 
                 foreach ($questionResponses as $response) {
-                    // Tambahkan setiap jawaban ke collection
                     $allScores->push((float) $response->answer);
                 }
             }
 
             if ($allScores->isNotEmpty()) {
-                // Hitung rata-rata skor untuk kriteria ini
-                // Ini akan menjadi nilai Xᵢⱼ (skor alternatif i pada kriteria j)
+                // Calculate average score for this criteria across all responses
                 $criteriaAverage = $allScores->avg();
                 
                 $firstQuestion = $questions->first();
                 
-                // Simpan data agregat per kriteria
                 $criteriaAggregates->push([
                     'criteria_name' => $criteriaName ?: 'Tidak Dikategorikan',
-                    'criteria_weight' => $firstQuestion->criteria_weight ?? 0,  // wⱼ (bobot kriteria)
-                    'criteria_type' => $firstQuestion->criteria_type ?? 'benefit', // benefit atau cost
-                    'average_score' => $criteriaAverage,  // Xᵢⱼ (skor rata-rata)
+                    'criteria_weight' => $firstQuestion->criteria_weight ?? 0,
+                    'criteria_type' => $firstQuestion->criteria_type ?? 'benefit',
+                    'average_score' => $criteriaAverage,
                     'total_responses' => $allScores->count(),
                     'questions_count' => $questions->count()
                 ]);
             }
         }
 
-        // ========================================================================
-        // TAHAP 2: NORMALISASI BOBOT KRITERIA
-        // ========================================================================
-        // Formula: wⱼ_normalized = wⱼ / Σwⱼ
-        //
-        // Contoh:
-        // Kriteria A: bobot = 30
-        // Kriteria B: bobot = 40
-        // Kriteria C: bobot = 30
-        // Total bobot = 100
-        //
-        // wA_normalized = 30/100 = 0.300
-        // wB_normalized = 40/100 = 0.400
-        // wC_normalized = 30/100 = 0.300
-        // ========================================================================
-        
+        // STEP 1: NORMALISASI BOBOT KRITERIA
         $totalWeight = $criteriaAggregates->sum('criteria_weight');
         if ($totalWeight == 0) {
             return $results;
         }
 
-        // ========================================================================
-        // TAHAP 3: NORMALISASI MATRIKS KEPUTUSAN & PERHITUNGAN NILAI TERBOBOT
-        // ========================================================================
+        // STEP 2: NORMALISASI SAW DAN PERHITUNGAN NILAI TERBOBOT
         foreach ($criteriaAggregates as $criteria) {
-            
-            // --------------------------------------------------------------------
-            // STEP 3.1: Normalisasi Bobot untuk Kriteria Ini
-            // --------------------------------------------------------------------
-            // wⱼ_normalized = wⱼ / Σwⱼ
+            // Bobot ternormalisasi
             $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
             
-            // --------------------------------------------------------------------
-            // STEP 3.2: Normalisasi Matriks Keputusan (rᵢⱼ)
-            // --------------------------------------------------------------------
-            // Tergantung tipe kriteria (benefit atau cost)
-            
+            // Normalisasi SAW - menggunakan skor rata-rata sebagai Xij
             if ($criteria['criteria_type'] === 'benefit') {
-                // ----------------------------------------------------------------
-                // UNTUK KRITERIA BENEFIT (semakin tinggi semakin baik)
-                // ----------------------------------------------------------------
-                // Formula: rᵢⱼ = Xᵢⱼ / max(Xᵢⱼ)
-                //
-                // Contoh:
-                // Kriteria "Kognitif" (benefit), skor rata-rata = 82.10
-                // Skor tertinggi dari semua kriteria = 90.00
-                // rᵢⱼ = 82.10 / 90.00 = 0.912
-                // ----------------------------------------------------------------
-                
+                // Untuk benefit: rij = Xij / Max{Xij}
                 $maxScore = $criteriaAggregates->max('average_score');
                 $normalized = $maxScore > 0 ? ($criteria['average_score'] / $maxScore) : 0;
-                
             } else {
-                // ----------------------------------------------------------------
-                // UNTUK KRITERIA COST (semakin rendah semakin baik)
-                // ----------------------------------------------------------------
-                // Formula: rᵢⱼ = min(Xᵢⱼ) / Xᵢⱼ
-                //
-                // Contoh:
-                // Kriteria "Biaya" (cost), skor rata-rata = 50.00
-                // Skor terendah dari semua kriteria = 30.00
-                // rᵢⱼ = 30.00 / 50.00 = 0.600
-                // ----------------------------------------------------------------
-                
+                // Untuk cost: rij = Min{Xij} / Xij
                 $minScore = $criteriaAggregates->min('average_score');
                 $normalized = $criteria['average_score'] > 0 ? ($minScore / $criteria['average_score']) : 0;
             }
             
-            // Pastikan nilai normalisasi berada di range [0, 1]
+            // Ensure normalized score is between 0 and 1
             $normalized = max(0, min(1, $normalized));
             
-            // --------------------------------------------------------------------
-            // STEP 3.3: Perhitungan Nilai Terbobot
-            // --------------------------------------------------------------------
-            // Formula: Vᵢⱼ = wⱼ × rᵢⱼ
-            //
-            // Contoh:
-            // wⱼ_normalized = 0.400 (bobot ternormalisasi)
-            // rᵢⱼ = 0.912 (nilai ternormalisasi)
-            // Vᵢⱼ = 0.400 × 0.912 = 0.3648
-            //
-            // Nilai ini adalah KONTRIBUSI kriteria ini terhadap nilai akhir
-            // --------------------------------------------------------------------
-            
+            // Nilai Terbobot (wj × rij)
             $weightedScore = $weightNormalized * $normalized;
             
-            // --------------------------------------------------------------------
-            // STEP 3.4: Interpretasi Kualitatif
-            // --------------------------------------------------------------------
-            // Memberikan label deskriptif berdasarkan nilai normalisasi
-            
+            // Keterangan interpretasi
             $interpretation = $this->getSAWInterpretation($normalized);
             
-            // --------------------------------------------------------------------
-            // STEP 3.5: Simpan Hasil untuk Ditampilkan
-            // --------------------------------------------------------------------
-            // Build result untuk tabel output
-            
+            // Build result untuk tabel
             $results->push([
                 'criteria' => $criteria['criteria_name'],
-                'score' => round($criteria['average_score'], 2),        // Skor rata-rata (Xᵢⱼ)
-                'weight_normalized' => round($weightNormalized, 3),     // Bobot Normalisasi (wⱼ)
-                'normalized' => round($normalized, 3),                  // Normalisasi (rᵢⱼ)
-                'weighted_score' => round($weightedScore, 4),           // Nilai Terbobot (wⱼ × rᵢⱼ)
-                'interpretation' => $interpretation,                    // Keterangan kualitatif
+                'score' => round($criteria['average_score'], 2), // Skor (x) - rata-rata
+                'weight_normalized' => round($weightNormalized, 3), // Bobot Normalisasi (wᵢ)
+                'normalized' => round($normalized, 3), // Normalisasi (rᵢ)
+                'weighted_score' => round($weightedScore, 4), // Nilai Terbobot (wᵢ×rᵢ)
+                'interpretation' => $interpretation, // Keterangan
                 'total_responses' => $criteria['total_responses'],
                 'questions_count' => $criteria['questions_count'],
                 'criteria_type' => $criteria['criteria_type']
             ]);
         }
 
-        // ========================================================================
-        // TAHAP 4: TOTAL NILAI PREFERENSI
-        // ========================================================================
-        // Total Vi akan dihitung di controller utama dengan:
-        // Vi = Σ(weighted_score) untuk semua kriteria
-        //
-        // Contoh:
-        // Kriteria A: weighted_score = 0.2610
-        // Kriteria B: weighted_score = 0.3648
-        // Kriteria C: weighted_score = 0.2502
-        // Total Vi = 0.2610 + 0.3648 + 0.2502 = 0.8760
-        //
-        // Nilai Vi berkisar antara 0 sampai 1
-        // Semakin tinggi nilai Vi, semakin baik kondisi keseluruhan
-        // ========================================================================
-
         return $results;
     }
 
     /**
-     * ============================================================================
-     * INTERPRETASI KUALITATIF UNTUK NILAI NORMALISASI SAW
-     * ============================================================================
-     * 
-     * Memberikan label deskriptif berdasarkan nilai normalisasi (rᵢⱼ)
-     * Range nilai normalisasi: 0 sampai 1
-     * 
-     * Skala Interpretasi:
-     * - 0.90 - 1.00 : Sangat Baik
-     * - 0.80 - 0.89 : Baik
-     * - 0.60 - 0.79 : Cukup
-     * - 0.40 - 0.59 : Kurang
-     * - 0.00 - 0.39 : Sangat Kurang
-     * 
-     * ============================================================================
+     * INTERPRETASI KUALITITATIF UNTUK SAW
      */
     private function getSAWInterpretation($normalizedScore)
     {
@@ -294,40 +173,216 @@ class SurveyResultController extends Controller
     }
 
     /**
-     * ============================================================================
-     * CONTOH OUTPUT YANG DIHASILKAN
-     * ============================================================================
+     * EXPORT PDF - DATA MENTAH + HASIL SAW
      * 
-     * Tabel Hasil Perhitungan SAW:
+     * Generate PDF berisi:
+     * 1. Cover Page
+     * 2. Hasil Perhitungan SAW (Tabel Rangking + Grafik)
+     * 3. Data Mentah Responden (Detail jawaban per responden)
+     * 4. Ringkasan Statistik per Pertanyaan
+     * 5. Lampiran (Penjelasan Metode SAW)
+     */
+    public function exportPDF()
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+
+        // Get SAW questions
+        $sawQuestions = SurveyQuestion::where('enable_saw', true)
+                                    ->where('question_type', 'linear_scale')
+                                    ->whereNotNull('criteria_name')
+                                    ->with('responses')
+                                    ->get();
+
+        // Calculate SAW results
+        $criteriaResults = $this->calculateAggregateSAWResults($sawQuestions);
+        $totalVi = $criteriaResults->sum('weighted_score');
+
+        // Get all surveys with responses
+        $surveys = Survey::with(['responses.question.section'])
+                        ->whereHas('responses')
+                        ->get();
+
+        // Calculate SAW score for each survey
+        $surveysWithSAW = $surveys->map(function($survey) use ($sawQuestions) {
+            $sawScore = $this->calculateIndividualSAWScore($survey, $sawQuestions);
+            $survey->saw_score = $sawScore;
+            return $survey;
+        })->sortByDesc('saw_score')->values();
+
+        // Get all questions with sections
+        $sections = SurveySection::where('is_active', true)
+                                ->with(['questions' => function($q) {
+                                    $q->where('is_active', true)->orderBy('order');
+                                }])
+                                ->orderBy('order')
+                                ->get();
+
+        // Statistics per question
+        $questionStats = $this->calculateQuestionStatistics($sections);
+
+        // SAW configuration
+        $sawConfig = $sawQuestions->map(function($q) {
+            return [
+                'code' => 'Q' . $q->id,
+                'question' => $q->question_text,
+                'type' => $q->criteria_type,
+                'weight' => $q->criteria_weight
+            ];
+        });
+
+        // Prepare data for PDF
+        $data = [
+            'title' => 'LAPORAN DATA SURVEI',
+            'generated_at' => now()->format('d F Y H:i:s'),
+            'total_responses' => $surveysWithSAW->count(),
+            'period_start' => $surveys->min('created_at')?->format('d F Y') ?? '-',
+            'period_end' => $surveys->max('created_at')?->format('d F Y') ?? '-',
+            
+            // SAW Results
+            'criteriaResults' => $criteriaResults,
+            'totalVi' => $totalVi,
+            'surveysWithSAW' => $surveysWithSAW,
+            'sawConfig' => $sawConfig,
+            
+            // Raw Data
+            'sections' => $sections,
+            'questionStats' => $questionStats,
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('admin.hasil-survey.export-pdf', $data);
+        $pdf->setPaper('a4', 'portrait');
+        
+        $filename = 'Laporan_Survey_' . now()->format('Y-m-d_His') . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Calculate SAW score for individual survey
+     */
+    private function calculateIndividualSAWScore($survey, $sawQuestions)
+    {
+        if ($sawQuestions->isEmpty()) {
+            return 0;
+        }
+
+        $totalScore = 0;
+        $totalWeight = $sawQuestions->sum('criteria_weight');
+        
+        if ($totalWeight == 0) {
+            return 0;
+        }
+
+        // Get all SAW responses for this survey
+        $surveyResponses = $survey->responses()
+            ->whereIn('question_id', $sawQuestions->pluck('id'))
+            ->get();
+
+        // Group responses by criteria
+        $criteriaScores = [];
+        foreach ($sawQuestions as $question) {
+            $response = $surveyResponses->firstWhere('question_id', $question->id);
+            
+            if ($response) {
+                $criteriaName = $question->criteria_name ?: 'Uncategorized';
+                
+                if (!isset($criteriaScores[$criteriaName])) {
+                    $criteriaScores[$criteriaName] = [
+                        'scores' => [],
+                        'type' => $question->criteria_type,
+                        'weight' => $question->criteria_weight
+                    ];
+                }
+                
+                $criteriaScores[$criteriaName]['scores'][] = (float) $response->answer;
+            }
+        }
+
+        // Calculate normalized scores
+        foreach ($criteriaScores as $criteriaName => $data) {
+            $avgScore = collect($data['scores'])->avg();
+            
+            // Normalization
+            if ($data['type'] === 'benefit') {
+                $maxScore = $sawQuestions->max(function($q) use ($surveyResponses) {
+                    $r = $surveyResponses->firstWhere('question_id', $q->id);
+                    return $r ? (float) $r->answer : 0;
+                });
+                $normalized = $maxScore > 0 ? ($avgScore / $maxScore) : 0;
+            } else {
+                $minScore = $sawQuestions->min(function($q) use ($surveyResponses) {
+                    $r = $surveyResponses->firstWhere('question_id', $q->id);
+                    return $r ? (float) $r->answer : 1;
+                });
+                $normalized = $avgScore > 0 ? ($minScore / $avgScore) : 0;
+            }
+            
+            $weightNormalized = $data['weight'] / $totalWeight;
+            $totalScore += ($normalized * $weightNormalized);
+        }
+
+        return round($totalScore, 4);
+    }
+
+    /**
+     * Calculate statistics for each question
+     */
+    private function calculateQuestionStatistics($sections)
+    {
+        $stats = [];
+        
+        foreach ($sections as $section) {
+            foreach ($section->questions as $question) {
+                $responses = $question->responses;
+                
+                if ($responses->isEmpty()) {
+                    continue;
+                }
+
+                $stat = [
+                    'question_id' => $question->id,
+                    'question_text' => $question->question_text,
+                    'question_type' => $question->question_type,
+                    'section_name' => $section->title,
+                    'total_responses' => $responses->count(),
+                    'distribution' => []
+                ];
+
+                // For questions with options
+                if (in_array($question->question_type, ['radio', 'select', 'checkbox'])) {
+                    $distribution = $responses->groupBy('answer')->map(function($group) use ($responses) {
+                        return [
+                            'count' => $group->count(),
+                            'percentage' => round(($group->count() / $responses->count()) * 100, 1)
+                        ];
+                    });
+                    
+                    $stat['distribution'] = $distribution->toArray();
+                }
+                
+                // For linear scale
+                if ($question->question_type === 'linear_scale') {
+                    $stat['average'] = round($responses->avg('answer'), 2);
+                    $stat['min'] = $responses->min('answer');
+                    $stat['max'] = $responses->max('answer');
+                }
+
+                $stats[] = $stat;
+            }
+        }
+        
+        return collect($stats);
+    }
+
+    /**
+     * CONTOH OUTPUT YANG DIHASILKAN:
      * 
-     * +---------------+----------+-----------------------+------------------+-------------------------+-------------+
-     * | Kriteria      | Skor (x) | Bobot Normalisasi (wᵢ)| Normalisasi (rᵢ) | Nilai Terbobot (wᵢ×rᵢ) | Keterangan  |
-     * +---------------+----------+-----------------------+------------------+-------------------------+-------------+
-     * | Afektif       | 78.50    | 0.300                 | 0.870            | 0.2610                  | Baik        |
-     * | Kognitif      | 82.10    | 0.400                 | 0.912            | 0.3648                  | Sangat Baik |
-     * | Psikomotorik  | 75.30    | 0.300                 | 0.836            | 0.2508                  | Baik        |
-     * +---------------+----------+-----------------------+------------------+-------------------------+-------------+
-     * | TOTAL NILAI PREFERENSI (Vi)                                         | 0.8766                  |             |
-     * +---------------------------------------------------------------------+-------------------------+-------------+
-     * 
-     * Penjelasan Kolom:
-     * 
-     * 1. Kriteria           : Nama kriteria penilaian
-     * 2. Skor (x)           : Rata-rata skor dari semua responden untuk kriteria ini (Xᵢⱼ)
-     * 3. Bobot Normalisasi  : Bobot kriteria yang sudah dinormalisasi (wⱼ = bobot / total_bobot)
-     * 4. Normalisasi        : Nilai yang sudah dinormalisasi dengan rumus SAW (rᵢⱼ)
-     *                         - Benefit: rᵢⱼ = Xᵢⱼ / max(Xᵢⱼ)
-     *                         - Cost: rᵢⱼ = min(Xᵢⱼ) / Xᵢⱼ
-     * 5. Nilai Terbobot     : Kontribusi kriteria ke nilai akhir (wⱼ × rᵢⱼ)
-     * 6. Keterangan         : Interpretasi kualitatif dari nilai normalisasi
-     * 
-     * TOTAL Vi = Σ(Nilai Terbobot) = 0.2610 + 0.3648 + 0.2508 = 0.8766
-     * 
-     * Interpretasi:
-     * - Vi = 0.8766 menunjukkan kondisi "Sangat Baik" (range 0.80 - 0.89)
-     * - Kriteria "Kognitif" memberikan kontribusi terbesar (0.3648)
-     * - Semua kriteria berada dalam kategori "Baik" atau "Sangat Baik"
-     * 
-     * ============================================================================
+     * | Kriteria     | Skor (x) | Bobot Normalisasi (wᵢ) | Normalisasi (rᵢ) | Nilai Terbobot (wᵢ×rᵢ) | Keterangan |
+     * |--------------|----------|------------------------|-------------------|------------------------|------------|
+     * | Afektif      | 78.50    | 0.300                  | 0.870             | 0.261                  | Baik       |
+     * | Kognitif     | 82.10    | 0.400                  | 0.910             | 0.364                  | Sangat Baik|
+     * | Psikomotorik | 75.30    | 0.300                  | 0.834             | 0.250                  | Baik       |
      */
 }
