@@ -551,42 +551,171 @@ private function getSectionData($totalSurveys, $questions)
             return redirect()->route('admin.login');
         }
 
-        $format = $request->get('format', 'csv');
-        
-        $surveys = Survey::with(['responses.question'])->get();
-        
-        if ($format === 'json') {
-            return response()->json($surveys);
-        }
-
-        $csvData = [];
-        $csvData[] = ['Survey ID', 'Timestamp', 'IP Address', 'Question', 'Answer'];
-
-        foreach ($surveys as $survey) {
-            foreach ($survey->responses as $response) {
-                $csvData[] = [
-                    $survey->id,
-                    $survey->created_at->format('Y-m-d H:i:s'),
-                    $survey->ip_address ?? 'N/A',
-                    $response->question->question_text ?? 'Unknown',
-                    $response->answer ?? 'No answer'
-                ];
+        try {
+            // Ambil semua pertanyaan yang aktif, diurutkan
+            $questions = SurveyQuestion::active()->ordered()->get();
+            
+            if ($questions->isEmpty()) {
+                return back()->with('error', 'Tidak ada pertanyaan yang tersedia untuk diekspor.');
             }
-        }
 
-        $filename = 'survey_export_' . date('YmdHis') . '.csv';
-        
-        $handle = fopen('php://temp', 'r+');
-        foreach ($csvData as $row) {
-            fputcsv($handle, $row);
-        }
-        rewind($handle);
-        $csv = stream_get_contents($handle);
-        fclose($handle);
+            // Ambil semua survey dengan responses
+            $surveys = Survey::with(['responses.question'])->orderBy('created_at', 'asc')->get();
+            
+            if ($surveys->isEmpty()) {
+                return back()->with('error', 'Tidak ada data survey untuk diekspor.');
+            }
 
-        return response($csv)
-            ->header('Content-Type', 'text/csv')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            // Buat Spreadsheet baru
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set judul sheet
+            $sheet->setTitle('Data Survey');
+            
+            // Header Row
+            $headerRow = ['ID Survey', 'Tanggal Pengisian'];
+            foreach ($questions as $question) {
+                $headerRow[] = $question->question_text;
+            }
+            
+            // Tulis header
+            $sheet->fromArray($headerRow, null, 'A1');
+            
+            // Style header
+            $headerStyle = [
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'FFFFFF'],
+                    'size' => 11
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '4472C4']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    'wrapText' => true
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000']
+                    ]
+                ]
+            ];
+            
+            $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headerRow));
+            $sheet->getStyle('A1:' . $lastColumn . '1')->applyFromArray($headerStyle);
+            
+            // Set tinggi baris header
+            $sheet->getRowDimension(1)->setRowHeight(30);
+            
+            // Data Rows
+            $rowNumber = 2;
+            foreach ($surveys as $survey) {
+                $rowData = [
+                    $survey->id,
+                    $survey->created_at->format('m/d/Y h:i:s A')
+                ];
+                
+                // Buat mapping response berdasarkan question_id
+                $responseMap = [];
+                foreach ($survey->responses as $response) {
+                    $responseMap[$response->question_id] = $response;
+                }
+                
+                // Isi jawaban untuk setiap pertanyaan
+                foreach ($questions as $question) {
+                    $answer = '-';
+                    
+                    if (isset($responseMap[$question->id])) {
+                        $response = $responseMap[$question->id];
+                        
+                        switch ($question->question_type) {
+                            case 'checkbox':
+                                if ($response->answer_data && is_array($response->answer_data)) {
+                                    $answer = implode('; ', $response->answer_data);
+                                } else {
+                                    $answer = $response->answer ?: '-';
+                                }
+                                break;
+                                
+                            case 'file_upload':
+                                if ($response->answer_data && isset($response->answer_data['filename'])) {
+                                    $answer = $response->answer_data['filename'];
+                                } else {
+                                    $answer = $response->answer ?: '-';
+                                }
+                                break;
+                                
+                            default:
+                                $answer = $response->answer ?: '-';
+                                break;
+                        }
+                    }
+                    
+                    $rowData[] = $answer;
+                }
+                
+                // Tulis data row
+                $sheet->fromArray($rowData, null, 'A' . $rowNumber);
+                
+                // Style data row
+                $dataStyle = [
+                    'alignment' => [
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP,
+                        'wrapText' => true
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => ['rgb' => 'CCCCCC']
+                        ]
+                    ]
+                ];
+                
+                $sheet->getStyle('A' . $rowNumber . ':' . $lastColumn . $rowNumber)->applyFromArray($dataStyle);
+                
+                $rowNumber++;
+            }
+            
+            // Auto-size columns
+            $sheet->getColumnDimension('A')->setWidth(12); // ID Survey
+            $sheet->getColumnDimension('B')->setWidth(22); // Tanggal Pengisian
+            
+            // Set width untuk kolom pertanyaan
+            for ($col = 3; $col <= count($headerRow); $col++) {
+                $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                $sheet->getColumnDimension($columnLetter)->setWidth(35);
+            }
+            
+            // Freeze header row
+            $sheet->freezePane('A2');
+            
+            // Generate filename
+            $filename = 'survey_export_' . date('Y-m-d_His') . '.xlsx';
+            
+            // Set header untuk download
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            
+            // Write file ke output
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+            
+            exit;
+            
+        } catch (\Exception $e) {
+            Log::error('Export Excel Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Terjadi kesalahan saat mengekspor data: ' . $e->getMessage());
+        }
     }
 
     // Method untuk melihat semua file yang diupload
