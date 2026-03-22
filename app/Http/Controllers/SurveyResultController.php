@@ -212,11 +212,18 @@ class SurveyResultController extends Controller
 
         // Get all questions with sections
         $sections = SurveySection::where('is_active', true)
-                                ->with(['questions' => function($q) {
-                                    $q->where('is_active', true)->orderBy('order');
+                                ->with(['allQuestions' => function($q) {
+                                    $q->where('is_active', true);
                                 }])
-                                ->orderBy('order')
+                                ->orderBy('order_index')
                                 ->get();
+        
+        // Filter sections yang memiliki questions aktif dan rename relation
+        $sections->transform(function($section) {
+            $section->questions = $section->allQuestions;
+            unset($section->allQuestions);
+            return $section;
+        });
 
         // Statistics per question
         $questionStats = $this->calculateQuestionStatistics($sections);

@@ -85,6 +85,7 @@
         background: #138496;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+    }
 
     .btn-danger {
         background: #e74c3c;
@@ -95,7 +96,6 @@
         background: #c0392b;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-    }
     }
 
     /* Tab Navigation */
