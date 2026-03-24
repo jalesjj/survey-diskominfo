@@ -195,11 +195,6 @@ class SurveyQuestionController extends Controller
 
         $question = SurveyQuestion::findOrFail($questionId);
 
-        // SOLUSI: Handle criteria_type dari backup field jika field utama disabled
-        if ($request->has('criteria_type_backup') && !$request->filled('criteria_type')) {
-            $request->merge(['criteria_type' => $request->criteria_type_backup]);
-        }
-
         // Validasi dasar
         $validationRules = [
             'question_text' => 'required|string',

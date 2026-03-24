@@ -621,8 +621,8 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="form-label" for="criteria_type">Tipe Kriteria *</label>
-                                <select id="criteria_type" name="criteria_type" class="form-input">
+                                <label class="form-label" for="criteria_type_display">Tipe Kriteria *</label>
+                                <select id="criteria_type_display" class="form-input">
                                     <option value="">-- Pilih Tipe --</option>
                                     <option value="benefit" {{ old('criteria_type') == 'benefit' ? 'selected' : '' }}>Benefit (Semakin tinggi semakin baik)</option>
                                     <option value="cost" {{ old('criteria_type') == 'cost' ? 'selected' : '' }}>Cost (Semakin rendah semakin baik)</option>
@@ -630,6 +630,9 @@
                                 @error('criteria_type')
                                     <div class="error-message">{{ $message }}</div>
                                 @enderror
+                                
+                                <!-- Hidden field yang sebenarnya dikirim ke server - SOLUSI UNTUK MASALAH DISABLED FIELD -->
+                                <input type="hidden" id="criteria_type" name="criteria_type" value="{{ old('criteria_type') }}">
                             </div>
                         </div>
                     </div>
@@ -665,6 +668,24 @@
         toggleQuestionOptions();
         updateTypeCardSelection();
         handleCriteriaChange();
+        
+        // Tambahkan event listener untuk sync criteria_type_display ke hidden field
+        const criteriaTypeDisplay = document.getElementById('criteria_type_display');
+        const criteriaTypeHidden = document.getElementById('criteria_type');
+        
+        if (criteriaTypeDisplay && criteriaTypeHidden) {
+            // Sync setiap kali nilai display berubah
+            criteriaTypeDisplay.addEventListener('change', function() {
+                criteriaTypeHidden.value = this.value;
+                console.log('criteria_type synced:', this.value);
+            });
+            
+            // Sync saat inisialisasi jika ada nilai
+            if (criteriaTypeDisplay.value) {
+                criteriaTypeHidden.value = criteriaTypeDisplay.value;
+                console.log('Initial criteria_type synced:', criteriaTypeDisplay.value);
+            }
+        }
     });
 
     // Toggle question options based on type
@@ -736,10 +757,18 @@
                 sawFields.classList.add('show');
             } else {
                 sawFields.classList.remove('show');
+                
                 // Clear SAW form values
-                document.getElementById('criteria_selection').value = '';
-                document.getElementById('criteria_weight').value = '';
-                document.getElementById('criteria_type').value = '';
+                const criteriaSelection = document.getElementById('criteria_selection');
+                const criteriaWeight = document.getElementById('criteria_weight');
+                const criteriaTypeDisplay = document.getElementById('criteria_type_display');
+                const criteriaTypeHidden = document.getElementById('criteria_type');
+                
+                if (criteriaSelection) criteriaSelection.value = '';
+                if (criteriaWeight) criteriaWeight.value = '';
+                if (criteriaTypeDisplay) criteriaTypeDisplay.value = '';
+                if (criteriaTypeHidden) criteriaTypeHidden.value = '';
+                
                 handleCriteriaChange();
             }
         }
@@ -750,9 +779,10 @@
         const criteriaSelection = document.getElementById('criteria_selection');
         const newCriteriaFields = document.getElementById('newCriteriaFields');
         const criteriaWeightInput = document.getElementById('criteria_weight');
-        const criteriaTypeInput = document.getElementById('criteria_type');
+        const criteriaTypeDisplay = document.getElementById('criteria_type_display');
+        const criteriaTypeHidden = document.getElementById('criteria_type'); // Field yang sebenarnya dikirim
         
-        if (criteriaSelection && newCriteriaFields && criteriaWeightInput && criteriaTypeInput) {
+        if (criteriaSelection && newCriteriaFields && criteriaWeightInput && criteriaTypeDisplay && criteriaTypeHidden) {
             if (criteriaSelection.value === 'new') {
                 // Show new criteria fields
                 newCriteriaFields.classList.add('show');
@@ -761,11 +791,12 @@
                 
                 // Enable weight and type inputs
                 criteriaWeightInput.removeAttribute('readonly');
-                criteriaTypeInput.removeAttribute('disabled');
+                criteriaTypeDisplay.removeAttribute('disabled');
                 
                 // Clear values
                 criteriaWeightInput.value = '';
-                criteriaTypeInput.value = '';
+                criteriaTypeDisplay.value = '';
+                criteriaTypeHidden.value = '';
             } else if (criteriaSelection.value && criteriaSelection.value !== '') {
                 // Hide new criteria fields
                 newCriteriaFields.classList.remove('show');
@@ -779,11 +810,19 @@
                 
                 if (weight && type) {
                     criteriaWeightInput.value = weight;
-                    criteriaTypeInput.value = type;
+                    criteriaTypeDisplay.value = type;
+                    
+                    // CRITICAL: Update hidden field yang sebenarnya akan dikirim ke server
+                    criteriaTypeHidden.value = type;
                     
                     // Make them readonly to prevent changes
                     criteriaWeightInput.setAttribute('readonly', 'readonly');
-                    criteriaTypeInput.setAttribute('disabled', 'disabled');
+                    criteriaTypeDisplay.setAttribute('disabled', 'disabled');
+                    
+                    // WORKAROUND: Karena field disabled, pastikan sekali lagi hidden field terisi
+                    setTimeout(function() {
+                        criteriaTypeHidden.value = type;
+                    }, 100);
                 }
             } else {
                 // Hide new criteria fields and clear everything
@@ -792,15 +831,25 @@
                 if (criteriaName) criteriaName.removeAttribute('required');
                 
                 criteriaWeightInput.removeAttribute('readonly');
-                criteriaTypeInput.removeAttribute('disabled');
+                criteriaTypeDisplay.removeAttribute('disabled');
                 criteriaWeightInput.value = '';
-                criteriaTypeInput.value = '';
+                criteriaTypeDisplay.value = '';
+                criteriaTypeHidden.value = '';
             }
         }
     }
 
     // Form validation
     document.getElementById('questionForm').addEventListener('submit', function(e) {
+        // SYNC criteria_type sebelum validasi
+        const criteriaTypeDisplay = document.getElementById('criteria_type_display');
+        const criteriaTypeHidden = document.getElementById('criteria_type');
+        
+        if (criteriaTypeDisplay && criteriaTypeHidden) {
+            criteriaTypeHidden.value = criteriaTypeDisplay.value;
+            console.log('Form submit - Syncing criteria_type:', criteriaTypeDisplay.value);
+        }
+        
         const selectedType = document.querySelector('input[name="question_type"]:checked');
         
         if (!selectedType) {
