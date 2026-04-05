@@ -358,28 +358,40 @@
 
     <div class="page-break"></div>
 
-    {{-- TABEL KRITERIA SAW --}}
-    <div class="sub-header">A. Tabel Kriteria SAW</div>
+    {{-- TABEL HASIL INTERPRETASI PER KRITERIA --}}
+    <div class="sub-header">Hasil Interpretasi per Kriteria</div>
 
     <table>
         <thead>
             <tr>
                 <th>Kriteria</th>
-                <th class="text-center">Skor (x)</th>
-                <th class="text-center">Bobot (w<sub>ᵢ</sub>)</th>
-                <th class="text-center">Normalisasi (r<sub>ᵢ</sub>)</th>
-                <th class="text-center">Nilai Terbobot</th>
-                <th class="text-center">Keterangan</th>
+                <th class="text-center">Jumlah Pertanyaan</th>
+                <th class="text-center">Nilai Ternormalisasi (r)</th>
+                <th class="text-center">Bobot Asli</th>
+                <th class="text-center">Tipe Kriteria</th>
+                <th class="text-center">Interpretasi</th>
             </tr>
         </thead>
         <tbody>
             @foreach($criteriaResults as $result)
+            @php
+                // Ambil bobot asli dari database berdasarkan criteria_name
+                $criteriaName = $result['criteria'];
+                $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
+                    ->where('criteria_name', $criteriaName)
+                    ->first();
+                $originalWeight = $firstQuestion ? $firstQuestion->criteria_weight : 0;
+            @endphp
             <tr>
                 <td style="font-weight: bold;">{{ $result['criteria'] }}</td>
-                <td class="text-center">{{ $result['score'] }}</td>
-                <td class="text-center">{{ number_format($result['weight_normalized'], 3) }}</td>
+                <td class="text-center">{{ $result['questions_count'] }}</td>
                 <td class="text-center">{{ number_format($result['normalized'], 3) }}</td>
-                <td class="text-center" style="font-weight: bold;">{{ number_format($result['weighted_score'], 4) }}</td>
+                <td class="text-center"><strong>{{ number_format($originalWeight, 1) }}</strong></td>
+                <td class="text-center">
+                    <span class="badge badge-{{ $result['criteria_type'] === 'benefit' ? 'baik' : 'cukup' }}">
+                        {{ ucfirst($result['criteria_type']) }}
+                    </span>
+                </td>
                 <td class="text-center">
                     <span class="badge badge-{{ strtolower(str_replace(' ', '-', $result['interpretation'])) }}">
                         {{ $result['interpretation'] }}
@@ -387,174 +399,13 @@
                 </td>
             </tr>
             @endforeach
-            <tr style="background: #34495e; color: white; font-weight: bold;">
-                <td colspan="4" class="text-right">TOTAL NILAI PREFERENSI (V<sub>i</sub>)</td>
-                <td class="text-center">{{ number_format($totalVi, 4) }}</td>
-                <td class="text-center">
-                    @php
-                        $totalInt = $totalVi >= 0.9 ? 'Excellent' : 
-                                   ($totalVi >= 0.8 ? 'Sangat Baik' : 
-                                   ($totalVi >= 0.6 ? 'Baik' : 
-                                   ($totalVi >= 0.4 ? 'Cukup' : 'Perlu Perbaikan')));
-                    @endphp
-                    {{ $totalInt }}
-                </td>
-            </tr>
         </tbody>
     </table>
 
     <div class="page-break"></div>
 
-    {{-- DATA MENTAH RESPONDEN --}}
-    <div class="section-header">2. DATA MENTAH RESPONDEN</div>
-
-    <div class="info-box">
-        Berikut adalah detail jawaban lengkap dari setiap responden, termasuk nilai SAW untuk pertanyaan yang memiliki bobot penilaian.
-    </div>
-
-    {{-- A. Detail Jawaban per Responden --}}
-    <div class="sub-header">A. Detail Jawaban per Responden</div>
-
-    @foreach($surveysWithSAW->take(20) as $index => $survey)
-        <div class="responden-box">
-            <div class="responden-header">
-                RESPONDEN #{{ $index + 1 }}: {{ $survey->nama }}
-            </div>
-            <div class="responden-meta">
-                Email: {{ $survey->responses->firstWhere('question.question_text', 'like', '%email%')?->answer ?? '-' }} | 
-                Tanggal Submit: {{ $survey->created_at->format('d F Y H:i:s') }} | 
-                Skor SAW: {{ number_format($survey->saw_score, 4) }} (Rank: {{ $index + 1 }})
-            </div>
-
-            <div class="section-divider"></div>
-
-            @foreach($sections as $section)
-                @php
-                    $sectionQuestions = $section->questions;
-                    $hasAnswers = false;
-                @endphp
-
-                @foreach($sectionQuestions as $question)
-                    @php
-                        $response = $survey->responses->firstWhere('question_id', $question->id);
-                        if ($response) $hasAnswers = true;
-                    @endphp
-                @endforeach
-
-                @if($hasAnswers)
-                    <div style="margin-top: 12px; margin-bottom: 8px;">
-                        <strong style="color: #2c3e50; font-size: 10pt;">{{ strtoupper($section->title) }}</strong>
-                    </div>
-
-                    @foreach($sectionQuestions as $question)
-                        @php
-                            $response = $survey->responses->firstWhere('question_id', $question->id);
-                        @endphp
-
-                        @if($response)
-                            <div class="question-item">
-                                <div class="question-label">
-                                    Q{{ $question->id }}. {{ $question->question_text }}
-                                </div>
-                                <div class="answer-text">
-                                    Jawaban: {{ Str::limit($response->answer, 100) }}
-                                    
-                                    @if($question->enable_saw && $question->question_type === 'linear_scale')
-                                        @php
-                                            $totalWeight = \App\Models\SurveyQuestion::where('enable_saw', true)->sum('criteria_weight');
-                                            $weightNormalized = $totalWeight > 0 ? ($question->criteria_weight / $totalWeight) : 0;
-                                            
-                                            // Simplified normalization for display
-                                            $normalized = ((float)$response->answer) / 10; // Assuming scale 1-10
-                                        @endphp
-                                        <div class="saw-detail">
-                                            ({{ ucfirst($question->criteria_type) }}) | 
-                                            Skor: {{ $response->answer }} | 
-                                            Bobot: {{ number_format($weightNormalized, 3) }} | 
-                                            Nilai Ternormalisasi: {{ number_format($normalized, 3) }}
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
-                    @endforeach
-                @endif
-            @endforeach
-        </div>
-
-        @if(($index + 1) % 3 == 0 && $index + 1 < $surveysWithSAW->count())
-            <div class="page-break"></div>
-        @endif
-    @endforeach
-
-    @if($surveysWithSAW->count() > 20)
-        <div class="info-box" style="margin-top: 20px;">
-            <strong>Catatan:</strong> PDF ini menampilkan detail 20 responden pertama. 
-            Total responden: {{ $surveysWithSAW->count() }} orang.
-        </div>
-    @endif
-
-    <div class="page-break"></div>
-
-    {{-- RINGKASAN STATISTIK PER PERTANYAAN --}}
-    <div class="section-header">3. RINGKASAN STATISTIK PER PERTANYAAN</div>
-
-    @foreach($questionStats->groupBy('section_name') as $sectionName => $stats)
-        <div class="sub-header">{{ $sectionName }}</div>
-
-        @foreach($stats as $stat)
-            <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-left: 3px solid #3498db;">
-                <div style="font-weight: bold; margin-bottom: 5px;">
-                    Q{{ $stat['question_id'] }}: {{ $stat['question_text'] }}
-                </div>
-                
-                <div style="font-size: 8pt; color: #666; margin-bottom: 8px;">
-                    Tipe: {{ ucfirst(str_replace('_', ' ', $stat['question_type'])) }} | 
-                    Total Jawaban: {{ $stat['total_responses'] }} responden
-                </div>
-
-                @if(!empty($stat['distribution']))
-                    <table style="margin-top: 8px;">
-                        <thead>
-                            <tr>
-                                <th>Pilihan Jawaban</th>
-                                <th class="text-center" width="20%">Jumlah</th>
-                                <th class="text-center" width="20%">Persentase</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($stat['distribution'] as $answer => $data)
-                            <tr>
-                                <td>{{ $answer }}</td>
-                                <td class="text-center">{{ $data['count'] }}</td>
-                                <td class="text-center">{{ $data['percentage'] }}%</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-
-                    <div class="chart-placeholder" style="padding: 20px; margin-top: 10px;">
-                        <strong>Grafik Bar/Pie Chart</strong><br>
-                        Visualisasi distribusi jawaban
-                    </div>
-                @endif
-
-                @if(isset($stat['average']))
-                    <div style="margin-top: 8px; font-size: 9pt;">
-                        <strong>Statistik:</strong><br>
-                        Rata-rata: {{ $stat['average'] }} | 
-                        Min: {{ $stat['min'] }} | 
-                        Max: {{ $stat['max'] }}
-                    </div>
-                @endif
-            </div>
-        @endforeach
-    @endforeach
-
-    <div class="page-break"></div>
-
     {{-- LAMPIRAN - DETAIL PERHITUNGAN SAW --}}
-    <div class="section-header">4. LAMPIRAN - DETAIL PERHITUNGAN SAW</div>
+    <div class="section-header">2. LAMPIRAN - DETAIL PERHITUNGAN SAW</div>
 
     {{-- A. Penjelasan Metode SAW --}}
     <div class="sub-header">A. Penjelasan Metode SAW (Simple Additive Weighting)</div>
@@ -646,9 +497,12 @@ foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
                         <td class="text-center"><strong>{{ $result['score'] }}</strong></td>
                         <td class="text-center">
                             @php
-                                // Ambil bobot asli dari sawConfig berdasarkan criteria_name
-                                $originalWeight = $sawConfig->where('type', $result['criteria_type'])
-                                    ->first()['weight'] ?? 0;
+                                // Ambil bobot asli dari database berdasarkan criteria_name
+                                $criteriaName = $result['criteria'];
+                                $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
+                                    ->where('criteria_name', $criteriaName)
+                                    ->first();
+                                $originalWeight = $firstQuestion ? $firstQuestion->criteria_weight : 0;
                             @endphp
                             <strong>{{ number_format($originalWeight, 1) }}</strong>
                         </td>
@@ -948,6 +802,12 @@ private function getSAWInterpretation($normalizedScore)<br>
             <div class="calc-result" style="margin-top: 15px;">
                 <strong>KESIMPULAN AKHIR:</strong><br>
                 Total Nilai Preferensi = {{ number_format($totalVi, 4) }}<br>
+                @php
+                    $totalInt = $totalVi >= 0.9 ? 'Excellent' : 
+                               ($totalVi >= 0.8 ? 'Sangat Baik' : 
+                               ($totalVi >= 0.6 ? 'Baik' : 
+                               ($totalVi >= 0.4 ? 'Cukup' : 'Perlu Perbaikan')));
+                @endphp
                 Kategori: <strong>{{ $totalInt }}</strong><br>
                 <br>
                 Sistem penilaian menunjukkan hasil yang 
