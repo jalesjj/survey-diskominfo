@@ -646,15 +646,11 @@ foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
                         <td class="text-center"><strong>{{ $result['score'] }}</strong></td>
                         <td class="text-center">
                             @php
-                                $originalWeight = $result['weight_normalized'] * ($criteriaResults->sum(function($r) {
-                                    return $r['weight_normalized'];
-                                }) > 0 ? 
-                                    $criteriaResults->sum(function($r) { 
-                                        return $r['weight_normalized']; 
-                                    }) * $result['weight_normalized'] / $result['weight_normalized'] 
-                                    : 0);
+                                // Ambil bobot asli dari sawConfig berdasarkan criteria_name
+                                $originalWeight = $sawConfig->where('type', $result['criteria_type'])
+                                    ->first()['weight'] ?? 0;
                             @endphp
-                            {{ number_format($result['weight_normalized'] * 100, 1) }}
+                            <strong>{{ number_format($originalWeight, 1) }}</strong>
                         </td>
                         <td class="text-center">{{ ucfirst($result['criteria_type']) }}</td>
                     </tr>
@@ -681,21 +677,33 @@ $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
             <p style="margin-top: 10px;"><strong>Perhitungan:</strong></p>
             
             @php
-                $totalOriginalWeight = 0;
+                // Hitung total bobot asli dari semua kriteria
+                $criteriaWeights = [];
                 foreach($criteriaResults as $result) {
-                    $totalOriginalWeight += ($result['weight_normalized'] > 0 ? 
-                        (1 / $result['weight_normalized']) * 
-                        ($criteriaResults->sum(function($r) { return $r['weight_normalized']; })) / 
-                        $criteriaResults->count() 
-                        : 0);
+                    $criteriaName = $result['criteria'];
+                    // Cari bobot asli dari sawConfig untuk kriteria ini
+                    $configItem = $sawConfig->first(function($item) use ($criteriaName) {
+                        // Ambil criteria_name dari pertanyaan pertama yang match
+                        return true; // Akan diambil dari grouping
+                    });
+                    
+                    // Ambil dari pertanyaan pertama dengan criteria_name yang sama
+                    $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
+                        ->where('criteria_name', $criteriaName)
+                        ->first();
+                    
+                    if ($firstQuestion) {
+                        $criteriaWeights[$criteriaName] = $firstQuestion->criteria_weight;
+                    }
                 }
+                $totalOriginalWeight = array_sum($criteriaWeights);
             @endphp
 
             <div style="margin: 10px 0; font-size: 9pt;">
                 Total Bobot = 
-                @foreach($criteriaResults as $index => $result)
-                    @if($index > 0) + @endif
-                    {{ number_format($result['weight_normalized'] * $totalOriginalWeight, 1) }}
+                @foreach($criteriaWeights as $index => $weight)
+                    @if($loop->index > 0) + @endif
+                    {{ number_format($weight, 1) }}
                 @endforeach
                 = <strong>{{ number_format($totalOriginalWeight, 1) }}</strong>
             </div>
@@ -711,17 +719,23 @@ $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
                 </thead>
                 <tbody>
                     @foreach($criteriaResults as $result)
+                    @php
+                        $criteriaName = $result['criteria'];
+                        $originalWeight = $criteriaWeights[$criteriaName] ?? 0;
+                    @endphp
                     <tr>
                         <td><strong>{{ $result['criteria'] }}</strong></td>
-                        <td class="text-center">{{ number_format($result['weight_normalized'] * $totalOriginalWeight, 1) }}</td>
+                        <td class="text-center"><strong>{{ number_format($originalWeight, 1) }}</strong></td>
                         <td class="text-center">
-                            {{ number_format($result['weight_normalized'] * $totalOriginalWeight, 1) }} / {{ number_format($totalOriginalWeight, 1) }}
+                            {{ number_format($originalWeight, 1) }} / {{ number_format($totalOriginalWeight, 1) }}
                         </td>
                         <td class="text-center"><strong>{{ number_format($result['weight_normalized'], 3) }}</strong></td>
                     </tr>
                     @endforeach
                     <tr style="background: #e8f5e9; font-weight: bold;">
-                        <td colspan="3" class="text-right">TOTAL</td>
+                        <td>TOTAL</td>
+                        <td class="text-center">{{ number_format($totalOriginalWeight, 1) }}</td>
+                        <td class="text-center">-</td>
                         <td class="text-center">{{ number_format($criteriaResults->sum('weight_normalized'), 3) }}</td>
                     </tr>
                 </tbody>
