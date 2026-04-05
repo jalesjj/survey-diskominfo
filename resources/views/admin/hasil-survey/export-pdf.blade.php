@@ -3,7 +3,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="html; charset=utf-8"/>
     <title>{{ $title }}</title>
     <style>
         @page {
@@ -264,6 +264,51 @@
             font-family: 'Courier New', monospace;
             font-size: 9pt;
         }
+
+        /* Calculation Step Box */
+        .calc-step {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        .calc-step-title {
+            font-weight: bold;
+            font-size: 10pt;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .calc-step-content {
+            font-size: 9pt;
+            line-height: 1.6;
+        }
+
+        .calc-step-code {
+            background: #ecf0f1;
+            padding: 8px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;
+            border-radius: 3px;
+        }
+
+        .calc-result {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            padding: 8px;
+            margin: 8px 0;
+            font-weight: bold;
+        }
+
+        .highlight-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 9pt;
+        }
     </style>
 </head>
 <body>
@@ -508,8 +553,8 @@
 
     <div class="page-break"></div>
 
-    {{-- LAMPIRAN --}}
-    <div class="section-header">4. LAMPIRAN</div>
+    {{-- LAMPIRAN - DETAIL PERHITUNGAN SAW --}}
+    <div class="section-header">4. LAMPIRAN - DETAIL PERHITUNGAN SAW</div>
 
     {{-- A. Penjelasan Metode SAW --}}
     <div class="sub-header">A. Penjelasan Metode SAW (Simple Additive Weighting)</div>
@@ -551,34 +596,411 @@
         </div>
     </div>
 
-    {{-- B. Konfigurasi Bobot --}}
-    <div class="sub-header">B. Konfigurasi Bobot Kriteria</div>
+    <div class="page-break"></div>
+
+    {{-- B. DETAIL PERHITUNGAN STEP BY STEP (Line 82-164) --}}
+    <div class="sub-header">B. Detail Perhitungan SAW (Sesuai Implementasi Kode)</div>
+
+    <div class="info-box">
+        Berikut adalah detail perhitungan SAW yang dilakukan oleh sistem sesuai dengan kode di <strong>SurveyResultController.php (Line 82-164)</strong>
+    </div>
+
+    {{-- STEP 1: Grouping dan Agregasi --}}
+    <div class="calc-step">
+        <div class="calc-step-title">STEP 1: Grouping dan Agregasi per Kriteria</div>
+        <div class="calc-step-content">
+            <p>Kode yang dijalankan (Line 82-111):</p>
+            <div class="calc-step-code">
+// Group questions by criteria<br>
+$questionsByCriteria = $sawQuestions->groupBy('criteria_name');<br>
+<br>
+foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$allScores = collect();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;foreach ($questions as $question) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;foreach ($question->responses as $response) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$allScores->push((float) $response->answer);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$criteriaAverage = $allScores->avg();<br>
+}
+            </div>
+
+            <p style="margin-top: 10px;"><strong>Hasil Agregasi:</strong></p>
+            <table style="margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Kriteria</th>
+                        <th class="text-center">Jumlah Sub-Kriteria</th>
+                        <th class="text-center">Total Data</th>
+                        <th class="text-center">Skor Agregat (x)</th>
+                        <th class="text-center">Bobot Asli</th>
+                        <th class="text-center">Tipe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($criteriaResults as $result)
+                    <tr>
+                        <td><strong>{{ $result['criteria'] }}</strong></td>
+                        <td class="text-center">{{ $result['questions_count'] }} pertanyaan</td>
+                        <td class="text-center">{{ $result['total_responses'] }} nilai</td>
+                        <td class="text-center"><strong>{{ $result['score'] }}</strong></td>
+                        <td class="text-center">
+                            @php
+                                $originalWeight = $result['weight_normalized'] * ($criteriaResults->sum(function($r) {
+                                    return $r['weight_normalized'];
+                                }) > 0 ? 
+                                    $criteriaResults->sum(function($r) { 
+                                        return $r['weight_normalized']; 
+                                    }) * $result['weight_normalized'] / $result['weight_normalized'] 
+                                    : 0);
+                            @endphp
+                            {{ number_format($result['weight_normalized'] * 100, 1) }}
+                        </td>
+                        <td class="text-center">{{ ucfirst($result['criteria_type']) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="highlight-box">
+                <strong>Catatan:</strong> Sistem mengumpulkan SEMUA jawaban dari SEMUA pertanyaan (sub-kriteria) yang memiliki nama kriteria yang sama, kemudian menghitung rata-ratanya sebagai nilai agregat kriteria.
+            </div>
+        </div>
+    </div>
+
+    {{-- STEP 2: Normalisasi Bobot --}}
+    <div class="calc-step">
+        <div class="calc-step-title">STEP 2: Normalisasi Bobot Kriteria (w)</div>
+        <div class="calc-step-content">
+            <p>Kode yang dijalankan (Line 115-119):</p>
+            <div class="calc-step-code">
+$totalWeight = $criteriaAggregates->sum('criteria_weight');<br>
+$weightNormalized = $criteria['criteria_weight'] / $totalWeight;
+            </div>
+
+            <p style="margin-top: 10px;"><strong>Perhitungan:</strong></p>
+            
+            @php
+                $totalOriginalWeight = 0;
+                foreach($criteriaResults as $result) {
+                    $totalOriginalWeight += ($result['weight_normalized'] > 0 ? 
+                        (1 / $result['weight_normalized']) * 
+                        ($criteriaResults->sum(function($r) { return $r['weight_normalized']; })) / 
+                        $criteriaResults->count() 
+                        : 0);
+                }
+            @endphp
+
+            <div style="margin: 10px 0; font-size: 9pt;">
+                Total Bobot = 
+                @foreach($criteriaResults as $index => $result)
+                    @if($index > 0) + @endif
+                    {{ number_format($result['weight_normalized'] * $totalOriginalWeight, 1) }}
+                @endforeach
+                = <strong>{{ number_format($totalOriginalWeight, 1) }}</strong>
+            </div>
+
+            <table style="margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Kriteria</th>
+                        <th class="text-center">Bobot Asli</th>
+                        <th class="text-center">Rumus</th>
+                        <th class="text-center">Bobot Ternormalisasi (w)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($criteriaResults as $result)
+                    <tr>
+                        <td><strong>{{ $result['criteria'] }}</strong></td>
+                        <td class="text-center">{{ number_format($result['weight_normalized'] * $totalOriginalWeight, 1) }}</td>
+                        <td class="text-center">
+                            {{ number_format($result['weight_normalized'] * $totalOriginalWeight, 1) }} / {{ number_format($totalOriginalWeight, 1) }}
+                        </td>
+                        <td class="text-center"><strong>{{ number_format($result['weight_normalized'], 3) }}</strong></td>
+                    </tr>
+                    @endforeach
+                    <tr style="background: #e8f5e9; font-weight: bold;">
+                        <td colspan="3" class="text-right">TOTAL</td>
+                        <td class="text-center">{{ number_format($criteriaResults->sum('weight_normalized'), 3) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calc-result">
+                ✓ Verifikasi: Total bobot ternormalisasi = {{ number_format($criteriaResults->sum('weight_normalized'), 3) }} (Harus = 1.000)
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    {{-- STEP 3: Normalisasi Nilai --}}
+    <div class="calc-step">
+        <div class="calc-step-title">STEP 3: Normalisasi Nilai (r) - Benefit dan Cost</div>
+        <div class="calc-step-content">
+            <p>Kode yang dijalankan (Line 126-138):</p>
+            <div class="calc-step-code">
+if ($criteria['criteria_type'] === 'benefit') {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$maxScore = $criteriaAggregates->max('average_score');<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$normalized = $maxScore > 0 ? <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;($criteria['average_score'] / $maxScore) : 0;<br>
+} else { // cost<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$minScore = $criteriaAggregates->min('average_score');<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$normalized = $criteria['average_score'] > 0 ? <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;($minScore / $criteria['average_score']) : 0;<br>
+}<br>
+$normalized = max(0, min(1, $normalized));
+            </div>
+
+            @php
+                $maxScore = $criteriaResults->max('score');
+                $minScore = $criteriaResults->min('score');
+            @endphp
+
+            <div class="highlight-box">
+                <strong>Data yang digunakan:</strong><br>
+                Max Score (untuk Benefit) = {{ number_format($maxScore, 2) }}<br>
+                Min Score (untuk Cost) = {{ number_format($minScore, 2) }}
+            </div>
+
+            <p style="margin-top: 10px;"><strong>Perhitungan per Kriteria:</strong></p>
+
+            <table style="margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Kriteria</th>
+                        <th class="text-center">Tipe</th>
+                        <th class="text-center">Skor (x)</th>
+                        <th class="text-center">Rumus</th>
+                        <th class="text-center">Normalisasi (r)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($criteriaResults as $result)
+                    <tr>
+                        <td><strong>{{ $result['criteria'] }}</strong></td>
+                        <td class="text-center">
+                            <span class="badge badge-{{ $result['criteria_type'] === 'benefit' ? 'baik' : 'cukup' }}">
+                                {{ ucfirst($result['criteria_type']) }}
+                            </span>
+                        </td>
+                        <td class="text-center">{{ $result['score'] }}</td>
+                        <td class="text-center" style="font-size: 8pt;">
+                            @if($result['criteria_type'] === 'benefit')
+                                {{ $result['score'] }} / {{ number_format($maxScore, 2) }}
+                            @else
+                                {{ number_format($minScore, 2) }} / {{ $result['score'] }}
+                            @endif
+                        </td>
+                        <td class="text-center"><strong>{{ number_format($result['normalized'], 3) }}</strong></td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="calc-result">
+                ✓ Semua nilai ternormalisasi berada dalam range 0-1 (sudah di-validasi dengan max(0, min(1, value)))
+            </div>
+        </div>
+    </div>
+
+    {{-- STEP 4: Nilai Terbobot --}}
+    <div class="calc-step">
+        <div class="calc-step-title">STEP 4: Perhitungan Nilai Terbobot (Vi)</div>
+        <div class="calc-step-content">
+            <p>Kode yang dijalankan (Line 141):</p>
+            <div class="calc-step-code">
+$weightedScore = $weightNormalized * $normalized;
+            </div>
+
+            <p style="margin-top: 10px;"><strong>Perhitungan:</strong></p>
+
+            <table style="margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Kriteria</th>
+                        <th class="text-center">Bobot (w)</th>
+                        <th class="text-center">Normalisasi (r)</th>
+                        <th class="text-center">Rumus</th>
+                        <th class="text-center">Nilai Terbobot (V<sub>i</sub>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($criteriaResults as $result)
+                    <tr>
+                        <td><strong>{{ $result['criteria'] }}</strong></td>
+                        <td class="text-center">{{ number_format($result['weight_normalized'], 3) }}</td>
+                        <td class="text-center">{{ number_format($result['normalized'], 3) }}</td>
+                        <td class="text-center" style="font-size: 8pt;">
+                            {{ number_format($result['weight_normalized'], 3) }} × {{ number_format($result['normalized'], 3) }}
+                        </td>
+                        <td class="text-center"><strong>{{ number_format($result['weighted_score'], 4) }}</strong></td>
+                    </tr>
+                    @endforeach
+                    <tr style="background: #34495e; color: white; font-weight: bold;">
+                        <td colspan="4" class="text-right">TOTAL NILAI PREFERENSI (ΣV<sub>i</sub>)</td>
+                        <td class="text-center">{{ number_format($totalVi, 4) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calc-result">
+                ✓ Total Vi = {{ number_format($totalVi, 4) }}
+            </div>
+        </div>
+    </div>
+
+    {{-- STEP 5: Interpretasi --}}
+    <div class="calc-step">
+        <div class="calc-step-title">STEP 5: Interpretasi Hasil</div>
+        <div class="calc-step-content">
+            <p>Kode yang dijalankan (Line 157-164):</p>
+            <div class="calc-step-code">
+private function getSAWInterpretation($normalizedScore)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if ($normalizedScore >= 0.9) return 'Sangat Baik';<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if ($normalizedScore >= 0.8) return 'Baik';<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if ($normalizedScore >= 0.6) return 'Cukup';<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if ($normalizedScore >= 0.4) return 'Kurang';<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return 'Sangat Kurang';<br>
+}
+            </div>
+
+            <p style="margin-top: 10px;"><strong>Kategori Interpretasi:</strong></p>
+
+            <table style="margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th class="text-center">Range Nilai</th>
+                        <th class="text-center">Kategori</th>
+                        <th class="text-center">Badge</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">≥ 0.900</td>
+                        <td class="text-center">Sangat Baik</td>
+                        <td class="text-center"><span class="badge badge-sangat-baik">Sangat Baik</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">0.800 - 0.899</td>
+                        <td class="text-center">Baik</td>
+                        <td class="text-center"><span class="badge badge-baik">Baik</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">0.600 - 0.799</td>
+                        <td class="text-center">Cukup</td>
+                        <td class="text-center"><span class="badge badge-cukup">Cukup</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">0.400 - 0.599</td>
+                        <td class="text-center">Kurang</td>
+                        <td class="text-center"><span class="badge badge-kurang">Kurang</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">< 0.400</td>
+                        <td class="text-center">Sangat Kurang</td>
+                        <td class="text-center"><span class="badge badge-sangat-kurang">Sangat Kurang</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="margin-top: 15px;"><strong>Hasil Interpretasi per Kriteria:</strong></p>
+
+            <table style="margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Kriteria</th>
+                        <th class="text-center">Nilai Ternormalisasi</th>
+                        <th class="text-center">Interpretasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($criteriaResults as $result)
+                    <tr>
+                        <td><strong>{{ $result['criteria'] }}</strong></td>
+                        <td class="text-center">{{ number_format($result['normalized'], 3) }}</td>
+                        <td class="text-center">
+                            <span class="badge badge-{{ strtolower(str_replace(' ', '-', $result['interpretation'])) }}">
+                                {{ $result['interpretation'] }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="calc-result" style="margin-top: 15px;">
+                <strong>KESIMPULAN AKHIR:</strong><br>
+                Total Nilai Preferensi = {{ number_format($totalVi, 4) }}<br>
+                Kategori: <strong>{{ $totalInt }}</strong><br>
+                <br>
+                Sistem penilaian menunjukkan hasil yang 
+                @if($totalVi >= 0.9)
+                    <strong>sangat memuaskan</strong> dengan semua kriteria berkontribusi positif.
+                @elseif($totalVi >= 0.8)
+                    <strong>baik</strong> dengan mayoritas kriteria berkinerja optimal.
+                @elseif($totalVi >= 0.6)
+                    <strong>cukup</strong> namun masih ada ruang untuk perbaikan.
+                @else
+                    <strong>memerlukan perbaikan</strong> pada beberapa kriteria.
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    {{-- C. Konfigurasi Bobot Lengkap --}}
+    <div class="sub-header">C. Konfigurasi Bobot Kriteria dan Sub-Kriteria</div>
 
     <table>
         <thead>
             <tr>
                 <th class="text-center" width="10%">Kode</th>
-                <th width="50%">Pertanyaan</th>
-                <th class="text-center" width="20%">Tipe Kriteria</th>
-                <th class="text-center" width="20%">Bobot</th>
+                <th width="40%">Kriteria / Sub-Kriteria (Pertanyaan)</th>
+                <th class="text-center" width="15%">Tipe Kriteria</th>
+                <th class="text-center" width="15%">Bobot Kriteria</th>
+                <th class="text-center" width="20%">Jumlah Sub-Kriteria</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($sawConfig as $config)
-            <tr>
-                <td class="text-center">{{ $config['code'] }}</td>
-                <td>{{ $config['question'] }}</td>
-                <td class="text-center">
-                    <span class="badge badge-{{ $config['type'] === 'benefit' ? 'baik' : 'cukup' }}">
-                        {{ ucfirst($config['type']) }}
-                    </span>
-                </td>
-                <td class="text-center" style="font-weight: bold;">{{ $config['weight'] }}</td>
-            </tr>
+            @php
+                $criteriaGrouped = collect($sawConfig)->groupBy('criteria_name');
+            @endphp
+            
+            @foreach($criteriaGrouped as $criteriaName => $questions)
+                @php
+                    $firstQuestion = $questions->first();
+                @endphp
+                <tr style="background: #e8f5e9; font-weight: bold;">
+                    <td class="text-center">{{ $firstQuestion['code'] }}</td>
+                    <td colspan="2"><strong>KRITERIA: {{ $criteriaName }}</strong></td>
+                    <td class="text-center">
+                        <span class="badge badge-{{ $firstQuestion['type'] === 'benefit' ? 'baik' : 'cukup' }}">
+                            {{ ucfirst($firstQuestion['type']) }}
+                        </span>
+                    </td>
+                    <td class="text-center"><strong>{{ $firstQuestion['weight'] }}</strong></td>
+                    <td class="text-center">{{ $questions->count() }} pertanyaan</td>
+                </tr>
+                
+                @foreach($questions as $index => $config)
+                <tr>
+                    <td class="text-center" style="font-size: 8pt;">{{ $config['code'] }}.{{ $index + 1 }}</td>
+                    <td style="padding-left: 20px; font-size: 8pt;">↳ {{ $config['question'] }}</td>
+                    <td class="text-center" style="font-size: 8pt;">Sub-Kriteria</td>
+                    <td class="text-center" style="font-size: 8pt;">-</td>
+                    <td class="text-center" style="font-size: 8pt;">-</td>
+                </tr>
+                @endforeach
             @endforeach
+            
             <tr style="background: #ecf0f1; font-weight: bold;">
-                <td colspan="3" class="text-right">TOTAL BOBOT</td>
-                <td class="text-center">{{ $sawConfig->sum('weight') }}</td>
+                <td colspan="4" class="text-right">TOTAL BOBOT</td>
+                <td class="text-center">{{ $criteriaGrouped->map(function($questions) { return $questions->first()['weight']; })->sum() }}</td>
+                <td class="text-center">{{ $sawConfig->count() }} pertanyaan</td>
             </tr>
         </tbody>
     </table>
@@ -586,7 +1008,8 @@
     {{-- Footer --}}
     <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ecf0f1; text-align: center; font-size: 8pt; color: #999;">
         Dokumen ini dibuat secara otomatis oleh sistem pada {{ $generated_at }}<br>
-        Laporan ini bersifat rahasia dan hanya untuk keperluan internal
+        Laporan ini bersifat rahasia dan hanya untuk keperluan internal<br>
+        <strong>Perhitungan SAW mengikuti implementasi di SurveyResultController.php (Line 82-164)</strong>
     </div>
 
 </body>
