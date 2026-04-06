@@ -78,7 +78,7 @@ class SurveyResultController extends Controller
     {
         $results = collect();
         
-        // # agregasi per kriteria Group questions by criteria
+        // Group questions by criteria
         $questionsByCriteria = $sawQuestions->groupBy('criteria_name');
         $criteriaAggregates = collect();
 
@@ -112,7 +112,7 @@ class SurveyResultController extends Controller
             }
         }
 
-        // # STEP 1: NORMALISASI BOBOT KRITERIA
+        // STEP 1: NORMALISASI BOBOT KRITERIA
         $totalWeight = $criteriaAggregates->sum('criteria_weight');
         if ($totalWeight == 0) {
             return $results;
@@ -123,7 +123,7 @@ class SurveyResultController extends Controller
             // Bobot ternormalisasi
             $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
             
-            // # Normalisasi SAW benefit dan cost - menggunakan skor rata-rata sebagai Xij
+            // Normalisasi SAW - menggunakan skor rata-rata sebagai Xij
             if ($criteria['criteria_type'] === 'benefit') {
                 // Untuk benefit: rij = Xij / Max{Xij}
                 $maxScore = $criteriaAggregates->max('average_score');
@@ -137,7 +137,7 @@ class SurveyResultController extends Controller
             // Ensure normalized score is between 0 and 1
             $normalized = max(0, min(1, $normalized));
             
-            // # perhitungan Nilai Terbobot (wj × rij)
+            // Nilai Terbobot (wj × rij)
             $weightedScore = $weightNormalized * $normalized;
             
             // Keterangan interpretasi
@@ -161,7 +161,7 @@ class SurveyResultController extends Controller
     }
 
     /**
-     * # INTERPRETASI KUALITITATIF UNTUK SAW
+     * INTERPRETASI KUALITITATIF UNTUK SAW
      */
     private function getSAWInterpretation($normalizedScore)
     {
@@ -213,17 +213,19 @@ class SurveyResultController extends Controller
         // Get all questions with sections
         $sections = SurveySection::where('is_active', true)
                                 ->with(['allQuestions' => function($q) {
-                                    $q->where('is_active', true);
+                                    $q->where('is_active', true)->with('responses')->orderBy('order_index');
                                 }])
                                 ->orderBy('order_index')
                                 ->get();
         
         // Filter sections yang memiliki questions aktif dan rename relation
-        $sections->transform(function($section) {
+        $sections = $sections->filter(function($section) {
+            return $section->allQuestions->count() > 0;
+        })->map(function($section) {
             $section->questions = $section->allQuestions;
             unset($section->allQuestions);
             return $section;
-        });
+        })->values();
 
         // Statistics per question
         $questionStats = $this->calculateQuestionStatistics($sections);

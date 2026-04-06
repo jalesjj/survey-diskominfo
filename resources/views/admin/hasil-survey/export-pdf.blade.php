@@ -358,6 +358,184 @@
 
     <div class="page-break"></div>
 
+    {{-- TABEL LAPORAN HASIL KUESIONER --}}
+    <div class="sub-header">Laporan Hasil Kuesioner</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;" class="text-center">No</th>
+                <th style="width: 30%;">Pertanyaan</th>
+                <th style="width: 12%;" class="text-center">Jenis</th>
+                <th style="width: 28%;">Jawaban Responden</th>
+                <th style="width: 12%;" class="text-center">Frekuensi</th>
+                <th style="width: 13%;" class="text-center">Persentase</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $questionNumber = 1;
+            @endphp
+            
+            @foreach($sections as $sectionIndex => $section)
+                @if($section->questions && $section->questions->count() > 0)
+                    @foreach($section->questions as $questionIndex => $question)
+                        @php
+                            $responses = $question->responses;
+                            $totalResponses = $responses->count();
+                            $questionType = $question->question_type;
+                            
+                            // Tentukan label jenis pertanyaan
+                            $typeLabels = [
+                                'short_text' => 'Jawaban Singkat',
+                                'text' => 'Jawaban Singkat',
+                                'long_text' => 'Paragraf',
+                                'textarea' => 'Paragraf',
+                                'multiple_choice' => 'Pilihan Ganda',
+                                'radio' => 'Pilihan Ganda',
+                                'checkbox' => 'Kotak Centang',
+                                'dropdown' => 'Drop-down',
+                                'select' => 'Drop-down',
+                                'file_upload' => 'Upload File',
+                                'linear_scale' => 'Skala Linier'
+                            ];
+                            
+                            $typeLabel = $typeLabels[$questionType] ?? ucfirst(str_replace('_', ' ', $questionType));
+                            
+                            // Tambahkan info skala untuk linear_scale
+                            if ($questionType === 'linear_scale') {
+                                $scaleMin = $question->settings['scale_min'] ?? 1;
+                                $scaleMax = $question->settings['scale_max'] ?? 5;
+                                $typeLabel .= ' (' . $scaleMin . '-' . $scaleMax . ')';
+                            }
+                            
+                            // Hitung distribusi jawaban
+                            $distribution = [];
+                            
+                            // Untuk Multiple Choice, Radio, Dropdown, Select
+                            if (in_array($questionType, ['multiple_choice', 'radio', 'dropdown', 'select'])) {
+                                if ($totalResponses > 0) {
+                                    $grouped = $responses->groupBy('answer');
+                                    foreach ($grouped as $answer => $group) {
+                                        if (!empty($answer)) {
+                                            $count = $group->count();
+                                            $distribution[] = [
+                                                'answer' => $answer,
+                                                'count' => $count,
+                                                'percentage' => round(($count / $totalResponses) * 100) . '%'
+                                            ];
+                                        }
+                                    }
+                                }
+                                
+                            } elseif ($questionType === 'checkbox') {
+                                $allOptions = [];
+                                foreach ($responses as $response) {
+                                    if ($response->answer_data && is_array($response->answer_data)) {
+                                        foreach ($response->answer_data as $option) {
+                                            if (!isset($allOptions[$option])) {
+                                                $allOptions[$option] = 0;
+                                            }
+                                            $allOptions[$option]++;
+                                        }
+                                    } elseif ($response->answer) {
+                                        $answerArray = json_decode($response->answer, true);
+                                        if (is_array($answerArray)) {
+                                            foreach ($answerArray as $option) {
+                                                if (!isset($allOptions[$option])) {
+                                                    $allOptions[$option] = 0;
+                                                }
+                                                $allOptions[$option]++;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                foreach ($allOptions as $option => $count) {
+                                    $distribution[] = [
+                                        'answer' => $option,
+                                        'count' => $count,
+                                        'percentage' => $totalResponses > 0 ? round(($count / $totalResponses) * 100) . '%' : '0%'
+                                    ];
+                                }
+                                
+                            } elseif ($questionType === 'linear_scale') {
+                                $scaleMin = $question->settings['scale_min'] ?? 1;
+                                $scaleMax = $question->settings['scale_max'] ?? 5;
+                                
+                                for ($i = $scaleMin; $i <= $scaleMax; $i++) {
+                                    $count = $responses->where('answer', (string)$i)->count();
+                                    $distribution[] = [
+                                        'answer' => (string)$i,
+                                        'count' => $count,
+                                        'percentage' => $totalResponses > 0 ? round(($count / $totalResponses) * 100) . '%' : '0%'
+                                    ];
+                                }
+                                
+                            } elseif ($questionType === 'file_upload') {
+                                $uploadedCount = $responses->filter(function($r) {
+                                    return !empty($r->answer) || !empty($r->answer_data);
+                                })->count();
+                                $notUploadedCount = $totalResponses - $uploadedCount;
+                                
+                                if ($uploadedCount > 0 || $notUploadedCount > 0) {
+                                    $distribution = [
+                                        [
+                                            'answer' => 'File diterima',
+                                            'count' => $uploadedCount,
+                                            'percentage' => $totalResponses > 0 ? round(($uploadedCount / $totalResponses) * 100) . '%' : '0%'
+                                        ],
+                                        [
+                                            'answer' => 'Tidak upload',
+                                            'count' => $notUploadedCount,
+                                            'percentage' => $totalResponses > 0 ? round(($notUploadedCount / $totalResponses) * 100) . '%' : '0%'
+                                        ]
+                                    ];
+                                }
+                            }
+                            
+                            $isTextType = in_array($questionType, ['text', 'textarea', 'short_text', 'long_text']);
+                            $hasDistribution = !empty($distribution);
+                        @endphp
+                        
+                        <tr>
+                            <td class="text-center">{{ $questionNumber }}</td>
+                            <td>{{ $question->question_text }}</td>
+                            <td class="text-center">{{ $typeLabel }}</td>
+                            @if($hasDistribution)
+                                <td>
+                                    @foreach($distribution as $dist)
+                                        {{ $dist['answer'] }}@if(!$loop->last)<br>@endif
+                                    @endforeach
+                                </td>
+                                <td class="text-center">
+                                    @foreach($distribution as $dist)
+                                        {{ $dist['count'] }}@if(!$loop->last)<br>@endif
+                                    @endforeach
+                                </td>
+                                <td class="text-center">
+                                    @foreach($distribution as $dist)
+                                        {{ $dist['percentage'] }}@if(!$loop->last)<br>@endif
+                                    @endforeach
+                                </td>
+                            @else
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                            @endif
+                        </tr>
+                        
+                        @php
+                            $questionNumber++;
+                        @endphp
+                    @endforeach
+                @endif
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
     {{-- TABEL HASIL INTERPRETASI PER KRITERIA --}}
     <div class="sub-header">Hasil Interpretasi per Kriteria</div>
 

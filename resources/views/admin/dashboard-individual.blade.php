@@ -82,6 +82,17 @@
         box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
     }
 
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
     /* Summary Stats */
     .summary-stats {
         display: grid;
@@ -569,6 +580,10 @@
         <a href="{{ route('admin.export') }}" class="btn btn-success">
             <i class="fas fa-download"></i>
             Export Data
+        </a>
+        <a href="{{ route('admin.hasil-survey.export-pdf') }}" class="btn btn-danger">
+            <i class="fas fa-file-pdf"></i>
+            Export PDF
         </a>
     </div>
 
