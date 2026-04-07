@@ -566,11 +566,100 @@
         margin: 0;
         line-height: 1.6;
     }
+
+    /* Toast Notification */
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        min-width: 300px;
+        border-left: 4px solid #28a745;
+    }
+
+    .toast.success {
+        border-left-color: #28a745;
+    }
+
+    .toast.error {
+        border-left-color: #dc3545;
+    }
+
+    .toast-icon {
+        font-size: 24px;
+    }
+
+    .toast.success .toast-icon {
+        color: #28a745;
+    }
+
+    .toast.error .toast-icon {
+        color: #dc3545;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #2c3e50;
+    }
+
+    .toast-message {
+        font-size: 14px;
+        color: #7f8c8d;
+    }
+
+    .toast-close {
+        cursor: pointer;
+        color: #95a5a6;
+        font-size: 18px;
+        transition: color 0.3s ease;
+    }
+
+    .toast-close:hover {
+        color: #7f8c8d;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+
+    .toast.hiding {
+        animation: slideOutRight 0.3s ease-out forwards;
+    }
 </style>
 @endpush
 
 @section('content')
-<!-- Action Buttons -->
 <!-- Action Buttons -->
     <div class="action-buttons">
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
@@ -703,13 +792,9 @@
                     <button class="action-btn detail-btn" onclick="showDetailModal({{ $survey->id }})">
                         <i class="fas fa-eye"></i> Lihat Detail
                     </button>
-                    <form method="POST" action="{{ route('admin.deleteSurvey', $survey->id) }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus data survei ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="action-btn delete-btn">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
-                    </form>
+                    <button class="action-btn delete-btn" onclick="deleteSurvey({{ $survey->id }})">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
                 </div>
             </div>
         </div>
@@ -927,6 +1012,73 @@
     function isImage(mimeType) {
         if (!mimeType) return false;
         return mimeType.startsWith('image/');
+    }
+
+    // Function to show toast notification
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const title = type === 'success' ? 'Berhasil!' : 'Error!';
+        
+        toast.innerHTML = `
+            <i class="fas ${icon} toast-icon"></i>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <i class="fas fa-times toast-close" onclick="this.parentElement.remove()"></i>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Function to delete survey
+    function deleteSurvey(surveyId) {
+        fetch(`/admin/survey/${surveyId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success toast
+                showToast(data.message, 'success');
+                
+                // Remove the card from DOM with animation
+                const card = document.querySelector(`[data-survey-id="${surveyId}"]`);
+                if (card) {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-50px)';
+                    setTimeout(() => {
+                        card.remove();
+                        
+                        // Check if no more cards, show empty state
+                        const container = document.getElementById('responsesContainer');
+                        if (container && container.children.length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                }
+            } else {
+                showToast(data.message || 'Gagal menghapus survey', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Terjadi kesalahan saat menghapus survey', 'error');
+        });
     }
 
     // Auto-hide success messages

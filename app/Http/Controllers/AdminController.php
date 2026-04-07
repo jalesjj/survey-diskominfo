@@ -735,4 +735,62 @@ private function getSectionData($totalSurveys, $questions)
 
         return view('admin.uploaded-files', compact('fileResponses'));
     }
+
+    // Method untuk menghapus survey individual
+    public function deleteSurvey($id)
+    {
+        // Cek apakah admin sudah login
+        if (!session('admin_id')) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $survey = Survey::findOrFail($id);
+            
+            // Hapus semua file yang terkait dengan survey ini
+            $fileResponses = SurveyResponse::where('survey_id', $id)
+                ->whereHas('question', function($query) {
+                    $query->where('question_type', 'file_upload');
+                })
+                ->whereNotNull('answer_data')
+                ->get();
+
+            foreach ($fileResponses as $response) {
+                if ($response->answer_data && isset($response->answer_data['file_path'])) {
+                    $filePath = $response->answer_data['file_path'];
+                    if (Storage::disk('public')->exists($filePath)) {
+                        Storage::disk('public')->delete($filePath);
+                    }
+                }
+            }
+
+            // Hapus semua responses terkait
+            SurveyResponse::where('survey_id', $id)->delete();
+            
+            // Hapus survey
+            $survey->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Survey berhasil dihapus',
+                'show_toast' => true
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Delete Survey Error', [
+                'survey_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat menghapus survey: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
