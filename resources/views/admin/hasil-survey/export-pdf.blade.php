@@ -23,10 +23,6 @@
             color: #333;
         }
 
-        .page-break {
-            page-break-after: always;
-        }
-
         /* Cover Page - Simple */
         .cover-page {
             text-align: center;
@@ -67,6 +63,10 @@
             font-weight: bold;
             margin: 20px 0 10px 0;
             color: #333;
+        }
+
+        .page-break {
+            page-break-after: always;
         }
 
         /* Tables - Simple */
@@ -333,6 +333,7 @@
 
     <div class="page-break"></div>
 
+
     {{-- HASIL PERHITUNGAN SAW --}}
     <div class="section-header">1. HASIL PERHITUNGAN SAW (Simple Additive Weighting)</div>
 
@@ -356,7 +357,6 @@
         </div>
     </div>
 
-    <div class="page-break"></div>
 
     {{-- TABEL LAPORAN HASIL KUESIONER --}}
     <div class="sub-header">Laporan Hasil Kuesioner</div>
@@ -534,7 +534,6 @@
         </tbody>
     </table>
 
-    <div class="page-break"></div>
 
     {{-- TABEL HASIL INTERPRETASI PER KRITERIA --}}
     <div class="sub-header">Hasil Interpretasi per Kriteria</div>
@@ -580,9 +579,8 @@
         </tbody>
     </table>
 
-    <div class="page-break"></div>
 
-    {{-- LAMPIRAN - DETAIL PERHITUNGAN SAW --}}
+    LAMPIRAN - DETAIL PERHITUNGAN SAW
     <div class="section-header">2. LAMPIRAN - DETAIL PERHITUNGAN SAW</div>
 
     {{-- A. Penjelasan Metode SAW --}}
@@ -594,51 +592,50 @@
             penjumlahan terbobot dari rating kinerja pada setiap alternatif pada semua kriteria.
         </p>
 
-        <strong>Langkah Perhitungan:</strong>
+        {{-- <strong>Langkah Perhitungan:</strong>
         <ol style="margin-left: 20px; margin-top: 8px;">
             <li style="margin: 5px 0;">Menentukan kriteria dan bobot masing-masing kriteria</li>
             <li style="margin: 5px 0;">Melakukan normalisasi matriks keputusan</li>
             <li style="margin: 5px 0;">Menghitung nilai preferensi untuk setiap alternatif</li>
-        </ol>
+        </ol> --}}
 
-        <div class="formula-box" style="margin-top: 15px;">
+        {{-- <div class="formula-box" style="margin-top: 15px;">
             <strong>Rumus Normalisasi (Benefit):</strong><br>
             r<sub>ij</sub> = x<sub>ij</sub> / Max{x<sub>ij</sub>}
-        </div>
+        </div> --}}
 
-        <div class="formula-box">
+        {{-- <div class="formula-box">
             <strong>Rumus Normalisasi (Cost):</strong><br>
             r<sub>ij</sub> = Min{x<sub>ij</sub>} / x<sub>ij</sub>
-        </div>
+        </div> --}}
 
-        <div class="formula-box">
+        {{-- <div class="formula-box">
             <strong>Rumus Nilai Preferensi:</strong><br>
             V<sub>i</sub> = Σ w<sub>j</sub> × r<sub>ij</sub>
-        </div>
+        </div> --}}
 
-        <div style="margin-top: 15px; font-size: 8pt; color: #666;">
+        {{-- <div style="margin-top: 15px; font-size: 8pt; color: #666;">
             <strong>Keterangan:</strong><br>
             r<sub>ij</sub> = nilai rating kinerja ternormalisasi<br>
             x<sub>ij</sub> = nilai atribut yang dimiliki dari setiap kriteria<br>
             w<sub>j</sub> = nilai bobot dari setiap kriteria<br>
             V<sub>i</sub> = nilai preferensi untuk setiap alternatif
-        </div>
+        </div> --}}
     </div>
 
-    <div class="page-break"></div>
 
     {{-- B. DETAIL PERHITUNGAN STEP BY STEP (Line 82-164) --}}
     <div class="sub-header">B. Detail Perhitungan SAW (Sesuai Implementasi Kode)</div>
 
-    <div class="info-box">
+    {{-- <div class="info-box">
         Berikut adalah detail perhitungan SAW yang dilakukan oleh sistem sesuai dengan kode di <strong>SurveyResultController.php (Line 82-164)</strong>
-    </div>
+    </div> --}}
 
     {{-- STEP 1: Grouping dan Agregasi --}}
     <div class="calc-step">
         <div class="calc-step-title">STEP 1: Grouping dan Agregasi per Kriteria</div>
         <div class="calc-step-content">
-            <p>Kode yang dijalankan (Line 82-111):</p>
+            {{-- <p>Kode yang dijalankan (Line 82-111):</p>
             <div class="calc-step-code">
 // Group questions by criteria<br>
 $questionsByCriteria = $sawQuestions->groupBy('criteria_name');<br>
@@ -652,7 +649,7 @@ foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;&nbsp;&nbsp;$criteriaAverage = $allScores->avg();<br>
 }
-            </div>
+            </div> --}}
 
             <p style="margin-top: 10px;"><strong>Hasil Agregasi:</strong></p>
             <table style="margin-top: 8px;">
@@ -690,9 +687,9 @@ foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
                 </tbody>
             </table>
 
-            <div class="highlight-box">
+            {{-- <div class="highlight-box">
                 <strong>Catatan:</strong> Sistem mengumpulkan SEMUA jawaban dari SEMUA pertanyaan (sub-kriteria) yang memiliki nama kriteria yang sama, kemudian menghitung rata-ratanya sebagai nilai agregat kriteria.
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -700,11 +697,11 @@ foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
     <div class="calc-step">
         <div class="calc-step-title">STEP 2: Normalisasi Bobot Kriteria (w)</div>
         <div class="calc-step-content">
-            <p>Kode yang dijalankan (Line 115-119):</p>
+            {{-- <p>Kode yang dijalankan (Line 115-119):</p>
             <div class="calc-step-code">
 $totalWeight = $criteriaAggregates->sum('criteria_weight');<br>
 $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
-            </div>
+            </div> --}}
 
             <p style="margin-top: 10px;"><strong>Perhitungan:</strong></p>
             
@@ -773,19 +770,18 @@ $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
                 </tbody>
             </table>
 
-            <div class="calc-result">
+            {{-- <div class="calc-result">
                 ✓ Verifikasi: Total bobot ternormalisasi = {{ number_format($criteriaResults->sum('weight_normalized'), 3) }} (Harus = 1.000)
-            </div>
+            </div> --}}
         </div>
     </div>
 
-    <div class="page-break"></div>
 
     {{-- STEP 3: Normalisasi Nilai --}}
     <div class="calc-step">
         <div class="calc-step-title">STEP 3: Normalisasi Nilai (r) - Benefit dan Cost</div>
         <div class="calc-step-content">
-            <p>Kode yang dijalankan (Line 126-138):</p>
+            {{-- <p>Kode yang dijalankan (Line 126-138):</p>
             <div class="calc-step-code">
 if ($criteria['criteria_type'] === 'benefit') {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;$maxScore = $criteriaAggregates->max('average_score');<br>
@@ -797,7 +793,7 @@ if ($criteria['criteria_type'] === 'benefit') {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;($minScore / $criteria['average_score']) : 0;<br>
 }<br>
 $normalized = max(0, min(1, $normalized));
-            </div>
+            </div> --}}
 
             @php
                 $maxScore = $criteriaResults->max('score');
@@ -845,9 +841,9 @@ $normalized = max(0, min(1, $normalized));
                 </tbody>
             </table>
 
-            <div class="calc-result">
+            {{-- <div class="calc-result">
                 ✓ Semua nilai ternormalisasi berada dalam range 0-1 (sudah di-validasi dengan max(0, min(1, value)))
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -855,10 +851,10 @@ $normalized = max(0, min(1, $normalized));
     <div class="calc-step">
         <div class="calc-step-title">STEP 4: Perhitungan Nilai Terbobot (Vi)</div>
         <div class="calc-step-content">
-            <p>Kode yang dijalankan (Line 141):</p>
+            {{-- <p>Kode yang dijalankan (Line 141):</p>
             <div class="calc-step-code">
 $weightedScore = $weightNormalized * $normalized;
-            </div>
+            </div> --}}
 
             <p style="margin-top: 10px;"><strong>Perhitungan:</strong></p>
 
@@ -891,9 +887,9 @@ $weightedScore = $weightNormalized * $normalized;
                 </tbody>
             </table>
 
-            <div class="calc-result">
+            {{-- <div class="calc-result">
                 ✓ Total Vi = {{ number_format($totalVi, 4) }}
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -901,7 +897,7 @@ $weightedScore = $weightNormalized * $normalized;
     <div class="calc-step">
         <div class="calc-step-title">STEP 5: Interpretasi Hasil</div>
         <div class="calc-step-content">
-            <p>Kode yang dijalankan (Line 157-164):</p>
+            {{-- <p>Kode yang dijalankan (Line 157-164):</p>
             <div class="calc-step-code">
 private function getSAWInterpretation($normalizedScore)<br>
 {<br>
@@ -911,7 +907,7 @@ private function getSAWInterpretation($normalizedScore)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if ($normalizedScore >= 0.4) return 'Kurang';<br>
 &nbsp;&nbsp;&nbsp;&nbsp;return 'Sangat Kurang';<br>
 }
-            </div>
+            </div> --}}
 
             <p style="margin-top: 10px;"><strong>Kategori Interpretasi:</strong></p>
 
@@ -1002,66 +998,11 @@ private function getSAWInterpretation($normalizedScore)<br>
         </div>
     </div>
 
-    <div class="page-break"></div>
-
-    {{-- C. Konfigurasi Bobot Lengkap --}}
-    <div class="sub-header">C. Konfigurasi Bobot Kriteria dan Sub-Kriteria</div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="text-center" width="10%">Kode</th>
-                <th width="40%">Kriteria / Sub-Kriteria (Pertanyaan)</th>
-                <th class="text-center" width="15%">Tipe Kriteria</th>
-                <th class="text-center" width="15%">Bobot Kriteria</th>
-                <th class="text-center" width="20%">Jumlah Sub-Kriteria</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $criteriaGrouped = collect($sawConfig)->groupBy('criteria_name');
-            @endphp
-            
-            @foreach($criteriaGrouped as $criteriaName => $questions)
-                @php
-                    $firstQuestion = $questions->first();
-                @endphp
-                <tr style="background: #e8f5e9; font-weight: bold;">
-                    <td class="text-center">{{ $firstQuestion['code'] }}</td>
-                    <td colspan="2"><strong>KRITERIA: {{ $criteriaName }}</strong></td>
-                    <td class="text-center">
-                        <span class="badge badge-{{ $firstQuestion['type'] === 'benefit' ? 'baik' : 'cukup' }}">
-                            {{ ucfirst($firstQuestion['type']) }}
-                        </span>
-                    </td>
-                    <td class="text-center"><strong>{{ $firstQuestion['weight'] }}</strong></td>
-                    <td class="text-center">{{ $questions->count() }} pertanyaan</td>
-                </tr>
-                
-                @foreach($questions as $index => $config)
-                <tr>
-                    <td class="text-center" style="font-size: 8pt;">{{ $config['code'] }}.{{ $index + 1 }}</td>
-                    <td style="padding-left: 20px; font-size: 8pt;">↳ {{ $config['question'] }}</td>
-                    <td class="text-center" style="font-size: 8pt;">Sub-Kriteria</td>
-                    <td class="text-center" style="font-size: 8pt;">-</td>
-                    <td class="text-center" style="font-size: 8pt;">-</td>
-                </tr>
-                @endforeach
-            @endforeach
-            
-            <tr style="background: #ecf0f1; font-weight: bold;">
-                <td colspan="4" class="text-right">TOTAL BOBOT</td>
-                <td class="text-center">{{ $criteriaGrouped->map(function($questions) { return $questions->first()['weight']; })->sum() }}</td>
-                <td class="text-center">{{ $sawConfig->count() }} pertanyaan</td>
-            </tr>
-        </tbody>
-    </table>
-
     {{-- Footer --}}
     <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ecf0f1; text-align: center; font-size: 8pt; color: #999;">
         Dokumen ini dibuat secara otomatis oleh sistem pada {{ $generated_at }}<br>
         Laporan ini bersifat rahasia dan hanya untuk keperluan internal<br>
-        <strong>Perhitungan SAW mengikuti implementasi di SurveyResultController.php (Line 82-164)</strong>
+        {{-- <strong>Perhitungan SAW mengikuti implementasi di SurveyResultController.php (Line 82-164)</strong> --}}
     </div>
 
 </body>
