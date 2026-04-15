@@ -456,43 +456,43 @@
                     <div class="question-type-cards">
                         <label class="type-card" for="type_short_text">
                             <input type="radio" id="type_short_text" name="question_type" value="short_text" {{ old('question_type') == 'short_text' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">📝 Jawaban Singkat</div>
+                            <div class="type-title"><i class="fas fa-align-left"></i> Jawaban Singkat</div>
                             <div class="type-description">Responden dapat memberikan jawaban singkat dalam satu baris</div>
                         </label>
 
                         <label class="type-card" for="type_long_text">
                             <input type="radio" id="type_long_text" name="question_type" value="long_text" {{ old('question_type') == 'long_text' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">📄 Paragraf</div>
+                            <div class="type-title"><i class="fas fa-paragraph"></i> Paragraf</div>
                             <div class="type-description">Responden dapat memberikan jawaban panjang dalam beberapa baris</div>
                         </label>
 
                         <label class="type-card" for="type_multiple_choice">
                             <input type="radio" id="type_multiple_choice" name="question_type" value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">🔘 Pilihan Ganda</div>
+                            <div class="type-title"><i class="far fa-circle"></i> Pilihan Ganda</div>
                             <div class="type-description">Responden memilih satu jawaban dari beberapa pilihan</div>
                         </label>
 
                         <label class="type-card" for="type_checkbox">
                             <input type="radio" id="type_checkbox" name="question_type" value="checkbox" {{ old('question_type') == 'checkbox' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">☑️ Kotak Centang</div>
+                            <div class="type-title"><i class="far fa-check-square"></i> Kotak Centang</div>
                             <div class="type-description">Responden dapat memilih beberapa jawaban sekaligus</div>
                         </label>
 
                         <label class="type-card" for="type_dropdown">
                             <input type="radio" id="type_dropdown" name="question_type" value="dropdown" {{ old('question_type') == 'dropdown' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">🔽 Drop-down</div>
+                            <div class="type-title"><i class="fas fa-caret-square-down"></i> Drop-down</div>
                             <div class="type-description">Responden memilih satu jawaban dari daftar dropdown</div>
                         </label>
 
                         <label class="type-card" for="type_file_upload">
                             <input type="radio" id="type_file_upload" name="question_type" value="file_upload" {{ old('question_type') == 'file_upload' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">📎 Upload File</div>
+                            <div class="type-title"><i class="fas fa-paperclip"></i> Upload File</div>
                             <div class="type-description">Responden dapat mengunggah dokumen atau gambar</div>
                         </label>
 
                         <label class="type-card" for="type_linear_scale">
                             <input type="radio" id="type_linear_scale" name="question_type" value="linear_scale" {{ old('question_type') == 'linear_scale' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
-                            <div class="type-title">📊 Skala Linier</div>
+                            <div class="type-title"><i class="fas fa-chart-line"></i> Skala Linier</div>
                             <div class="type-description">Responden memberikan penilaian dengan skala angka</div>
                         </label>
                     </div>

@@ -372,14 +372,14 @@
     <div class="form-body">
         @if(session('success'))
         <div class="success-message">
-            <span>✅</span>
+            <span><i class="fas fa-check-circle"></i></span>
             {{ session('success') }}
         </div>
         @endif
 
         @if(session('error'))
         <div class="error-message">
-            <span>❌</span>
+            <span><i class="fas fa-times-circle"></i></span>
             {{ session('error') }}
         </div>
         @endif
@@ -407,7 +407,7 @@
                         <div id="previewType"></div>
                     </div>
                     <button type="button" class="file-change-btn" onclick="changeFile()">
-                        🔄 Ganti File
+                        <i class="fas fa-sync-alt"></i> Ganti File
                     </button>
                 </div>
                 
@@ -425,7 +425,7 @@
                     ← Batal
                 </a>
                 <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
-                    <span id="submitIcon">📁</span>
+                    <span id="submitIcon"><i class="fas fa-folder"></i></span>
                     <span id="submitText">Pilih File Dulu</span>
                 </button>
             </div>
@@ -464,7 +464,7 @@ function previewFile(file) {
         const uploadSubtext = document.getElementById('uploadSubtext');
         
         uploadArea.classList.add('has-file');
-        uploadText.textContent = '✅ File dipilih: ' + file.name;
+        uploadText.innerHTML = '<i class="fas fa-check-circle"></i> File dipilih: ' + file.name;
         uploadSubtext.textContent = 'Ukuran: ' + formatFileSize(file.size);
         
         // Show preview
@@ -475,10 +475,10 @@ function previewFile(file) {
         const previewType = document.getElementById('previewType');
         
         previewImg.src = e.target.result;
-        previewName.innerHTML = '<strong>📄 ' + file.name + '</strong>';
-        previewSize.innerHTML = '📏 ' + formatFileSize(file.size);
-        previewType.innerHTML = '🏷️ ' + file.type.split('/')[1].toUpperCase();
-        
+        previewName.innerHTML = '<strong><i class="fas fa-file"></i> ' + file.name + '</strong>';
+        previewSize.innerHTML = '<i class="fas fa-ruler"></i> ' + formatFileSize(file.size);
+        previewType.innerHTML = '<i class="fas fa-tag"></i> ' + file.type.split('/')[1].toUpperCase();
+
         filePreview.classList.add('show');
         
         // Smooth scroll to preview

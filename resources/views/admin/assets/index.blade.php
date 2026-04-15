@@ -471,14 +471,14 @@
 <div class="page-container">
     @if(session('success'))
     <div class="success-message">
-        <span>✅</span>
+        <span><i class="fas fa-check-circle"></i></span>
         {{ session('success') }}
     </div>
     @endif
 
     @if(session('error'))
     <div class="error-message">
-        <span>❌</span>
+        <span><i class="fas fa-times-circle"></i></span>
         {{ session('error') }}
     </div>
     @endif
@@ -486,7 +486,7 @@
     <!-- Upload Section - Always Visible -->
     <div class="upload-section">
         <div class="upload-content">
-            <span class="upload-icon">📤</span>
+            <span class="upload-icon"><i class="fas fa-upload"></i></span>
             <div class="upload-title">Upload Logo Baru</div>
             <div class="upload-subtitle">
                 Tambahkan lebih banyak logo untuk sistem survei. 
@@ -498,14 +498,8 @@
             </div>
             <div class="upload-actions">
                 <a href="{{ route('admin.assets.create') }}" class="btn-upload primary">
-                    📷 Upload Logo
+                    <i class="fas fa-camera"></i> Upload Logo
                 </a>
-                {{-- <a href="{{ route('admin.assets.create') }}" class="btn-upload">
-                    🎨 Upload Banner
-                </a>
-                <a href="{{ route('admin.assets.create') }}" class="btn-upload">
-                    🔰 Upload Icon
-                </a> --}}
             </div>
         </div>
     </div>
@@ -515,17 +509,17 @@
         <div class="stat-card total">
             <div class="stat-number">{{ $assets->count() }}</div>
             <div class="stat-label">Total Assets</div>
-            <div class="stat-icon">📊</div>
+            <div class="stat-icon"><i class="fas fa-chart-bar"></i></div>
         </div>
         <div class="stat-card active">
             <div class="stat-number">{{ $assets->where('is_active', true)->count() }}</div>
             <div class="stat-label">Assets Aktif</div>
-            <div class="stat-icon">✅</div>
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
         </div>
         <div class="stat-card inactive">
             <div class="stat-number">{{ $assets->where('is_active', false)->count() }}</div>
             <div class="stat-label">Assets Non-aktif</div>
-            <div class="stat-icon">⏸️</div>
+            <div class="stat-icon"><i class="fas fa-pause-circle"></i></div>
         </div>
     </div>
 
@@ -580,11 +574,13 @@
         </div>
         @empty
         <div class="empty-state">
-            <div class="empty-icon">📁</div>
-            <h3>Belum ada asset yang diupload</h3>
-            <p>Upload logo atau asset gambar pertama untuk sistem survei. Logo yang diupload akan otomatis tampil di header halaman survei.</p>
+            <div class="empty-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <h3>Belum Ada Asset</h3>
+            <p>Logo yang diupload akan otomatis tampil di header halaman survei.</p>
             <a href="{{ route('admin.assets.create') }}" class="btn">
-                📤 Upload Asset Pertama
+                <i class="fas fa-upload"></i> Upload Asset Pertama
             </a>
         </div>
         @endforelse
@@ -592,7 +588,7 @@
 
     @if($assets->count() > 0)
     <div class="info-banner">
-        <h4>ℹ️ Informasi Sistem Logo</h4>
+        <h4><i class="fas fa-info-circle"></i> Informasi Sistem Logo</h4>
         <p>Logo yang aktif akan tampil di header halaman survei dengan ukuran yang disesuaikan otomatis. Anda dapat mengelola multiple logo sekaligus dan mengatur status aktif/non-aktif untuk setiap logo.</p>
     </div>
     @endif

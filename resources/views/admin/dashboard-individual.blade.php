@@ -712,7 +712,7 @@
 
 <!-- Search and Filter Bar -->
 <div class="search-filter-bar">
-    <input type="text" class="search-input" placeholder="🔍 Cari berdasarkan jawaban responden..." id="searchInput">
+    <input type="text" class="search-input" placeholder="Cari berdasarkan jawaban responden..." id="searchInput">
     <select class="filter-select" id="dateFilter">
         <option value="">Semua Tanggal</option>
         <option value="today">Hari Ini</option>

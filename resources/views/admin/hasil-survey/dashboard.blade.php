@@ -163,6 +163,146 @@
         color: #ad1457;
     }
 
+    /* Button Detail */
+    .btn-detail {
+        background: #2196F3;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-detail:hover {
+        background: #1976D2;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+    }
+
+    .btn-detail i {
+        font-size: 12px;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+        background: #f0f0f0;
+        color: #666;
+    }
+
+    .modal-body {
+        padding: 25px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 14px;
+    }
+
+    .detail-value {
+        font-family: 'Courier New', monospace;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .detail-section {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .detail-section:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .detail-section-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+
     /* Total Section - Clean */
     .total-box {
         background: #f9f9f9;
@@ -268,11 +408,11 @@
         </div>
 
         <!-- Info Box -->
-        <div class="info-box">
+        {{-- <div class="info-box">
             Tabel berikut menampilkan hasil perhitungan Simple Additive Weighting (SAW) untuk setiap kriteria. 
             Data diperoleh dari agregasi seluruh responden survey dan diolah menggunakan rumus SAW untuk 
             mendapatkan nilai preferensi akhir.
-        </div>
+        </div> --}}
 
         <!-- Table -->
         <div class="table-container">
@@ -284,25 +424,23 @@
                 <thead>
                     <tr>
                         <th>Kriteria</th>
-                        <th>Skor (x)</th>
-                        <th>Bobot (w<sub>ᵢ</sub>)</th>
-                        <th>Normalisasi (r<sub>ᵢ</sub>)</th>
-                        <th>Nilai Terbobot</th>
                         <th>Keterangan</th>
+                        <th>Detail</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($criteriaResults as $result)
                         <tr>
                             <td class="criteria-name">{{ $result['criteria'] }}</td>
-                            <td class="number-cell">{{ $result['score'] }}</td>
-                            <td class="number-cell">{{ number_format($result['weight_normalized'], 3) }}</td>
-                            <td class="number-cell">{{ number_format($result['normalized'], 3) }}</td>
-                            <td class="number-cell">{{ number_format($result['weighted_score'], 4) }}</td>
                             <td>
                                 <span class="badge-status badge-{{ strtolower(str_replace(' ', '-', $result['interpretation'])) }}">
                                     {{ $result['interpretation'] }}
                                 </span>
+                            </td>
+                            <td>
+                                <button class="btn-detail" onclick="showDetail{{ $loop->index }}()">
+                                    <i class="fas fa-eye"></i> Lihat Detail
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -328,6 +466,88 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal untuk Detail -->
+        @foreach($criteriaResults as $index => $result)
+        <div class="modal-overlay" id="modal{{ $index }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Detail Perhitungan: {{ $result['criteria'] }}</h3>
+                    <button class="modal-close" onclick="closeModal{{ $index }}()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-section">
+                        <div class="detail-section-title">Informasi Dasar</div>
+                        <div class="detail-row">
+                            <span class="detail-label">Kriteria</span>
+                            <span class="detail-value">{{ $result['criteria'] }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Tipe Kriteria</span>
+                            <span class="detail-value">
+                                <span class="badge-status badge-{{ $result['criteria_type'] === 'benefit' ? 'baik' : 'cukup' }}">
+                                    {{ ucfirst($result['criteria_type']) }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Jumlah Sub-Kriteria</span>
+                            <span class="detail-value">{{ $result['questions_count'] }} pertanyaan</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Respons</span>
+                            <span class="detail-value">{{ $result['total_responses'] }} nilai</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="detail-section-title">Nilai & Perhitungan</div>
+                        <div class="detail-row">
+                            <span class="detail-label">Skor Agregat (x)</span>
+                            <span class="detail-value">{{ $result['score'] }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Bobot Asli</span>
+                            <span class="detail-value">
+                                @php
+                                    $criteriaName = $result['criteria'];
+                                    $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
+                                        ->where('criteria_name', $criteriaName)
+                                        ->first();
+                                    $originalWeight = $firstQuestion ? $firstQuestion->criteria_weight : 0;
+                                @endphp
+                                {{ number_format($originalWeight, 1) }}
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Bobot Ternormalisasi (w<sub>ᵢ</sub>)</span>
+                            <span class="detail-value">{{ number_format($result['weight_normalized'], 3) }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Nilai Ternormalisasi (r<sub>ᵢ</sub>)</span>
+                            <span class="detail-value">{{ number_format($result['normalized'], 3) }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Nilai Terbobot (w×r)</span>
+                            <span class="detail-value">{{ number_format($result['weighted_score'], 4) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="detail-section-title">Interpretasi</div>
+                        <div class="detail-row">
+                            <span class="detail-label">Keterangan</span>
+                            <span class="detail-value">
+                                <span class="badge-status badge-{{ strtolower(str_replace(' ', '-', $result['interpretation'])) }}">
+                                    {{ $result['interpretation'] }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
     @else
         <!-- No Data -->
         <div class="no-data">
@@ -347,6 +567,37 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Dashboard SAW loaded');
+    });
+
+    // Generate functions for each modal
+    @foreach($criteriaResults as $index => $result)
+    function showDetail{{ $index }}() {
+        document.getElementById('modal{{ $index }}').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal{{ $index }}() {
+        document.getElementById('modal{{ $index }}').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('modal{{ $index }}').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal{{ $index }}();
+        }
+    });
+    @endforeach
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            @foreach($criteriaResults as $index => $result)
+            if (document.getElementById('modal{{ $index }}').classList.contains('active')) {
+                closeModal{{ $index }}();
+            }
+            @endforeach
+        }
     });
 </script>
 @endpush
