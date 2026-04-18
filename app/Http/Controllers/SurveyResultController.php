@@ -101,13 +101,20 @@ class SurveyResultController extends Controller
                 
                 $firstQuestion = $questions->first();
                 
+                // Get scale_max and scale_min from settings (for linear_scale questions)
+                $settings = $firstQuestion->settings ?? [];
+                $scaleMax = $settings['scale_max'] ?? 5; // Default 5
+                $scaleMin = $settings['scale_min'] ?? 1; // Default 1
+                
                 $criteriaAggregates->push([
                     'criteria_name' => $criteriaName ?: 'Tidak Dikategorikan',
                     'criteria_weight' => $firstQuestion->criteria_weight ?? 0,
                     'criteria_type' => $firstQuestion->criteria_type ?? 'benefit',
                     'average_score' => $criteriaAverage,
                     'total_responses' => $allScores->count(),
-                    'questions_count' => $questions->count()
+                    'questions_count' => $questions->count(),
+                    'scale_max' => $scaleMax,
+                    'scale_min' => $scaleMin
                 ]);
             }
         }
@@ -125,12 +132,14 @@ class SurveyResultController extends Controller
             
             // Normalisasi SAW - menggunakan skor rata-rata sebagai Xij
             if ($criteria['criteria_type'] === 'benefit') {
-                // Untuk benefit: rij = Xij / Max{Xij}
-                $maxScore = $criteriaAggregates->max('average_score');
+                // Untuk benefit: rij = Xij / Max{Scale}
+                // Menggunakan nilai maksimal dari skala (scale_max), bukan max dari average_score
+                $maxScore = $criteria['scale_max'];
                 $normalized = $maxScore > 0 ? ($criteria['average_score'] / $maxScore) : 0;
             } else {
-                // Untuk cost: rij = Min{Xij} / Xij
-                $minScore = $criteriaAggregates->min('average_score');
+                // Untuk cost: rij = Min{Scale} / Xij
+                // Menggunakan nilai minimal dari skala (scale_min), bukan min dari average_score
+                $minScore = $criteria['scale_min'];
                 $normalized = $criteria['average_score'] > 0 ? ($minScore / $criteria['average_score']) : 0;
             }
             
