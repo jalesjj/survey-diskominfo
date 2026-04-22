@@ -25,7 +25,7 @@ Route::post('/admin/auth', [AdminController::class, 'authenticate'])->name('admi
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
 // Admin Dashboard & Management Routes
-Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::get('/admin/jawaban', [AdminController::class, 'dashboard'])->name('admin.jawaban');
 Route::get('/admin/export', [AdminController::class, 'export'])->name('admin.export');
 Route::delete('/admin/survey/{id}', [AdminController::class, 'deleteSurvey'])->name('admin.deleteSurvey');
 Route::get('/admin/survey/{id}/detail', [AdminController::class, 'getSurveyDetail'])->name('admin.survey.detail');

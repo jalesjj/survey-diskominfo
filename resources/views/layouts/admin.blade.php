@@ -408,9 +408,9 @@
             </div>
 
             <div class="sidebar-menu">
-                <a href="{{ route('admin.dashboard') }}" class="menu-item @yield('active-dashboard')">
-                    <span class="menu-icon"><i class="fas fa-tachometer-alt"></i></span>
-                    <span class="menu-text">Dashboard</span>
+                <a href="{{ route('admin.jawaban') }}" class="menu-item @yield('active-jawaban')">
+                    <span class="menu-icon"><i class="fas fa-comments"></i></span>
+                    <span class="menu-text">Jawaban</span>
                 </a>
                 
                 <a href="{{ route('admin.questions.index') }}" class="menu-item @yield('active-questions')">

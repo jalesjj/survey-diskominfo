@@ -41,7 +41,7 @@ class AdminController extends Controller
             // Update last login
             $admin->update(['last_login_at' => now()]);
             
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.jawaban');
         }
 
         return back()->withErrors(['login' => 'Username atau password salah.']);
@@ -160,7 +160,7 @@ class AdminController extends Controller
 {
     // Jika tidak ada questions, return view sederhana
     if ($questions->isEmpty()) {
-        return view('admin.dashboard', compact('totalSurveys', 'questions'));
+        return view('admin.jawaban', compact('totalSurveys', 'questions'));
     }
 
     // Ambil semua sections beserta pertanyaannya
@@ -306,7 +306,7 @@ class AdminController extends Controller
         ];
     }
 
-    return view('admin.dashboard', compact(
+    return view('admin.jawaban', compact(
         'totalSurveys',
         'questions',
         'sectionStats'
@@ -446,7 +446,7 @@ private function getSectionData($totalSurveys, $questions)
         ];
     }
 
-    return view('admin.dashboard-sections', compact(
+    return view('admin.jawaban-sections', compact(
         'totalSurveys',
         'questions', 
         'sectionStats'
@@ -532,7 +532,7 @@ private function getSectionData($totalSurveys, $questions)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('admin.dashboard-individual', compact(
+        return view('admin.jawaban-individual', compact(
             'totalSurveys',
             'questions',
             'surveys'

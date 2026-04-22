@@ -1,10 +1,10 @@
-{{-- resources/views/admin/dashboard.blade.php --}}
+{{-- resources/views/admin/jawaban.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Admin - Survei Kepuasan Diskominfo Lamongan')
-@section('active-dashboard', 'active')
-@section('page-title', 'Dashboard Administrator')
-@section('page-subtitle', 'Kelola dan pantau survei kepuasan masyarakat')
+@section('title', 'Jawaban - Survei Kepuasan Diskominfo Lamongan')
+@section('active-jawaban', 'active')
+@section('page-title', 'Jawaban Survei')
+@section('page-subtitle', 'Lihat dan analisis hasil jawaban survei kepuasan masyarakat')
 
 @section('header-actions')
 <div class="header-actions">
@@ -865,12 +865,12 @@
     <!-- Tab Navigation -->
     <div class="tab-navigation">
         <div class="tab-nav">
-            <a href="{{ route('admin.dashboard', ['tab' => 'questions']) }}" 
+            <a href="{{ route('admin.jawaban', ['tab' => 'questions']) }}" 
                 class="tab-item {{ request('tab', 'questions') === 'questions' ? 'active' : '' }}">
                 <i class="tab-icon fas fa-question-circle"></i>
                 Pertanyaan & Jawaban
             </a>
-            <a href="{{ route('admin.dashboard', ['tab' => 'individual']) }}" 
+            <a href="{{ route('admin.jawaban', ['tab' => 'individual']) }}" 
                 class="tab-item {{ request('tab') === 'individual' ? 'active' : '' }}">
                 <i class="tab-icon fas fa-users"></i>
                 Individual

@@ -1,9 +1,9 @@
-{{-- resources/views/admin/dashboard-individual.blade.php --}}
+{{-- resources/views/admin/jawaban-individual.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Individual - Admin Survei')
-@section('active-dashboard', 'active')
-@section('page-title', 'Dashboard Individual')
+@section('title', 'Jawaban Individual - Survei Kepuasan')
+@section('active-jawaban', 'active')
+@section('page-title', 'Jawaban Individual')
 @section('page-subtitle', 'Data responden individual')
 
 @section('header-actions')
@@ -699,11 +699,11 @@
 <!-- Tab Navigation -->
 <div class="tab-navigation">
     <div class="tab-nav">
-        <a href="{{ route('admin.dashboard', ['tab' => 'questions']) }}" class="tab-item">
+        <a href="{{ route('admin.jawaban', ['tab' => 'questions']) }}" class="tab-item">
             <i class="fas fa-question-circle tab-icon"></i>
             <span>Pertanyaan</span>
         </a>
-        <a href="{{ route('admin.dashboard', ['tab' => 'individual']) }}" class="tab-item active">
+        <a href="{{ route('admin.jawaban', ['tab' => 'individual']) }}" class="tab-item active">
             <i class="fas fa-users tab-icon"></i>
             <span>Individual</span>
         </a>
@@ -712,7 +712,7 @@
 
 <!-- Search and Filter Bar -->
 <div class="search-filter-bar">
-    <input type="text" class="search-input" placeholder="Cari berdasarkan jawaban responden..." id="searchInput">
+    <input type="text" class="search-input" placeholder="🔍 Cari berdasarkan jawaban responden..." id="searchInput">
     <select class="filter-select" id="dateFilter">
         <option value="">Semua Tanggal</option>
         <option value="today">Hari Ini</option>

@@ -1,9 +1,9 @@
-{{-- resources/views/admin/dashboard-sections.blade.php --}}
+{{-- resources/views/admin/jawaban-sections.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Bagian - Admin Survei')
-@section('active-dashboard', 'active')
-@section('page-title', 'Dashboard Survei')
+@section('title', 'Jawaban Bagian - Survei Kepuasan')
+@section('active-jawaban', 'active')
+@section('page-title', 'Jawaban Survei')
 @section('page-subtitle', 'Analisis jawaban per bagian dan pertanyaan')
 
 @section('header-actions')
@@ -714,11 +714,11 @@
 <!-- Tab Navigation -->
 <div class="tab-navigation">
     <div class="tab-nav">
-        <a href="{{ route('admin.dashboard', ['tab' => 'questions']) }}" class="tab-item active">
+        <a href="{{ route('admin.jawaban', ['tab' => 'questions']) }}" class="tab-item active">
             <i class="fas fa-question-circle tab-icon"></i>
             <span>Pertanyaan</span>
         </a>
-        <a href="{{ route('admin.dashboard', ['tab' => 'individual']) }}" class="tab-item">
+        <a href="{{ route('admin.jawaban', ['tab' => 'individual']) }}" class="tab-item">
             <i class="fas fa-users tab-icon"></i>
             <span>Individual</span>
         </a>
