@@ -7,26 +7,38 @@ use Illuminate\Database\Eloquent\Model;
 
 class SurveyResponse extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'survey_id',
+        'period_id', 
         'question_id',
-        'answer',
-        'answer_data'
-    ];
-
-    protected $casts = [
-        'answer_data' => 'array'
+        'user_id',
+        'answer_value',
+        'answer_text',
     ];
 
     public function survey()
     {
-        return $this->belongsTo(Survey::class);
+        return $this->belongsTo(Survey::class, 'survey_id');
     }
 
+    /**
+     * Relasi ke Period
+     */
+    public function period()
+    {
+        return $this->belongsTo(SurveyPeriod::class, 'period_id');
+    }
+
+    /**
+     * Relasi existing
+     */
     public function question()
     {
-        return $this->belongsTo(SurveyQuestion::class);
+        return $this->belongsTo(SurveyQuestion::class, 'question_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

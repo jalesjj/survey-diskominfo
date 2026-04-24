@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FooterLinkController;
 use App\Http\Controllers\ContactInfoController;
+use App\Http\Controllers\SurveyPeriodController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -25,7 +26,10 @@ Route::post('/admin/auth', [AdminController::class, 'authenticate'])->name('admi
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
 // Admin Dashboard & Management Routes
-Route::get('/admin/jawaban', [AdminController::class, 'dashboard'])->name('admin.jawaban');
+Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::get('/admin/jawaban', [AdminController::class, 'jawaban'])->name('admin.jawaban');
+Route::get('/admin/jawaban/sections', [AdminController::class, 'jawabanSections'])->name('admin.jawaban.sections');
+Route::get('/admin/jawaban/individual', [AdminController::class, 'jawabanIndividual'])->name('admin.jawaban.individual');
 Route::get('/admin/export', [AdminController::class, 'export'])->name('admin.export');
 Route::delete('/admin/survey/{id}', [AdminController::class, 'deleteSurvey'])->name('admin.deleteSurvey');
 Route::get('/admin/survey/{id}/detail', [AdminController::class, 'getSurveyDetail'])->name('admin.survey.detail');
@@ -96,3 +100,24 @@ Route::prefix('admin/contact-info')->name('admin.contact-info.')->group(function
     Route::get('/edit', [ContactInfoController::class, 'edit'])->name('edit');
     Route::put('/update', [ContactInfoController::class, 'update'])->name('update');
 });
+
+// Admin Period Management Routes
+Route::prefix('admin/periods')->name('admin.periods.')->group(function () {
+    // Kelola Periode
+    Route::get('/', [SurveyPeriodController::class, 'index'])->name('index');
+    Route::get('/create', [SurveyPeriodController::class, 'create'])->name('create');
+    Route::post('/', [SurveyPeriodController::class, 'store'])->name('store');
+    Route::post('/{id}/activate', [SurveyPeriodController::class, 'activate'])->name('activate');
+    Route::post('/{id}/close', [SurveyPeriodController::class, 'close'])->name('close');
+    
+    // Hasil SAW per Periode
+    Route::get('/{id}/saw', [SurveyPeriodController::class, 'showSAW'])->name('saw');
+    Route::post('/{id}/saw/recalculate', [SurveyPeriodController::class, 'recalculateSAW'])->name('saw.recalculate');
+    
+    // Jawaban Responden per Periode
+    Route::get('/{id}/responses', [SurveyPeriodController::class, 'responses'])->name('responses');
+    Route::get('/{periodId}/responses/{userId}', [SurveyPeriodController::class, 'responseDetail'])->name('response-detail');
+});
+
+// Perbandingan Antar Periode (BARU)
+Route::get('/admin/saw/compare', [SurveyPeriodController::class, 'comparePeriods'])->name('admin.saw.compare');
