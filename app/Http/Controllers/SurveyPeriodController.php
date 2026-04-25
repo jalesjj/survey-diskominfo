@@ -233,15 +233,15 @@ class SurveyPeriodController extends Controller
         
         // Ambil unique responden di periode ini
         $responses = SurveyResponse::where('period_id', $periodId)
-                                   ->select('user_id', 'created_at')
-                                   ->groupBy('user_id')
-                                   ->with('user')
+                                   ->select('survey_id', 'created_at')
+                                   ->groupBy('survey_id')
+                                   ->with('survey_id')
                                    ->orderBy('created_at', 'desc')
                                    ->paginate(20);
         
         $totalResponses = SurveyResponse::where('period_id', $periodId)
-                                        ->distinct('user_id')
-                                        ->count('user_id');
+                                        ->distinct('survey_id')
+                                        ->count('survey_id');
         
         $questions = SurveyQuestion::where('enable_saw', true)->get();
         
@@ -258,23 +258,23 @@ class SurveyPeriodController extends Controller
      * 
      * Route: GET /admin/periods/{periodId}/responses/{userId}
      */
-    public function responseDetail($periodId, $userId)
+    public function responseDetail($periodId, $surveyId)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
         $period = SurveyPeriod::findOrFail($periodId);
-        $user = User::find($userId);
+        $user = User::find($surveyId);
         
         // Ambil semua jawaban user ini di periode ini
         $responses = SurveyResponse::where('period_id', $periodId)
-                                   ->where('user_id', $userId)
+                                   ->where('survey_id', $surveyId)
                                    ->with(['question.section'])
                                    ->get();
         
         return view('admin.periods.response-detail', [
             'period' => $period,
-            'user' => $user,
+            'survey' => $survey,
             'responses' => $responses,
         ]);
     }

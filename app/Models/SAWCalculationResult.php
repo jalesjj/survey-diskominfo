@@ -10,6 +10,8 @@ class SAWCalculationResult extends Model
 {
     use HasFactory;
 
+    protected $table = 'saw_calculation_results';
+
     protected $fillable = [
         'survey_id',
         'period_id',

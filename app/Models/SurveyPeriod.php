@@ -10,6 +10,8 @@ class SurveyPeriod extends Model
 {
     use HasFactory;
 
+    protected $table = 'survey_periods';
+
     protected $fillable = [
         'survey_id',
         'period_name',
@@ -75,11 +77,9 @@ class SurveyPeriod extends Model
         return $this->responses()->exists();
     }
 
-    /**
-     * Helper: Total responden unik di periode ini
-     */
     public function getTotalRespondentsAttribute()
     {
-        return $this->responses()->distinct('user_id')->count('user_id');
+        // Count unique survey_id (1 survey = 1 responden)
+        return $this->responses()->distinct('survey_id')->count('survey_id');
     }
 }

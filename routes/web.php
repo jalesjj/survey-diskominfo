@@ -116,7 +116,7 @@ Route::prefix('admin/periods')->name('admin.periods.')->group(function () {
     
     // Jawaban Responden per Periode
     Route::get('/{id}/responses', [SurveyPeriodController::class, 'responses'])->name('responses');
-    Route::get('/{periodId}/responses/{userId}', [SurveyPeriodController::class, 'responseDetail'])->name('response-detail');
+    Route::get('/{periodId}/responses/{surveyId}', [SurveyPeriodController::class, 'responseDetail'])->name('response-detail');
 });
 
 // Perbandingan Antar Periode (BARU)
