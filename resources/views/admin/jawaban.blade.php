@@ -922,7 +922,7 @@
                         <div class="question-header">
                             <h3 class="question-text">{{ $stat['question']->question_text }}</h3>
                             <div class="question-meta">
-                                <span><i class="fas fa-tag"></i> {{ $stat['question']->getQuestionTypeLabel() }}</span>
+                                <span><i class="fas fa-tag"></i> {{ $stat['question_type_label'] ?? 'Unknown' }}</span>
                                 <span><i class="fas fa-users"></i> {{ $stat['total_responses'] }} responden</span>
                                 <span><i class="fas fa-percentage"></i> {{ $stat['response_rate'] }}% tingkat respons</span>
                                 @if($stat['question']->is_required)
@@ -1081,9 +1081,10 @@
                                         <div class="file-response">
                                             <i class="fas fa-file file-icon"></i>
                                             <div class="file-info">
-                                                <div class="file-name">{{ $file['filename'] }}</div>
-                                                <div class="file-date">Upload: {{ \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') }}</div>
+                                                <div class="file-name">{{ $file['filename'] ?? 'File tidak tersedia' }}</div>
+                                                <div class="file-date">Upload: {{ isset($file['upload_date']) ? \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') : '-' }}</div>
                                             </div>
+                                            @if(isset($file['response_id']))
                                             <div class="file-actions">
                                                 @if(isset($file['file_data']['mime_type']) && str_starts_with($file['file_data']['mime_type'], 'image/'))
                                                     <a href="{{ route('admin.viewFile', $file['response_id']) }}" target="_blank" class="action-btn view-btn">
@@ -1094,6 +1095,7 @@
                                                     <i class="fas fa-download"></i> Download
                                                 </a>
                                             </div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -1135,7 +1137,7 @@
                     <div class="question-header">
                         <h3 class="question-text">{{ $question->question_text }}</h3>
                         <div class="question-meta">
-                            <span><i class="fas fa-tag"></i> {{ $question->getQuestionTypeLabel() }}</span>
+                            <span><i class="fas fa-tag"></i> {{\App\Helpers\SurveyDefaults::getQuestionTypeLabel($question->question_type) }}</span>
                             <span><i class="fas fa-users"></i> {{ $question->responses->count() }} responden</span>
                             @if($question->is_required)
                                 <span><i class="fas fa-asterisk"></i> Wajib diisi</span>

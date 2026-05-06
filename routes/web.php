@@ -54,6 +54,8 @@ Route::prefix('admin/questions')->name('admin.questions.')->group(function () {
     Route::delete('/question/{id}', [SurveyQuestionController::class, 'deleteQuestion'])->name('delete-question');
     Route::put('/question/{id}/toggle', [SurveyQuestionController::class, 'toggleQuestion'])->name('toggle-question');
     Route::post('/section/{sectionId}/questions/reorder', [SurveyQuestionController::class, 'updateQuestionOrder'])->name('reorder-questions');
+    Route::get('/section/{id}/edit', [SurveyQuestionController::class, 'editSection'])->name('edit-section');
+    Route::put('/section/{id}', [SurveyQuestionController::class, 'updateSection'])->name('update-section');
 });
 
 // HASIL SURVEY ROUTES

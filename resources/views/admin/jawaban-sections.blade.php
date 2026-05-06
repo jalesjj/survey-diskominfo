@@ -675,11 +675,14 @@
 @endpush
 
 @section('content')
+
+
 <!-- Action Buttons -->
+
 <div class="action-buttons">
     <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
         <i class="fas fa-cog"></i>
-        Kelola Pertanyaan
+        Kelola Pertanyaan salahh
     </a>
     <a href="{{ route('survey.index') }}" class="btn btn-success">
         <i class="fas fa-eye"></i>
@@ -687,7 +690,7 @@
     </a>
     <a href="{{ route('admin.export') }}" class="btn btn-warning">
         <i class="fas fa-download"></i>
-        Export Data
+        Export Dat
     </a>
 </div>
 
@@ -765,7 +768,7 @@
                     <div class="question-title">{{ $stat['question']->question_text }}</div>
                     <div class="question-meta">
                         <span class="question-type-badge">
-                            <i class="fas fa-tag"></i> {{ $stat['question']->getQuestionTypeLabel() }}
+                            <i class="fas fa-tag"></i> {{ $stat['question_type_label'] ?? 'Unknown'  }}
                         </span>
                         <span><i class="fas fa-{{ $stat['question']->is_required ? 'star' : 'star-o' }}"></i> {{ $stat['question']->is_required ? 'Wajib' : 'Opsional' }}</span>
                         <span><i class="fas fa-sort-numeric-up"></i> Urutan: {{ $stat['question']->order_index }}</span>
@@ -881,14 +884,15 @@
                                         <div class="file-response">
                                             <i class="fas fa-file file-icon"></i>
                                             <div class="file-info">
-                                                <div class="file-name">{{ $file['filename'] }}</div>
-                                                <div class="file-date">Diupload: {{ \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') }}</div>
+                                                <div class="file-name">{{ $file['filename'] ?? 'File tidak tersedia' }}</div>
+                                                <div class="file-date">Diupload: {{ isset($file['upload_date']) ? \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') : '-' }}</div>
                                                 @if(isset($file['file_data']['size']))
                                                     <div style="font-size: 12px; color: #7f8c8d;">
                                                         {{ number_format($file['file_data']['size'] / 1024, 1) }} KB
                                                     </div>
                                                 @endif
                                             </div>
+                                            @if(isset($file['response_id']))
                                             <div class="file-actions">
                                                 @if(isset($file['file_data']['mime_type']) && str_starts_with($file['file_data']['mime_type'], 'image/'))
                                                     <a href="{{ route('admin.viewFile', $file['response_id']) }}" target="_blank" 
@@ -901,6 +905,7 @@
                                                     <i class="fas fa-download"></i> Download
                                                 </a>
                                             </div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 @endif

@@ -73,6 +73,20 @@
         font-size: 12px;
     }
 
+    /* Disabled button for permanent sections */
+    .btn-disabled {
+        background: #6c757d;
+        color: #fff;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-disabled:hover {
+        background: #6c757d;
+        transform: none;
+        box-shadow: none;
+    }
+
     /* Sections Container */
     .sections-container {
         display: grid;
@@ -86,6 +100,11 @@
         overflow: hidden;
     }
 
+    /* Permanent section styling */
+    .section-card.permanent {
+        border: 2px solid #6c757d;
+    }
+
     .section-header {
         background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
         color: white;
@@ -95,10 +114,18 @@
         align-items: center;
     }
 
+    /* Permanent section header */
+    .section-header.permanent {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    }
+
     .section-title {
         font-size: 18px;
         font-weight: 600;
         margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .section-description {
@@ -173,6 +200,19 @@
         color: #721c24;
     }
 
+    /* Badge permanen */
+    .badge-permanent {
+        background: #6c757d;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -236,10 +276,12 @@
 <!-- Sections -->
 <div class="sections-container">
     @forelse($sections as $section)
-    <div class="section-card">
-        <div class="section-header">
+    <div class="section-card {{ isset($section->is_permanent) && $section->is_permanent ? 'permanent' : '' }}">
+        <div class="section-header {{ isset($section->is_permanent) && $section->is_permanent ? 'permanent' : '' }}">
             <div>
-                <div class="section-title">{{ $section->title }}</div>
+                <div class="section-title">
+                    {{ $section->title }}
+                </div>
                 @if($section->description)
                     <div class="section-description">{{ $section->description }}</div>
                 @endif
@@ -248,15 +290,33 @@
                 <span class="status-badge {{ $section->is_active ? 'status-active' : 'status-inactive' }}">
                     {{ $section->is_active ? 'Aktif' : 'Nonaktif' }}
                 </span>
-                <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-success btn-sm">
-                    <i class="fas fa-plus"></i> Tambah Pertanyaan
-                </a>
-                <a href="#" onclick="toggleSection({{ $section->id }})" class="btn btn-warning btn-sm">
-                    <i class="fas {{ $section->is_active ? 'fa-lock' : 'fa-unlock' }}"></i> {{ $section->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                </a>
-                <a href="#" onclick="deleteSection({{ $section->id }}, '{{ $section->title }}')" class="btn btn-danger btn-sm">
-                    <i class="fas fa-trash"></i> Hapus
-                </a>
+                
+                @if(isset($section->is_permanent) && $section->is_permanent)
+                    {{-- Tombol disabled untuk section permanen --}}
+                    <button class="btn btn-disabled btn-sm" disabled title="Section permanen tidak dapat diubah">
+                        <i class="fas fa-plus"></i> Tambah Pertanyaan
+                    </button>
+                    <button class="btn btn-disabled btn-sm" disabled title="Section permanen tidak dapat diubah">
+                        <i class="fas fa-lock"></i> Toggle Status
+                    </button>
+                    <button class="btn btn-disabled btn-sm" disabled title="Section permanen tidak dapat dihapus">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
+                @else
+                    {{-- Tombol normal untuk section biasa --}}
+                    <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Tambah Pertanyaan
+                    </a>
+                    <a href="{{ route('admin.questions.edit-section', $section->id) }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> Edit Bagian
+                    </a>
+                    <a href="#" onclick="toggleSection({{ $section->id }})" class="btn btn-warning btn-sm">
+                        <i class="fas {{ $section->is_active ? 'fa-lock' : 'fa-unlock' }}"></i> {{ $section->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                    </a>
+                    <a href="#" onclick="deleteSection({{ $section->id }}, '{{ $section->title }}')" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Hapus
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -278,7 +338,9 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>
-                                <div style="font-weight: 500;">{{ $question->question_text }}</div>
+                                <div style="font-weight: 500;">
+                                    {{ $question->question_text }}
+                                </div>
                                 @if($question->options && count($question->options) > 0)
                                     <small style="color: #7f8c8d;">
                                         Opsi: {{ implode(', ', array_slice($question->options, 0, 3)) }}
@@ -290,7 +352,7 @@
                             </td>
                             <td>
                                 <span class="question-type-badge badge-{{ str_replace('_', '-', $question->question_type) }}">
-                                    {{ $question->getQuestionTypeLabel() }}
+                                    {{ \App\Helpers\SurveyDefaults::getQuestionTypeLabel($question->question_type) }}
                                 </span>
                             </td>
                             <td>
@@ -304,17 +366,33 @@
                                 </span>
                             </td>
                             <td>
-                                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                    <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="#" onclick="toggleQuestion({{ $question->id }})" class="btn btn-warning btn-sm" title="{{ $question->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                        <i class="fas {{ $question->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
-                                    </a>
-                                    <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}')" class="btn btn-danger btn-sm" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </div>
+                                @if(isset($question->is_permanent) && $question->is_permanent)
+                                    {{-- Tombol disabled untuk pertanyaan permanen --}}
+                                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diedit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diubah statusnya">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
+                                        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat dihapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    {{-- Tombol normal untuk pertanyaan biasa --}}
+                                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                        <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="#" onclick="toggleQuestion({{ $question->id }})" class="btn btn-warning btn-sm" title="{{ $question->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                            <i class="fas {{ $question->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
+                                        </a>
+                                        <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}')" class="btn btn-danger btn-sm" title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                         @endforeach
@@ -326,9 +404,11 @@
                     <h4>Belum Ada Pertanyaan</h4>
                     <p>Bagian ini belum memiliki pertanyaan. Klik tombol "Tambah Pertanyaan" untuk menambahkan pertanyaan pertama.</p>
                     <br>
-                    <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Tambah Pertanyaan Pertama
-                    </a>
+                    @if(!isset($section->is_permanent) || !$section->is_permanent)
+                        <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Tambah Pertanyaan Pertama
+                        </a>
+                    @endif
                 </div>
             @endif
         </div>

@@ -422,6 +422,11 @@
                     <span class="menu-icon"><i class="fas fa-chart-bar"></i></span>
                     <span class="menu-text">Hasil Survey</span>
                 </a>
+
+                {{-- <a href="{{ route('admin.periods.index') }}" class="menu-item @yield('active-periods')">
+                    <span class="menu-icon"><i class="fas fa-calendar-alt"></i></span>
+                    <span class="menu-text">Kelola Periode</span>
+                </a> --}}
                 
                 <a href="{{ route('admin.users.index') }}" class="menu-item @yield('active-users')">
                     <span class="menu-icon"><i class="fas fa-users"></i></span>

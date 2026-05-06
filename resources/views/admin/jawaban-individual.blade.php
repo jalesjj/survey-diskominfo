@@ -660,6 +660,7 @@
 @endpush
 
 @section('content')
+
 <!-- Action Buttons -->
     <div class="action-buttons">
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">

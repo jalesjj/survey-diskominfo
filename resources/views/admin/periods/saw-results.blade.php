@@ -1,5 +1,7 @@
-{{-- resources/views/admin/periods/saw-result.blade.php --}}
+{{-- resources/views/admin/periods/saw-result.blade.php
 @extends('layouts.admin')
+
+@section('active-periods', 'active')
 
 @section('title', 'Hasil SAW - ' . $selectedPeriod->period_name)
 
@@ -283,4 +285,4 @@ function getOverallInterpretation($totalVi) {
     margin-bottom: 15px;
 }
 </style>
-@endsection
+@endsection --}}

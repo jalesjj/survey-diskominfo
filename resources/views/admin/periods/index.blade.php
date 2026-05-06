@@ -1,5 +1,7 @@
-{{-- resources/views/admin/periods/index.blade.php --}}
+{{-- resources/views/admin/periods/index.blade.php
 @extends('layouts.admin')
+
+@section('active-periods', 'active')
 
 @section('title', 'Kelola Periode Survey')
 
@@ -300,4 +302,4 @@
     font-size: 1.75rem;
 }
 </style>
-@endsection
+@endsection --}}

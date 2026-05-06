@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SurveySection;
 use App\Models\SurveyQuestion;
+use App\Helpers\SurveyDefaults;
 use Illuminate\Http\Request;
 
 class SurveyQuestionController extends Controller
@@ -28,9 +29,20 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        $sections = SurveySection::with(['allQuestions' => function($query) {
+        // Ambil sections dari database
+        $dbSections = SurveySection::with(['allQuestions' => function($query) {
             $query->orderBy('order_index');
         }])->ordered()->get();
+
+        // Tambahkan default section di awal
+        $defaultSection = SurveyDefaults::getDefaultSection();
+        $defaultQuestions = SurveyDefaults::getDefaultQuestions();
+        
+        // Set property allQuestions untuk default section
+        $defaultSection->allQuestions = $defaultQuestions;
+        
+        // Gabungkan default section dengan sections dari database
+        $sections = collect([$defaultSection])->merge($dbSections);
 
         return view('admin.questions.index', compact('sections'));
     }
@@ -73,6 +85,12 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat menambah pertanyaan ke bagian Data Diri karena bagian ini permanen.');
+        }
+
         $section = SurveySection::findOrFail($sectionId);
         
         return view('admin.questions.create-question', compact('section'));
@@ -83,6 +101,12 @@ class SurveyQuestionController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat menambah pertanyaan ke bagian Data Diri karena bagian ini permanen.');
+        }
 
         $section = SurveySection::findOrFail($sectionId);
 
@@ -182,6 +206,12 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Cek jika pertanyaan adalah default question
+        if (SurveyDefaults::isPermanentQuestion($questionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat mengedit pertanyaan di bagian Data Diri karena pertanyaan ini permanen.');
+        }
+
         $question = SurveyQuestion::with('section')->findOrFail($questionId);
         
         return view('admin.questions.edit-question', compact('question'));
@@ -192,6 +222,12 @@ class SurveyQuestionController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Cek jika pertanyaan adalah default question
+        if (SurveyDefaults::isPermanentQuestion($questionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat mengedit pertanyaan di bagian Data Diri karena pertanyaan ini permanen.');
+        }
 
         $question = SurveyQuestion::findOrFail($questionId);
 
@@ -287,6 +323,12 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Cek jika pertanyaan adalah default question
+        if (SurveyDefaults::isPermanentQuestion($questionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat menghapus pertanyaan di bagian Data Diri karena pertanyaan ini permanen.');
+        }
+
         $question = SurveyQuestion::findOrFail($questionId);
         $question->delete();
 
@@ -299,6 +341,12 @@ class SurveyQuestionController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Cek jika pertanyaan adalah default question
+        if (SurveyDefaults::isPermanentQuestion($questionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat mengubah status pertanyaan di bagian Data Diri karena pertanyaan ini permanen.');
+        }
 
         $question = SurveyQuestion::findOrFail($questionId);
         $question->update(['is_active' => !$question->is_active]);
@@ -314,6 +362,12 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat menghapus bagian Data Diri karena bagian ini permanen.');
+        }
+
         $section = SurveySection::findOrFail($sectionId);
         $section->delete(); // Akan menghapus pertanyaan juga karena foreign key cascade
 
@@ -326,6 +380,12 @@ class SurveyQuestionController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat mengubah status bagian Data Diri karena bagian ini permanen.');
+        }
 
         $section = SurveySection::findOrFail($sectionId);
         $section->update(['is_active' => !$section->is_active]);
@@ -359,6 +419,11 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return response()->json(['success' => false, 'message' => 'Tidak dapat mengubah urutan pertanyaan di bagian Data Diri.'], 403);
+        }
+
         $request->validate([
             'questions' => 'required|array',
             'questions.*' => 'required|integer|exists:survey_questions,id'
@@ -372,4 +437,50 @@ class SurveyQuestionController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function editSection($sectionId)
+{
+    $authCheck = $this->checkAdminAuth();
+    if ($authCheck) return $authCheck;
+ 
+    // Cek jika section adalah default section
+    if (SurveyDefaults::isPermanentSection($sectionId)) {
+        return redirect()->route('admin.questions.index')
+                        ->with('error', 'Tidak dapat mengedit bagian Data Diri karena bagian ini permanen.');
+    }
+ 
+    $section = SurveySection::findOrFail($sectionId);
+    
+    return view('admin.questions.edit-section', compact('section'));
+}
+ 
+/**
+ * Update bagian
+ */
+public function updateSection(Request $request, $sectionId)
+{
+    $authCheck = $this->checkAdminAuth();
+    if ($authCheck) return $authCheck;
+ 
+    // Cek jika section adalah default section
+    if (SurveyDefaults::isPermanentSection($sectionId)) {
+        return redirect()->route('admin.questions.index')
+                        ->with('error', 'Tidak dapat mengedit bagian Data Diri karena bagian ini permanen.');
+    }
+ 
+    $section = SurveySection::findOrFail($sectionId);
+ 
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string|max:1000'
+    ]);
+ 
+    $section->update([
+        'title' => $request->title,
+        'description' => $request->description
+    ]);
+ 
+    return redirect()->route('admin.questions.index')
+                    ->with('success', 'Bagian berhasil diperbarui.');
+}
 }

@@ -1,5 +1,7 @@
-{{-- resources/views/admin/periods/create.blade.php --}}
+{{-- resources/views/admin/periods/create.blade.php
 @extends('layouts.admin')
+
+@section('active-periods', 'active')
 
 @section('title', 'Buat Periode Baru')
 
@@ -204,4 +206,4 @@ document.getElementById('createPeriodForm').addEventListener('submit', function(
     font-size: 1.75rem;
 }
 </style>
-@endsection
+@endsection --}}
