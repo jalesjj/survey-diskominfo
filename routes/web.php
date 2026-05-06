@@ -56,6 +56,9 @@ Route::prefix('admin/questions')->name('admin.questions.')->group(function () {
     Route::post('/section/{sectionId}/questions/reorder', [SurveyQuestionController::class, 'updateQuestionOrder'])->name('reorder-questions');
     Route::get('/section/{id}/edit', [SurveyQuestionController::class, 'editSection'])->name('edit-section');
     Route::put('/section/{id}', [SurveyQuestionController::class, 'updateSection'])->name('update-section');
+    Route::get('/lock-form', [SurveyQuestionController::class, 'showLockForm'])->name('lock-form');
+    Route::post('/lock-submit', [SurveyQuestionController::class, 'lockSystem'])->name('lock-submit');
+    Route::post('/stop-period', [SurveyQuestionController::class, 'stopPeriod'])->name('stop-period');
 });
 
 // HASIL SURVEY ROUTES

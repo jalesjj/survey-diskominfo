@@ -10,8 +10,6 @@ class SurveyPeriod extends Model
 {
     use HasFactory;
 
-    protected $table = 'survey_periods';
-
     protected $fillable = [
         'survey_id',
         'period_name',
@@ -20,25 +18,34 @@ class SurveyPeriod extends Model
         'end_date',
         'status',
         'is_active',
-        'description',
+        'description'
     ];
 
     protected $casts = [
+        'is_active' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
-        'is_active' => 'boolean',
+        'year' => 'integer'
     ];
 
     /**
-     * Relasi ke Survey (kalau ada tabel surveys)
+     * Get active period
      */
-    public function survey()
+    public static function getActivePeriod()
     {
-        return $this->belongsTo(Survey::class);
+        return self::where('is_active', true)->first();
     }
 
     /**
-     * Relasi ke Responses
+     * Check if system is locked (has active period)
+     */
+    public static function isLocked()
+    {
+        return self::where('is_active', true)->exists();
+    }
+
+    /**
+     * Relasi ke responses
      */
     public function responses()
     {
@@ -46,7 +53,7 @@ class SurveyPeriod extends Model
     }
 
     /**
-     * Relasi ke SAW Results
+     * Relasi ke SAW calculation results
      */
     public function sawResults()
     {
@@ -54,32 +61,18 @@ class SurveyPeriod extends Model
     }
 
     /**
-     * Scope: Periode aktif
+     * Scope active periods
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('is_active', true);
     }
 
     /**
-     * Scope: Periode closed
+     * Scope by year
      */
-    public function scopeClosed($query)
+    public function scopeByYear($query, $year)
     {
-        return $query->where('status', 'closed');
-    }
-
-    /**
-     * Helper: Cek apakah periode ini sudah punya responden
-     */
-    public function hasResponses()
-    {
-        return $this->responses()->exists();
-    }
-
-    public function getTotalRespondentsAttribute()
-    {
-        // Count unique survey_id (1 survey = 1 responden)
-        return $this->responses()->distinct('survey_id')->count('survey_id');
+        return $query->where('year', $year);
     }
 }

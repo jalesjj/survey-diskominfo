@@ -2,10 +2,12 @@
 // app/Http/Controllers/SurveyQuestionController.php
 namespace App\Http\Controllers;
 
+use App\Models\SurveyPeriod;
 use App\Models\SurveySection;
 use App\Models\SurveyQuestion;
 use App\Helpers\SurveyDefaults;
 use Illuminate\Http\Request;
+
 
 class SurveyQuestionController extends Controller
 {
@@ -25,27 +27,31 @@ class SurveyQuestionController extends Controller
 
     // Halaman utama manajemen pertanyaan
     public function index()
-    {
-        $authCheck = $this->checkAdminAuth();
-        if ($authCheck) return $authCheck;
+{
+    $authCheck = $this->checkAdminAuth();
+    if ($authCheck) return $authCheck;
 
-        // Ambil sections dari database
-        $dbSections = SurveySection::with(['allQuestions' => function($query) {
-            $query->orderBy('order_index');
-        }])->ordered()->get();
+    // Ambil sections dari database
+    $dbSections = SurveySection::with(['allQuestions' => function($query) {
+        $query->orderBy('order_index');
+    }])->ordered()->get();
 
-        // Tambahkan default section di awal
-        $defaultSection = SurveyDefaults::getDefaultSection();
-        $defaultQuestions = SurveyDefaults::getDefaultQuestions();
-        
-        // Set property allQuestions untuk default section
-        $defaultSection->allQuestions = $defaultQuestions;
-        
-        // Gabungkan default section dengan sections dari database
-        $sections = collect([$defaultSection])->merge($dbSections);
+    // Tambahkan default section di awal
+    $defaultSection = SurveyDefaults::getDefaultSection();
+    $defaultQuestions = SurveyDefaults::getDefaultQuestions();
+    
+    // Set property allQuestions untuk default section
+    $defaultSection->allQuestions = $defaultQuestions;
+    
+    // Gabungkan default section dengan sections dari database
+    $sections = collect([$defaultSection])->merge($dbSections);
 
-        return view('admin.questions.index', compact('sections'));
-    }
+    // ✅ TAMBAHKAN INI: Cek status lock
+    $isLocked = SurveyPeriod::isLocked();
+    $activePeriod = SurveyPeriod::getActivePeriod();
+
+    return view('admin.questions.index', compact('sections', 'isLocked', 'activePeriod'));
+}
 
     // Form tambah bagian baru
     public function createSection()
@@ -483,4 +489,101 @@ public function updateSection(Request $request, $sectionId)
     return redirect()->route('admin.questions.index')
                     ->with('success', 'Bagian berhasil diperbarui.');
 }
+
+public function showLockForm()
+{
+    $authCheck = $this->checkAdminAuth();
+    if ($authCheck) return $authCheck;
+ 
+    // Check if already locked
+    if (SurveyPeriod::isLocked()) {
+        $activePeriod = SurveyPeriod::getActivePeriod();
+        return redirect()->route('admin.questions.index')
+                        ->with('error', 'Sistem sudah terkunci untuk periode: ' . $activePeriod->period_name);
+    }
+ 
+    // Get total questions and sections for confirmation
+    $totalSections = SurveySection::count();
+    $totalQuestions = SurveyQuestion::count();
+    $totalDefaultQuestions = count(SurveyDefaults::getDefaultQuestions());
+    $totalAllQuestions = $totalQuestions + $totalDefaultQuestions;
+ 
+    return view('admin.questions.lock-confirm', compact('totalSections', 'totalQuestions', 'totalDefaultQuestions', 'totalAllQuestions'));
+}
+ 
+/**
+ * Lock the system with period
+ */
+public function lockSystem(Request $request)
+{
+    $authCheck = $this->checkAdminAuth();
+    if ($authCheck) return $authCheck;
+ 
+    // Check if already locked
+    if (SurveyPeriod::isLocked()) {
+        return redirect()->route('admin.questions.index')
+                        ->with('error', 'Sistem sudah terkunci.');
+    }
+ 
+    // Validate
+    $request->validate([
+        'period_name' => 'required|string|max:255',
+        'year' => 'required|integer|min:2020|max:2100',
+        'description' => 'nullable|string|max:1000'
+    ], [
+        'period_name.required' => 'Nama periode harus diisi',
+        'year.required' => 'Tahun harus diisi',
+        'year.integer' => 'Tahun harus berupa angka',
+        'year.min' => 'Tahun minimal 2020',
+        'year.max' => 'Tahun maksimal 2100'
+    ]);
+ 
+    // Create period
+    $period = SurveyPeriod::create([
+        'survey_id' => 1, // Default survey ID
+        'period_name' => $request->period_name,
+        'year' => $request->year,
+        'start_date' => now(),
+        'end_date' => now()->addYear(), // Default 1 year
+        'status' => 'active',
+        'is_active' => true,
+        'description' => $request->description
+    ]);
+ 
+    return redirect()->route('admin.questions.index')
+                    ->with('success', 'Sistem berhasil dikunci untuk periode: ' . $period->period_name . '. Pertanyaan tidak dapat diubah sampai periode dibuka kembali.');
+}
+ 
+/**
+ * Check if system is locked
+ */
+private function isSystemLocked()
+{
+    return SurveyPeriod::isLocked();
+}
+
+public function stopPeriod()
+{
+    $authCheck = $this->checkAdminAuth();
+    if ($authCheck) return $authCheck;
+ 
+    // Check if there's an active period
+    $activePeriod = SurveyPeriod::getActivePeriod();
+    
+    if (!$activePeriod) {
+        return redirect()->route('admin.questions.index')
+                        ->with('error', 'Tidak ada periode aktif yang dapat dihentikan.');
+    }
+ 
+    // Update active period to closed
+    $activePeriod->update([
+        'is_active' => false,
+        'status' => 'closed',
+        'end_date' => now()
+    ]);
+ 
+    return redirect()->route('admin.questions.index')
+                    ->with('success', 'Periode "' . $activePeriod->period_name . '" berhasil dihentikan. Sistem sekarang terbuka dan pertanyaan dapat diubah kembali.');
+}
+
 }

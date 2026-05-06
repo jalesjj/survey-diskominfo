@@ -261,64 +261,135 @@
             padding: 10px 8px;
         }
     }
+
+    /* Lock Alert */
+.lock-alert {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-left: 5px solid #ffc107;
+    padding: 20px 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+ 
+.lock-alert-icon {
+    font-size: 40px;
+    color: #856404;
+}
+ 
+.lock-alert-content h3 {
+    margin: 0 0 8px 0;
+    color: #856404;
+    font-size: 18px;
+    font-weight: 600;
+}
+ 
+.lock-alert-content p {
+    margin: 0;
+    color: #856404;
+    line-height: 1.6;
+}
+ 
+.lock-alert-content strong {
+    font-weight: 700;
+}
+ 
+.lock-alert-content small {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* Stop Period Button */
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+ 
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
 </style>
 @endpush
 
 @section('content')
 <!-- Action Buttons -->
 <div class="action-buttons">
-    <a href="{{ route('admin.questions.create-section') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
-        Tambahkan Bagian
-    </a>
+    @if($isLocked)
+        {{-- Tombol saat locked --}}
+        <button class="btn btn-disabled" disabled title="Sistem terkunci">
+            <i class="fas fa-lock"></i> Tambahkan Bagian (Terkunci)
+        </button>
+        <button type="button" class="btn btn-danger" onclick="confirmStopPeriod()">
+            <i class="fas fa-stop-circle"></i> Stop Periode
+        </button>
+    @else
+        {{-- Tombol normal saat unlocked --}}
+        <a href="{{ route('admin.questions.create-section') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tambahkan Bagian
+        </a>
+        <a href="{{ route('admin.questions.lock-form') }}" class="btn btn-warning">
+            <i class="fas fa-lock"></i> Kunci Pertanyaan
+        </a>
+    @endif
 </div>
+
+{{-- Lock Status Alert --}}
+@php
+    $activePeriod = \App\Models\SurveyPeriod::getActivePeriod();
+    $isLocked = \App\Models\SurveyPeriod::isLocked();
+@endphp
+ 
+@if($isLocked && $activePeriod)
+    <div class="lock-alert">
+        <div class="lock-alert-icon">
+            <i class="fas fa-lock"></i>
+        </div>
+        <div class="lock-alert-content">
+            <h3>Sistem Terkunci</h3>
+            <p>
+                Pertanyaan dikunci untuk periode: <strong>{{ $activePeriod->period_name }}</strong> ({{ $activePeriod->year }})
+                <br>
+                <small>Dimulai: {{ $activePeriod->start_date->format('d F Y') }}</small>
+            </p>
+            @if($activePeriod->description)
+                <p style="margin-top: 10px; opacity: 0.9;">
+                    <i class="fas fa-info-circle"></i> {{ $activePeriod->description }}
+                </p>
+            @endif
+        </div>
+    </div>
+@endif
 
 <!-- Sections -->
 <div class="sections-container">
     @forelse($sections as $section)
     <div class="section-card {{ isset($section->is_permanent) && $section->is_permanent ? 'permanent' : '' }}">
         <div class="section-header {{ isset($section->is_permanent) && $section->is_permanent ? 'permanent' : '' }}">
-            <div>
-                <div class="section-title">
-                    {{ $section->title }}
-                </div>
-                @if($section->description)
-                    <div class="section-description">{{ $section->description }}</div>
-                @endif
-            </div>
-            <div class="section-actions">
-                <span class="status-badge {{ $section->is_active ? 'status-active' : 'status-inactive' }}">
-                    {{ $section->is_active ? 'Aktif' : 'Nonaktif' }}
+    <div>
+        <div class="section-title">
+            @if(isset($section->is_permanent) && $section->is_permanent)
+                <span class="badge-permanent">
+                    <i class="fas fa-lock"></i> PERMANEN
                 </span>
-                
-                @if(isset($section->is_permanent) && $section->is_permanent)
-                    {{-- Tombol disabled untuk section permanen --}}
-                    <button class="btn btn-disabled btn-sm" disabled title="Section permanen tidak dapat diubah">
-                        <i class="fas fa-plus"></i> Tambah Pertanyaan
-                    </button>
-                    <button class="btn btn-disabled btn-sm" disabled title="Section permanen tidak dapat diubah">
-                        <i class="fas fa-lock"></i> Toggle Status
-                    </button>
-                    <button class="btn btn-disabled btn-sm" disabled title="Section permanen tidak dapat dihapus">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                @else
-                    {{-- Tombol normal untuk section biasa --}}
-                    <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-plus"></i> Tambah Pertanyaan
-                    </a>
-                    <a href="{{ route('admin.questions.edit-section', $section->id) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-edit"></i> Edit Bagian
-                    </a>
-                    <a href="#" onclick="toggleSection({{ $section->id }})" class="btn btn-warning btn-sm">
-                        <i class="fas {{ $section->is_active ? 'fa-lock' : 'fa-unlock' }}"></i> {{ $section->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                    </a>
-                    <a href="#" onclick="deleteSection({{ $section->id }}, '{{ $section->title }}')" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash"></i> Hapus
-                    </a>
-                @endif
-            </div>
+            @elseif($isLocked)
+                <i class="fas fa-lock" style="opacity: 0.7;"></i>
+            @endif
+            {{ $section->title }}
         </div>
+        @if($section->description)
+            <div class="section-description">{{ $section->description }}</div>
+        @endif
+    </div>
+    <div class="section-actions">
+        {{-- ... tombol actions di sini (lihat LANGKAH 3) ... --}}
+    </div>
+</div>
 
         <div class="section-body">
             @if($section->allQuestions->count() > 0)
@@ -367,32 +438,45 @@
                             </td>
                             <td>
                                 @if(isset($question->is_permanent) && $question->is_permanent)
-                                    {{-- Tombol disabled untuk pertanyaan permanen --}}
-                                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diedit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diubah statusnya">
-                                            <i class="fas fa-lock"></i>
-                                        </button>
-                                        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat dihapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                @else
-                                    {{-- Tombol normal untuk pertanyaan biasa --}}
-                                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                        <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="#" onclick="toggleQuestion({{ $question->id }})" class="btn btn-warning btn-sm" title="{{ $question->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                            <i class="fas {{ $question->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
-                                        </a>
-                                        <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}')" class="btn btn-danger btn-sm" title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                @endif
+    {{-- Tombol disabled untuk pertanyaan permanen --}}
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diedit">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diubah statusnya">
+            <i class="fas fa-lock"></i>
+        </button>
+        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat dihapus">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+@elseif($isLocked)
+    {{-- Tombol disabled saat sistem locked --}}
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
+            <i class="fas fa-lock"></i>
+        </button>
+        <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+@else
+    {{-- Tombol normal untuk pertanyaan biasa --}}
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit">
+            <i class="fas fa-edit"></i>
+        </a>
+        <a href="#" onclick="toggleQuestion({{ $question->id }})" class="btn btn-warning btn-sm" title="{{ $question->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+            <i class="fas {{ $question->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
+        </a>
+        <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}')" class="btn btn-danger btn-sm" title="Hapus">
+            <i class="fas fa-trash"></i>
+        </a>
+    </div>
+@endif
                             </td>
                         </tr>
                         @endforeach
@@ -448,6 +532,10 @@
     @csrf
     @method('DELETE')
 </form>
+
+<form id="stopPeriodForm" method="POST" action="{{ route('admin.questions.stop-period') }}" style="display: none;">
+    @csrf
+</form>
 @endsection
 
 @push('scripts')
@@ -482,6 +570,15 @@
             const form = document.getElementById('deleteQuestionForm');
             form.action = `/admin/questions/question/${questionId}`;
             form.submit();
+        }
+    }
+
+    function confirmStopPeriod() {
+        const periodName = '{{ $activePeriod ? $activePeriod->period_name : "" }}';
+        const periodYear = '{{ $activePeriod ? $activePeriod->year : "" }}';
+        
+        if (confirm(`KONFIRMASI STOP PERIODE\n\nAnda akan menghentikan periode:\n"${periodName}" (${periodYear})\n\nSetelah periode dihentikan:\n✓ Pertanyaan dapat ditambah/edit/hapus kembali\n✓ Data responden periode ini tersimpan permanen\n✓ Sistem kembali ke mode terbuka (unlocked)\n\nLanjutkan?`)) {
+            document.getElementById('stopPeriodForm').submit();
         }
     }
 

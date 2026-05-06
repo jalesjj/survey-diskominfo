@@ -6,11 +6,13 @@ use App\Models\Survey;
 use App\Models\SurveySection;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyResponse;
+use App\Models\SurveyPeriod;
 use App\Helpers\SurveyDefaults;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+
 
 class SurveyController extends Controller
 {
@@ -189,12 +191,16 @@ class SurveyController extends Controller
                 ]);
 
                 try {
-                    $response = SurveyResponse::create([
-                        'survey_id' => $survey->id,
-                        'question_id' => $question->id,
-                        'answer' => $answer ?? '',
-                        'answer_data' => $answerData
-                    ]);
+                    // Get active period
+$activePeriod = SurveyPeriod::getActivePeriod();
+ 
+$response = SurveyResponse::create([
+    'survey_id' => $survey->id,
+    'period_id' => $activePeriod ? $activePeriod->id : null,
+    'question_id' => $question->id,
+    'answer' => $answer ?? '',
+    'answer_data' => $answerData
+]);
 
                     $responseCount++;
                     
