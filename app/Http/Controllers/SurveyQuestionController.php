@@ -357,9 +357,7 @@ class SurveyQuestionController extends Controller
         $question = SurveyQuestion::findOrFail($questionId);
         $question->update(['is_active' => !$question->is_active]);
 
-        $status = $question->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return redirect()->route('admin.questions.index')
-                        ->with('success', "Pertanyaan berhasil {$status}.");
+        return redirect()->route('admin.questions.index');
     }
 
     // Hapus section

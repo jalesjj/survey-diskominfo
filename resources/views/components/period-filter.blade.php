@@ -1,4 +1,4 @@
-{{-- Component Dropdown Filter Periode --}}
+{{-- Component Dropdown Filter Periode
 @if($allPeriods && $allPeriods->count() > 0)
 <div class="period-filter-component mb-3">
     <div class="card">
@@ -63,4 +63,4 @@ function updatePeriodParam(periodId) {
     min-width: 200px;
 }
 </style>
-@endif
+@endif --}}

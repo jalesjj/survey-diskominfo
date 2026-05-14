@@ -213,6 +213,31 @@
         gap: 5px;
     }
 
+    /* Custom Checkbox Styling */
+    .checkbox-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .custom-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #5a9b9e;
+        transform: scale(1.3);
+    }
+
+    .custom-checkbox:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .custom-checkbox:hover:not(:disabled) {
+        transform: scale(1.4);
+        transition: transform 0.2s ease;
+    }
+
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -244,115 +269,97 @@
         .section-header {
             flex-direction: column;
             gap: 15px;
-            text-align: center;
+            align-items: flex-start;
         }
 
         .section-actions {
-            justify-content: center;
-            flex-wrap: wrap;
+            width: 100%;
+            justify-content: flex-start;
         }
 
         .questions-list {
-            font-size: 14px;
+            font-size: 12px;
         }
 
-        .questions-list th,
+        .questions-list th, 
         .questions-list td {
-            padding: 10px 8px;
+            padding: 10px;
         }
     }
 
-    /* Lock Alert */
-.lock-alert {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    border-left: 5px solid #ffc107;
-    padding: 20px 25px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
-}
- 
-.lock-alert-icon {
-    font-size: 40px;
-    color: #856404;
-}
- 
-.lock-alert-content h3 {
-    margin: 0 0 8px 0;
-    color: #856404;
-    font-size: 18px;
-    font-weight: 600;
-}
- 
-.lock-alert-content p {
-    margin: 0;
-    color: #856404;
-    line-height: 1.6;
-}
- 
-.lock-alert-content strong {
-    font-weight: 700;
-}
- 
-.lock-alert-content small {
-    font-size: 13px;
-    opacity: 0.9;
-}
+    /* Success/Error Messages */
+    .success-message, .error-message, .warning-message {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+    }
 
-/* Stop Period Button */
-.btn-danger {
-    background: #dc3545;
-    color: white;
-}
- 
-.btn-danger:hover {
-    background: #c82333;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-}
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
 
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .warning-message {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
 </style>
 @endpush
 
 @section('content')
+<!-- Messages -->
+@if(session('success'))
+    <div class="success-message">
+        <i class="fas fa-check-circle"></i>
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ session('error') }}
+    </div>
+@endif
+
 <!-- Action Buttons -->
 <div class="action-buttons">
-    @if($isLocked)
-        {{-- Tombol saat locked --}}
-        <button class="btn btn-disabled" disabled title="Sistem terkunci">
-            <i class="fas fa-lock"></i> Tambahkan Bagian (Terkunci)
-        </button>
-        <button type="button" class="btn btn-danger" onclick="confirmStopPeriod()">
-            <i class="fas fa-stop-circle"></i> Stop Periode
-        </button>
-    @else
-        {{-- Tombol normal saat unlocked --}}
+    @if(!$isLocked)
         <a href="{{ route('admin.questions.create-section') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Tambahkan Bagian
+            <i class="fas fa-plus"></i> Tambah Bagian Baru
         </a>
-        <a href="{{ route('admin.questions.lock-form') }}" class="btn btn-warning">
-            <i class="fas fa-lock"></i> Kunci Pertanyaan
+        <a href="{{ route('admin.questions.lock-form') }}" class="btn btn-success">
+            <i class="fas fa-lock"></i> Lock Sistem & Mulai Periode
         </a>
+    @else
+        <button class="btn btn-disabled" disabled>
+            <i class="fas fa-lock"></i> Sistem Terkunci
+        </button>
+        <button onclick="confirmStopPeriod()" class="btn btn-danger">
+            <i class="fas fa-stop-circle"></i> Stop Periode & Unlock
+        </button>
     @endif
 </div>
 
-{{-- Lock Status Alert --}}
-@php
-    $activePeriod = \App\Models\SurveyPeriod::getActivePeriod();
-    $isLocked = \App\Models\SurveyPeriod::isLocked();
-@endphp
- 
+<!-- Period Lock Info -->
 @if($isLocked && $activePeriod)
-    <div class="lock-alert">
-        <div class="lock-alert-icon">
+    <div class="warning-message">
+        <div>
             <i class="fas fa-lock"></i>
-        </div>
-        <div class="lock-alert-content">
-            <h3>Sistem Terkunci</h3>
-            <p>
+            <strong>SISTEM TERKUNCI</strong>
+            <p style="margin: 5px 0 0 0;">
                 Pertanyaan dikunci untuk periode: <strong>{{ $activePeriod->period_name }}</strong> ({{ $activePeriod->year }})
                 <br>
                 <small>Dimulai: {{ $activePeriod->start_date->format('d F Y') }}</small>
@@ -381,13 +388,60 @@
                 <i class="fas fa-lock" style="opacity: 0.7;"></i>
             @endif
             {{ $section->title }}
+            
+            {{-- Status Badge untuk Section --}}
+            @if(!isset($section->is_permanent) || !$section->is_permanent)
+                <span class="status-badge {{ $section->is_active ? 'status-active' : 'status-inactive' }}" style="margin-left: 10px;">
+                    {{ $section->is_active ? 'Aktif' : 'Nonaktif' }}
+                </span>
+            @endif
         </div>
         @if($section->description)
             <div class="section-description">{{ $section->description }}</div>
         @endif
     </div>
     <div class="section-actions">
-        {{-- ... tombol actions di sini (lihat LANGKAH 3) ... --}}
+        @if(isset($section->is_permanent) && $section->is_permanent)
+            {{-- Tombol disabled untuk section permanen --}}
+            <button class="btn btn-disabled btn-sm" disabled title="Bagian permanen tidak dapat diedit">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-disabled btn-sm" disabled title="Bagian permanen tidak dapat diubah statusnya">
+                <i class="fas fa-{{ $section->is_active ? 'eye-slash' : 'eye' }}"></i>
+            </button>
+            <button class="btn btn-disabled btn-sm" disabled title="Bagian permanen tidak dapat dihapus">
+                <i class="fas fa-trash"></i>
+            </button>
+        @elseif($isLocked)
+            {{-- Tombol disabled saat sistem locked --}}
+            <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
+                <i class="fas fa-{{ $section->is_active ? 'eye-slash' : 'eye' }}"></i>
+            </button>
+            <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
+                <i class="fas fa-trash"></i>
+            </button>
+        @else
+            {{-- Tombol normal untuk section biasa --}}
+            <a href="{{ route('admin.questions.edit-section', $section->id) }}" class="btn btn-primary btn-sm" title="Edit Bagian">
+                <i class="fas fa-edit"></i>
+            </a>
+            <a href="#" onclick="toggleSection({{ $section->id }})" class="btn btn-warning btn-sm" title="{{ $section->is_active ? 'Nonaktifkan Bagian' : 'Aktifkan Bagian' }}">
+                <i class="fas fa-{{ $section->is_active ? 'eye-slash' : 'eye' }}"></i>
+            </a>
+            <a href="#" onclick="deleteSection({{ $section->id }}, '{{ addslashes($section->title) }}')" class="btn btn-danger btn-sm" title="Hapus Bagian">
+                <i class="fas fa-trash"></i>
+            </a>
+        @endif
+        
+        {{-- Tombol Tambah Pertanyaan - selalu tampil kecuali locked --}}
+        @if(!$isLocked)
+            <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-success btn-sm" title="Tambah Pertanyaan">
+                <i class="fas fa-plus"></i> Pertanyaan
+            </a>
+        @endif
     </div>
 </div>
 
@@ -396,18 +450,48 @@
                 <table class="questions-list">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">No</th>
+                            <th style="width: 60px; text-align: center;">Aktif</th>
                             <th>Pertanyaan</th>
                             <th style="width: 150px;">Jenis</th>
                             <th style="width: 100px;">Required</th>
-                            <th style="width: 80px;">Status</th>
-                            <th style="width: 200px;">Aksi</th>
+                            <th style="width: 150px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($section->allQuestions as $question)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td>
+                                <div class="checkbox-container">
+                                    @if(isset($question->is_permanent) && $question->is_permanent)
+                                        {{-- Checkbox disabled untuk pertanyaan permanen --}}
+                                        <input 
+                                            type="checkbox" 
+                                            class="custom-checkbox" 
+                                            checked 
+                                            disabled 
+                                            title="Pertanyaan permanen selalu aktif"
+                                        >
+                                    @elseif($isLocked)
+                                        {{-- Checkbox disabled saat sistem locked --}}
+                                        <input 
+                                            type="checkbox" 
+                                            class="custom-checkbox" 
+                                            {{ $question->is_active ? 'checked' : '' }} 
+                                            disabled 
+                                            title="Sistem terkunci"
+                                        >
+                                    @else
+                                        {{-- Checkbox normal yang bisa diklik --}}
+                                        <input 
+                                            type="checkbox" 
+                                            class="custom-checkbox" 
+                                            {{ $question->is_active ? 'checked' : '' }}
+                                            onclick="toggleQuestion({{ $question->id }})"
+                                            title="Klik untuk {{ $question->is_active ? 'menonaktifkan' : 'mengaktifkan' }}"
+                                        >
+                                    @endif
+                                </div>
+                            </td>
                             <td>
                                 <div style="font-weight: 500;">
                                     {{ $question->question_text }}
@@ -432,19 +516,11 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="status-badge {{ $question->is_active ? 'status-active' : 'status-inactive' }}">
-                                    {{ $question->is_active ? 'Aktif' : 'Nonaktif' }}
-                                </span>
-                            </td>
-                            <td>
                                 @if(isset($question->is_permanent) && $question->is_permanent)
     {{-- Tombol disabled untuk pertanyaan permanen --}}
     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
         <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diedit">
             <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diubah statusnya">
-            <i class="fas fa-lock"></i>
         </button>
         <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat dihapus">
             <i class="fas fa-trash"></i>
@@ -457,20 +533,14 @@
             <i class="fas fa-edit"></i>
         </button>
         <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
-            <i class="fas fa-lock"></i>
-        </button>
-        <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
             <i class="fas fa-trash"></i>
         </button>
     </div>
 @else
-    {{-- Tombol normal untuk pertanyaan biasa --}}
+    {{-- Tombol normal untuk pertanyaan biasa (Edit dan Hapus saja) --}}
     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
         <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit">
             <i class="fas fa-edit"></i>
-        </a>
-        <a href="#" onclick="toggleQuestion({{ $question->id }})" class="btn btn-warning btn-sm" title="{{ $question->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-            <i class="fas {{ $question->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
         </a>
         <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}')" class="btn btn-danger btn-sm" title="Hapus">
             <i class="fas fa-trash"></i>
@@ -541,7 +611,7 @@
 @push('scripts')
 <script>
     function toggleSection(sectionId) {
-        if (confirm('Yakin ingin mengubah status bagian ini?')) {
+        if (confirm('Yakin ingin mengubah status bagian ini?\n\nJika dinonaktifkan, bagian ini tidak akan muncul di halaman responden.')) {
             const form = document.getElementById('toggleSectionForm');
             form.action = `/admin/questions/section/${sectionId}/toggle`;
             form.submit();
@@ -557,11 +627,12 @@
     }
 
     function toggleQuestion(questionId) {
-        if (confirm('Yakin ingin mengubah status pertanyaan ini?')) {
-            const form = document.getElementById('toggleQuestionForm');
-            form.action = `/admin/questions/question/${questionId}/toggle`;
-            form.submit();
-        }
+        // Simpan posisi scroll sebelum submit
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+        
+        const form = document.getElementById('toggleQuestionForm');
+        form.action = `/admin/questions/question/${questionId}/toggle`;
+        form.submit();
     }
 
     function deleteQuestion(questionId, questionText) {
@@ -582,13 +653,22 @@
         }
     }
 
-    // Auto hide success message
+    // Auto hide success message & Restore scroll position
     document.addEventListener('DOMContentLoaded', function() {
+        // Hide success message
         const successMessage = document.querySelector('.success-message');
         if (successMessage) {
             setTimeout(() => {
                 successMessage.style.display = 'none';
             }, 5000);
+        }
+
+        // Restore scroll position setelah toggle
+        const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+        if (savedScrollPosition) {
+            window.scrollTo(0, parseInt(savedScrollPosition));
+            // Hapus setelah restore agar tidak mengganggu navigasi normal
+            sessionStorage.removeItem('scrollPosition');
         }
     });
 </script>
