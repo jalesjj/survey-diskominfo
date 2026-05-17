@@ -18,6 +18,18 @@ class SurveyController extends Controller
 {
     public function index()
     {
+        // ============================================================
+        // CEK APAKAH ADA PERIODE AKTIF
+        // Jika tidak ada periode aktif (belum di-lock/submit atau sudah di-stop),
+        // maka halaman responden tidak bisa diakses
+        // ============================================================
+        $activePeriod = SurveyPeriod::getActivePeriod();
+        
+        if (!$activePeriod) {
+            // Tampilkan halaman kosong atau pesan bahwa survey belum dibuka
+            return view('survey.no-active-period');
+        }
+        
         // Ambil default section dan questions
         $defaultSection = SurveyDefaults::getDefaultSection();
         $defaultQuestions = SurveyDefaults::getDefaultQuestions();
@@ -48,278 +60,212 @@ class SurveyController extends Controller
     }
 
     public function store(Request $request)
-{
-    try {
-        // Log request data untuk debugging
-        Log::info('Survey submission started', [
-            'ip' => $request->ip(),
-            'user_agent' => $request->header('User-Agent'),
-            'request_data_keys' => array_keys($request->all()),
-            'files' => array_keys($request->allFiles())
-        ]);
-
-        DB::beginTransaction();
-
-        // Validasi form dinamis
-        $this->validateDynamicSurvey($request);
-        
-        Log::info('Validation passed');
-
-        // Buat record survei utama
-        $survey = Survey::create([
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->header('User-Agent'),
-        ]);
-
-        Log::info('Survey record created', ['survey_id' => $survey->id]);
-
-        // Ambil semua pertanyaan aktif dari database
-        $dbQuestions = SurveyQuestion::active()->get();
-        
-        // Ambil default questions
-        $defaultQuestions = SurveyDefaults::getDefaultQuestions();
-        
-        // Gabungkan kedua collection
-        $questions = $defaultQuestions->merge($dbQuestions);
-        
-        Log::info('Found active questions', [
-            'default_count' => $defaultQuestions->count(),
-            'db_count' => $dbQuestions->count(),
-            'total_count' => $questions->count()
-        ]);
-
-        $responseCount = 0;
-        foreach ($questions as $question) {
-            $fieldName = 'question_' . $question->id;
-            $answer = $request->input($fieldName);
-            $answerData = null;
-
-            Log::info('Processing question', [
-                'question_id' => $question->id,
-                'field_name' => $fieldName,
-                'question_type' => $question->question_type,
-                'has_input' => !empty($answer),
-                'has_file' => $request->hasFile($fieldName),
-                'is_required' => $question->is_required
+    {
+        try {
+            // ============================================================
+            // CEK PERIODE AKTIF SEBELUM MENYIMPAN RESPONSE
+            // ============================================================
+            $activePeriod = SurveyPeriod::getActivePeriod();
+            
+            if (!$activePeriod) {
+                return redirect()->route('survey.index')
+                    ->with('error', 'Survey sedang tidak aktif. Silakan coba lagi nanti.');
+            }
+            
+            // Log request data untuk debugging
+            Log::info('Survey submission started', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'request_data_keys' => array_keys($request->all()),
+                'files' => array_keys($request->allFiles()),
+                'period_id' => $activePeriod->id,
+                'period_name' => $activePeriod->period_name
             ]);
 
-            // Handle file upload khusus
-            if ($question->question_type === 'file_upload') {
-                if ($request->hasFile($fieldName)) {
-                    try {
-                        $file = $request->file($fieldName);
-                        
-                        // Validasi file
-                        if ($file->isValid()) {
-                            // Pastikan direktori exists
-                            $uploadPath = 'uploads/survey';
-                            if (!Storage::disk('public')->exists($uploadPath)) {
-                                Storage::disk('public')->makeDirectory($uploadPath);
+            DB::beginTransaction();
+
+            // Validasi basic
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+            ], [
+                'nama.required' => 'Nama harus diisi.',
+                'email.required' => 'Email harus diisi.',
+                'email.email' => 'Format email tidak valid.',
+            ]);
+
+            // Create survey record
+            $survey = Survey::create([
+                'nama' => $request->nama,
+                'email' => $request->email,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'submitted_at' => now(),
+            ]);
+
+            Log::info('Survey record created', ['survey_id' => $survey->id]);
+
+            // Get all questions (default + database)
+            $defaultQuestions = SurveyDefaults::getDefaultQuestions();
+            $dbQuestions = SurveyQuestion::active()->get();
+            $allQuestions = collect($defaultQuestions)->merge($dbQuestions);
+
+            Log::info('Total questions to process', [
+                'default_count' => count($defaultQuestions),
+                'db_count' => $dbQuestions->count(),
+                'total' => $allQuestions->count()
+            ]);
+
+            $totalResponses = 0;
+            $totalFiles = 0;
+
+            // Process each question
+            foreach ($allQuestions as $question) {
+                $questionId = is_object($question) ? $question->id : $question['id'];
+                $questionType = is_object($question) ? $question->question_type : $question['question_type'];
+                $isRequired = is_object($question) ? $question->is_required : $question['is_required'];
+                $isPermanent = is_object($question) ? ($question->is_permanent ?? false) : ($question['is_permanent'] ?? false);
+
+                Log::info('Processing question', [
+                    'id' => $questionId,
+                    'type' => $questionType,
+                    'is_permanent' => $isPermanent
+                ]);
+
+                // Ambil jawaban dari request
+                $answer = $request->input('question_' . $questionId);
+                $answerData = null;
+
+                // Handle file uploads
+                if ($questionType === 'file_upload') {
+                    Log::info('Processing file upload for question', ['question_id' => $questionId]);
+                    
+                    if ($request->hasFile('question_' . $questionId)) {
+                        try {
+                            $file = $request->file('question_' . $questionId);
+                            
+                            Log::info('File details', [
+                                'original_name' => $file->getClientOriginalName(),
+                                'size' => $file->getSize(),
+                                'mime' => $file->getMimeType()
+                            ]);
+
+                            // Validasi file
+                            $maxSize = 10 * 1024 * 1024; // 10 MB
+                            if ($file->getSize() > $maxSize) {
+                                throw new \Exception('File terlalu besar. Maksimal 10 MB.');
                             }
-                            
-                            // Generate filename yang aman
-                            $filename = time() . '_' . uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-                            
-                            // Store file
-                            $path = $file->storeAs($uploadPath, $filename, 'public');
-                            
+
+                            $allowedTypes = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'];
+                            $extension = strtolower($file->getClientOriginalExtension());
+                            if (!in_array($extension, $allowedTypes)) {
+                                throw new \Exception('Tipe file tidak diizinkan. Hanya: ' . implode(', ', $allowedTypes));
+                            }
+
+                            // Generate filename
+                            $filename = time() . '_' . $questionId . '_' . preg_replace('/[^A-Za-z0-9._-]/', '', $file->getClientOriginalName());
+                            $path = $file->storeAs('uploads', $filename, 'public');
+
+                            Log::info('File uploaded successfully', ['path' => $path]);
+
+                            // Simpan data file sebagai JSON
                             $answerData = [
                                 'filename' => $file->getClientOriginalName(),
                                 'stored_filename' => $filename,
                                 'path' => $path,
                                 'size' => $file->getSize(),
                                 'mime_type' => $file->getMimeType(),
-                                'extension' => $file->getClientOriginalExtension()
+                                'extension' => $extension,
+                                'uploaded_at' => now()->toDateTimeString()
                             ];
-                            
-                            $answer = $file->getClientOriginalName();
-                            
-                            Log::info('File uploaded successfully', [
-                                'original_filename' => $file->getClientOriginalName(),
-                                'stored_filename' => $filename,
-                                'path' => $path,
-                                'size' => $file->getSize()
-                            ]);
 
-                            // CRITICAL: Pastikan file response tersimpan
-                            Log::info('About to save file response', [
-                                'survey_id' => $survey->id,
-                                'question_id' => $question->id,
-                                'answer' => $answer,
-                                'answer_data_keys' => array_keys($answerData)
+                            $answer = json_encode($answerData);
+                            $totalFiles++;
+                            
+                        } catch (\Exception $fileError) {
+                            Log::error('File upload error', [
+                                'question_id' => $questionId,
+                                'error' => $fileError->getMessage()
                             ]);
-
-                        } else {
-                            Log::error('File upload validation failed', [
-                                'question_id' => $question->id,
-                                'error' => 'File is not valid'
-                            ]);
-                            throw new \Exception('File yang diupload tidak valid');
+                            throw new \Exception('Gagal upload file: ' . $fileError->getMessage());
                         }
-                    } catch (\Exception $fileError) {
-                        Log::error('File upload error', [
-                            'question_id' => $question->id,
-                            'error' => $fileError->getMessage()
-                        ]);
-                        throw new \Exception('Gagal mengupload file: ' . $fileError->getMessage());
+                    } elseif ($isRequired) {
+                        Log::warning('Required file upload missing', ['question_id' => $questionId]);
                     }
-                } elseif ($question->is_required) {
-                    Log::warning('Required file upload missing', ['question_id' => $question->id]);
+                } 
+                // Handle non-file questions
+                elseif ($answer !== null && $answer !== '') {
+                    if ($questionType === 'checkbox' && is_array($answer)) {
+                        $answerData = $answer;
+                        $answer = implode(', ', $answer);
+                        Log::info('Processed checkbox answer', ['options' => $answerData]);
+                    } elseif (is_array($answer)) {
+                        $answer = implode(', ', $answer);
+                        Log::info('Processed array answer', ['answer' => $answer]);
+                    }
                 }
-            } 
-            // Handle non-file questions
-            elseif ($answer !== null && $answer !== '') {
-                if ($question->question_type === 'checkbox' && is_array($answer)) {
-                    $answerData = $answer;
-                    $answer = implode(', ', $answer);
-                    Log::info('Processed checkbox answer', ['options' => $answerData]);
-                } elseif (is_array($answer)) {
-                    $answer = implode(', ', $answer);
-                    Log::info('Processed array answer', ['answer' => $answer]);
-                }
-            }
 
-            // CRITICAL DEBUG: Simpan response jika ada jawaban atau file
-            if (($answer !== null && $answer !== '') || $answerData !== null) {
-                
-                Log::info('BEFORE saving response', [
-                    'survey_id' => $survey->id,
-                    'question_id' => $question->id,
-                    'answer' => $answer,
-                    'has_answer_data' => !empty($answerData),
-                    'answer_data_type' => gettype($answerData)
-                ]);
-
-                try {
-                    // Get active period
-$activePeriod = SurveyPeriod::getActivePeriod();
- 
-$response = SurveyResponse::create([
-    'survey_id' => $survey->id,
-    'period_id' => $activePeriod ? $activePeriod->id : null,
-    'question_id' => $question->id,
-    'answer' => $answer ?? '',
-    'answer_data' => $answerData
-]);
-
-                    $responseCount++;
+                // CRITICAL DEBUG: Simpan response jika ada jawaban atau file
+                if (($answer !== null && $answer !== '') || $answerData !== null) {
                     
-                    Log::info('AFTER saving response - SUCCESS', [
-                        'response_id' => $response->id,
-                        'survey_id' => $response->survey_id,
-                        'question_id' => $response->question_id,
-                        'answer' => $response->answer,
-                        'has_answer_data' => !empty($response->answer_data),
-                        'response_count' => $responseCount
+                    Log::info('BEFORE saving response', [
+                        'survey_id' => $survey->id,
+                        'question_id' => $questionId,
+                        'answer' => $answer,
+                        'has_answer_data' => !empty($answerData),
+                        'answer_data_type' => gettype($answerData)
                     ]);
 
-                    // Double check: Query back the saved response
-                    $savedResponse = SurveyResponse::find($response->id);
-                    if ($savedResponse) {
-                        Log::info('Response verification - FOUND in DB', [
-                            'response_id' => $savedResponse->id,
-                            'answer_data_exists' => !empty($savedResponse->answer_data)
+                    try {
+                        $response = SurveyResponse::create([
+                            'survey_id' => $survey->id,
+                            'period_id' => $activePeriod->id, // Gunakan periode aktif
+                            'question_id' => $questionId,
+                            'answer' => $answer ?? '',
+                            'answer_data' => $answerData ? json_encode($answerData) : null
                         ]);
-                    } else {
-                        Log::error('Response verification - NOT FOUND in DB', [
-                            'expected_response_id' => $response->id
+
+                        Log::info('Response saved successfully', [
+                            'response_id' => $response->id,
+                            'question_id' => $questionId
                         ]);
+
+                        $totalResponses++;
+                    } catch (\Exception $e) {
+                        Log::error('Failed to save response', [
+                            'question_id' => $questionId,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        throw $e;
                     }
-
-                } catch (\Exception $dbError) {
-                    Log::error('Database save error', [
-                        'question_id' => $question->id,
-                        'error' => $dbError->getMessage(),
-                        'survey_id' => $survey->id
-                    ]);
-                    throw $dbError;
-                }
-            } else {
-                Log::info('Skipping response - no answer or file', [
-                    'question_id' => $question->id,
-                    'answer_empty' => empty($answer),
-                    'answer_data_empty' => empty($answerData)
-                ]);
-            }
-        }
-
-        Log::info('All responses processed', [
-            'total_responses' => $responseCount,
-            'survey_id' => $survey->id
-        ]);
-
-        // FINAL VERIFICATION: Count responses in DB
-        $dbResponseCount = SurveyResponse::where('survey_id', $survey->id)->count();
-        Log::info('Final DB verification', [
-            'expected_responses' => $responseCount,
-            'actual_db_responses' => $dbResponseCount,
-            'match' => $responseCount === $dbResponseCount
-        ]);
-
-        DB::commit();
-        Log::info('Transaction committed successfully');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Survei berhasil disimpan. Terima kasih atas partisipasinya!',
-            'survey_id' => $survey->id
-        ]);
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        DB::rollBack();
-        Log::error('Validation failed', ['errors' => $e->errors()]);
-        
-        return response()->json([
-            'success' => false,
-            'errors' => $e->errors()
-        ], 422);
-        
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Survey submission error', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Terjadi kesalahan saat menyimpan survei: ' . $e->getMessage()
-        ], 500);
-    }
-}
-
-    // Validasi dinamis berdasarkan pertanyaan yang aktif
-    private function validateDynamicSurvey(Request $request)
-    {
-        // Ambil pertanyaan dari database
-        $dbQuestions = SurveyQuestion::active()->get();
-        
-        // Ambil default questions
-        $defaultQuestions = SurveyDefaults::getDefaultQuestions();
-        
-        // Gabungkan
-        $questions = $defaultQuestions->merge($dbQuestions);
-        
-        $rules = [];
-        $messages = [];
-
-        foreach ($questions as $question) {
-            $fieldName = 'question_' . $question->id;
-            
-            if ($question->is_required) {
-                if ($question->question_type === 'file_upload') {
-                    $rules[$fieldName] = 'required|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240';
-                    $messages[$fieldName . '.required'] = "Pertanyaan '{$question->question_text}' harus diisi.";
-                    $messages[$fieldName . '.file'] = "File untuk pertanyaan '{$question->question_text}' tidak valid.";
-                    $messages[$fieldName . '.mimes'] = "File harus berformat: jpg, jpeg, png, pdf, doc, docx.";
-                    $messages[$fieldName . '.max'] = "Ukuran file maksimal 10MB.";
                 } else {
-                    $rules[$fieldName] = 'required';
-                    $messages[$fieldName . '.required'] = "Pertanyaan '{$question->question_text}' harus diisi.";
+                    Log::info('Skipping question - no answer provided', ['question_id' => $questionId]);
                 }
             }
-        }
 
-        $request->validate($rules, $messages);
+            DB::commit();
+
+            Log::info('Survey submission completed', [
+                'survey_id' => $survey->id,
+                'total_responses' => $totalResponses,
+                'total_files' => $totalFiles
+            ]);
+
+            return redirect()->route('survey.index')
+                           ->with('success', 'Terima kasih! Survei Anda telah berhasil dikirim.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            Log::error('Validation error', ['errors' => $e->errors()]);
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Survey submission error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Terjadi kesalahan saat mengirim survei: ' . $e->getMessage())->withInput();
+        }
     }
 }

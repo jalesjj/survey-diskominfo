@@ -25,33 +25,128 @@ class SurveyQuestionController extends Controller
         return null;
     }
 
-    // Halaman utama manajemen pertanyaan
-    public function index()
-{
-    $authCheck = $this->checkAdminAuth();
-    if ($authCheck) return $authCheck;
-
-    // Ambil sections dari database
-    $dbSections = SurveySection::with(['allQuestions' => function($query) {
-        $query->orderBy('order_index');
-    }])->ordered()->get();
-
-    // Tambahkan default section di awal
-    $defaultSection = SurveyDefaults::getDefaultSection();
-    $defaultQuestions = SurveyDefaults::getDefaultQuestions();
-    
-    // Set property allQuestions untuk default section
-    $defaultSection->allQuestions = $defaultQuestions;
-    
-    // Gabungkan default section dengan sections dari database
-    $sections = collect([$defaultSection])->merge($dbSections);
-
-    // ✅ TAMBAHKAN INI: Cek status lock
-    $isLocked = SurveyPeriod::isLocked();
-    $activePeriod = SurveyPeriod::getActivePeriod();
-
-    return view('admin.questions.index', compact('sections', 'isLocked', 'activePeriod'));
-}
+    // ✅ HANYA 1 METHOD INDEX INI SAJA - DENGAN FILTER
+    public function index(Request $request)
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+ 
+        // Ambil parameter filter
+        $filterStatus = $request->get('status', 'all'); // all, active, inactive
+        $filterCriteria = $request->get('criteria', 'all'); // all, benefit, cost
+        $filterType = $request->get('type', 'all'); // all, short_text, multiple_choice, dll
+ 
+        // Ambil sections dari database
+        $dbSections = SurveySection::with(['allQuestions' => function($query) use ($filterStatus, $filterCriteria, $filterType) {
+            $query->orderBy('order_index');
+            
+            // Filter berdasarkan status aktif/nonaktif
+            if ($filterStatus === 'active') {
+                $query->where('is_active', true);
+            } elseif ($filterStatus === 'inactive') {
+                $query->where('is_active', false);
+            }
+            
+            // Filter berdasarkan criteria_type (benefit/cost)
+            if ($filterCriteria === 'benefit') {
+                $query->where('criteria_type', 'benefit');
+            } elseif ($filterCriteria === 'cost') {
+                $query->where('criteria_type', 'cost');
+            }
+            
+            // Filter berdasarkan question_type
+            if ($filterType !== 'all') {
+                $query->where('question_type', $filterType);
+            }
+        }])->ordered()->get();
+ 
+        // Tambahkan default section di awal
+        $defaultSection = SurveyDefaults::getDefaultSection();
+        $defaultQuestions = SurveyDefaults::getDefaultQuestions();
+        
+        // Convert array ke collection untuk filtering
+        $defaultQuestionsCollection = collect($defaultQuestions);
+        
+        // Apply filter ke default questions
+        if ($filterStatus === 'active') {
+            $defaultQuestionsCollection = $defaultQuestionsCollection->filter(function($q) {
+                // Handle both array and object
+                $isActive = is_array($q) ? ($q['is_active'] ?? true) : ($q->is_active ?? true);
+                return $isActive === true;
+            });
+        } elseif ($filterStatus === 'inactive') {
+            $defaultQuestionsCollection = $defaultQuestionsCollection->filter(function($q) {
+                // Handle both array and object
+                $isActive = is_array($q) ? ($q['is_active'] ?? true) : ($q->is_active ?? true);
+                return $isActive === false;
+            });
+        }
+        
+        if ($filterType !== 'all') {
+            $defaultQuestionsCollection = $defaultQuestionsCollection->filter(function($q) use ($filterType) {
+                // Handle both array and object
+                $questionType = is_array($q) ? ($q['question_type'] ?? '') : ($q->question_type ?? '');
+                return $questionType === $filterType;
+            });
+        }
+        
+        // Default questions tidak punya criteria_type, jadi skip filter benefit/cost
+        if ($filterCriteria === 'benefit' || $filterCriteria === 'cost') {
+            $defaultQuestionsCollection = collect([]); // Kosongkan karena tidak ada criteria
+        }
+        
+        // Convert collection kembali ke array untuk allQuestions
+        $defaultSection->allQuestions = $defaultQuestionsCollection->values()->all();
+        
+        // Gabungkan default section dengan sections dari database
+        // PENTING: Gunakan base Collection, bukan Eloquent Collection untuk merge
+        $sections = collect([$defaultSection])->concat($dbSections);
+        
+        // Filter sections yang memiliki pertanyaan (setelah filter applied)
+        $sections = $sections->filter(function($section) {
+            return is_array($section->allQuestions) ? count($section->allQuestions) > 0 : $section->allQuestions->count() > 0;
+        })->values();
+ 
+        // Cek status lock
+        $isLocked = SurveyPeriod::isLocked();
+        $activePeriod = SurveyPeriod::getActivePeriod();
+        
+        // Hitung total semua pertanyaan untuk mendeteksi tipe yang ada
+        $allDbQuestions = SurveyQuestion::all();
+        $allDefaultQuestions = collect(SurveyDefaults::getDefaultQuestions());
+        
+        // Gabung dan ambil question_type dengan cara yang aman
+        $dbTypes = $allDbQuestions->pluck('question_type');
+        
+        // Untuk default questions, handle both array and object
+        $defaultTypes = $allDefaultQuestions->map(function($q) {
+            return is_array($q) ? ($q['question_type'] ?? null) : ($q->question_type ?? null);
+        })->filter();
+        
+        $availableTypes = $dbTypes->concat($defaultTypes)->unique()->sort()->values();
+        
+        // Mapping tipe ke label
+        $typeLabels = [
+            'short_text' => 'Teks Pendek',
+            'long_text' => 'Teks Panjang',
+            'multiple_choice' => 'Pilihan Ganda',
+            'checkbox' => 'Kotak Centang',
+            'dropdown' => 'Dropdown',
+            'file_upload' => 'Upload File',
+            'linear_scale' => 'Skala Linier'
+        ];
+ 
+        return view('admin.questions.index', compact(
+            'sections', 
+            'isLocked', 
+            'activePeriod',
+            'filterStatus',
+            'filterCriteria',
+            'filterType',
+            'availableTypes',
+            'typeLabels'
+        ));
+    }
 
     // Form tambah bagian baru
     public function createSection()
@@ -223,7 +318,7 @@ class SurveyQuestionController extends Controller
         return view('admin.questions.edit-question', compact('question'));
     }
 
-    // Update pertanyaan - FINAL FIXED VERSION
+    // Update pertanyaan
     public function updateQuestion(Request $request, $questionId)
     {
         $authCheck = $this->checkAdminAuth();
@@ -293,7 +388,7 @@ class SurveyQuestionController extends Controller
         if ($request->boolean('enable_saw') && $request->question_type === 'linear_scale') {
             $sawFields['enable_saw'] = true;
             $sawFields['criteria_weight'] = $request->criteria_weight;
-            $sawFields['criteria_type'] = $request->criteria_type; // Sudah dihandle dari backup
+            $sawFields['criteria_type'] = $request->criteria_type;
             
             if ($request->criteria_selection === 'new') {
                 // Gunakan kriteria baru
@@ -443,145 +538,138 @@ class SurveyQuestionController extends Controller
     }
 
     public function editSection($sectionId)
-{
-    $authCheck = $this->checkAdminAuth();
-    if ($authCheck) return $authCheck;
- 
-    // Cek jika section adalah default section
-    if (SurveyDefaults::isPermanentSection($sectionId)) {
-        return redirect()->route('admin.questions.index')
-                        ->with('error', 'Tidak dapat mengedit bagian Data Diri karena bagian ini permanen.');
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+     
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat mengedit bagian Data Diri karena bagian ini permanen.');
+        }
+     
+        $section = SurveySection::findOrFail($sectionId);
+        
+        return view('admin.questions.edit-section', compact('section'));
     }
- 
-    $section = SurveySection::findOrFail($sectionId);
-    
-    return view('admin.questions.edit-section', compact('section'));
-}
- 
-/**
- * Update bagian
- */
-public function updateSection(Request $request, $sectionId)
-{
-    $authCheck = $this->checkAdminAuth();
-    if ($authCheck) return $authCheck;
- 
-    // Cek jika section adalah default section
-    if (SurveyDefaults::isPermanentSection($sectionId)) {
+     
+    // Update bagian
+    public function updateSection(Request $request, $sectionId)
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+     
+        // Cek jika section adalah default section
+        if (SurveyDefaults::isPermanentSection($sectionId)) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak dapat mengedit bagian Data Diri karena bagian ini permanen.');
+        }
+     
+        $section = SurveySection::findOrFail($sectionId);
+     
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000'
+        ]);
+     
+        $section->update([
+            'title' => $request->title,
+            'description' => $request->description
+        ]);
+     
         return redirect()->route('admin.questions.index')
-                        ->with('error', 'Tidak dapat mengedit bagian Data Diri karena bagian ini permanen.');
+                        ->with('success', 'Bagian berhasil diperbarui.');
     }
- 
-    $section = SurveySection::findOrFail($sectionId);
- 
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string|max:1000'
-    ]);
- 
-    $section->update([
-        'title' => $request->title,
-        'description' => $request->description
-    ]);
- 
-    return redirect()->route('admin.questions.index')
-                    ->with('success', 'Bagian berhasil diperbarui.');
-}
 
-public function showLockForm()
-{
-    $authCheck = $this->checkAdminAuth();
-    if ($authCheck) return $authCheck;
- 
-    // Check if already locked
-    if (SurveyPeriod::isLocked()) {
+    public function showLockForm()
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+     
+        // Check if already locked
+        if (SurveyPeriod::isLocked()) {
+            $activePeriod = SurveyPeriod::getActivePeriod();
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Sistem sudah terkunci untuk periode: ' . $activePeriod->period_name);
+        }
+     
+        // Get total questions and sections for confirmation
+        $totalSections = SurveySection::count();
+        $totalQuestions = SurveyQuestion::count();
+        $totalDefaultQuestions = count(SurveyDefaults::getDefaultQuestions());
+        $totalAllQuestions = $totalQuestions + $totalDefaultQuestions;
+     
+        return view('admin.questions.lock-confirm', compact('totalSections', 'totalQuestions', 'totalDefaultQuestions', 'totalAllQuestions'));
+    }
+     
+    // Lock the system with period
+    public function lockSystem(Request $request)
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+     
+        // Check if already locked
+        if (SurveyPeriod::isLocked()) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Sistem sudah terkunci.');
+        }
+     
+        // Validate
+        $request->validate([
+            'period_name' => 'required|string|max:255',
+            'year' => 'required|integer|min:2020|max:2100',
+            'description' => 'nullable|string|max:1000'
+        ], [
+            'period_name.required' => 'Nama periode harus diisi',
+            'year.required' => 'Tahun harus diisi',
+            'year.integer' => 'Tahun harus berupa angka',
+            'year.min' => 'Tahun minimal 2020',
+            'year.max' => 'Tahun maksimal 2100'
+        ]);
+     
+        // Create period
+        $period = SurveyPeriod::create([
+            'survey_id' => 1, // Default survey ID
+            'period_name' => $request->period_name,
+            'year' => $request->year,
+            'start_date' => now(),
+            'end_date' => now()->addYear(), // Default 1 year
+            'status' => 'active',
+            'is_active' => true,
+            'description' => $request->description
+        ]);
+     
+        return redirect()->route('admin.questions.index')
+                        ->with('success', 'Sistem berhasil dikunci untuk periode: ' . $period->period_name . '. Pertanyaan tidak dapat diubah sampai periode dibuka kembali.');
+    }
+     
+    // Check if system is locked
+    private function isSystemLocked()
+    {
+        return SurveyPeriod::isLocked();
+    }
+
+    public function stopPeriod()
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+     
+        // Check if there's an active period
         $activePeriod = SurveyPeriod::getActivePeriod();
+        
+        if (!$activePeriod) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Tidak ada periode aktif yang dapat dihentikan.');
+        }
+     
+        // Update active period to closed
+        $activePeriod->update([
+            'is_active' => false,
+            'status' => 'closed',
+            'end_date' => now()
+        ]);
+     
         return redirect()->route('admin.questions.index')
-                        ->with('error', 'Sistem sudah terkunci untuk periode: ' . $activePeriod->period_name);
+                        ->with('success', 'Periode "' . $activePeriod->period_name . '" berhasil dihentikan. Sistem sekarang terbuka dan pertanyaan dapat diubah kembali.');
     }
- 
-    // Get total questions and sections for confirmation
-    $totalSections = SurveySection::count();
-    $totalQuestions = SurveyQuestion::count();
-    $totalDefaultQuestions = count(SurveyDefaults::getDefaultQuestions());
-    $totalAllQuestions = $totalQuestions + $totalDefaultQuestions;
- 
-    return view('admin.questions.lock-confirm', compact('totalSections', 'totalQuestions', 'totalDefaultQuestions', 'totalAllQuestions'));
-}
- 
-/**
- * Lock the system with period
- */
-public function lockSystem(Request $request)
-{
-    $authCheck = $this->checkAdminAuth();
-    if ($authCheck) return $authCheck;
- 
-    // Check if already locked
-    if (SurveyPeriod::isLocked()) {
-        return redirect()->route('admin.questions.index')
-                        ->with('error', 'Sistem sudah terkunci.');
-    }
- 
-    // Validate
-    $request->validate([
-        'period_name' => 'required|string|max:255',
-        'year' => 'required|integer|min:2020|max:2100',
-        'description' => 'nullable|string|max:1000'
-    ], [
-        'period_name.required' => 'Nama periode harus diisi',
-        'year.required' => 'Tahun harus diisi',
-        'year.integer' => 'Tahun harus berupa angka',
-        'year.min' => 'Tahun minimal 2020',
-        'year.max' => 'Tahun maksimal 2100'
-    ]);
- 
-    // Create period
-    $period = SurveyPeriod::create([
-        'survey_id' => 1, // Default survey ID
-        'period_name' => $request->period_name,
-        'year' => $request->year,
-        'start_date' => now(),
-        'end_date' => now()->addYear(), // Default 1 year
-        'status' => 'active',
-        'is_active' => true,
-        'description' => $request->description
-    ]);
- 
-    return redirect()->route('admin.questions.index')
-                    ->with('success', 'Sistem berhasil dikunci untuk periode: ' . $period->period_name . '. Pertanyaan tidak dapat diubah sampai periode dibuka kembali.');
-}
- 
-/**
- * Check if system is locked
- */
-private function isSystemLocked()
-{
-    return SurveyPeriod::isLocked();
-}
-
-public function stopPeriod()
-{
-    $authCheck = $this->checkAdminAuth();
-    if ($authCheck) return $authCheck;
- 
-    // Check if there's an active period
-    $activePeriod = SurveyPeriod::getActivePeriod();
-    
-    if (!$activePeriod) {
-        return redirect()->route('admin.questions.index')
-                        ->with('error', 'Tidak ada periode aktif yang dapat dihentikan.');
-    }
- 
-    // Update active period to closed
-    $activePeriod->update([
-        'is_active' => false,
-        'status' => 'closed',
-        'end_date' => now()
-    ]);
- 
-    return redirect()->route('admin.questions.index')
-                    ->with('success', 'Periode "' . $activePeriod->period_name . '" berhasil dihentikan. Sistem sekarang terbuka dan pertanyaan dapat diubah kembali.');
-}
-
 }

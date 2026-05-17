@@ -4,7 +4,7 @@
 @section('title', 'Tambah Pertanyaan - Admin Survei')
 @section('active-questions', 'active')
 @section('page-title', 'Tambah Pertanyaan')
-@section('page-subtitle', 'Buat pertanyaan baru untuk bagian: {{ $section->title }}')
+@section('page-subtitle')
 
 @section('breadcrumb')
 <div class="breadcrumb">

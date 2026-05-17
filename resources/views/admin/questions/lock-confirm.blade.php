@@ -19,98 +19,65 @@
 <style>
     .lock-container {
         max-width: 700px;
-        margin: 0 auto;
+        margin: auto;
+        padding: 20px;
+    }
+
+    .lock-icon {
+        text-align: center;
+        font-size: 50px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .warning-card,
+    .info-card,
+    .error-message {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 20px;
     }
 
     .warning-card {
-        background: #fff3cd;
-        border-left: 5px solid #ffc107;
-        padding: 25px;
-        border-radius: 8px;
-        margin-bottom: 30px;
+        background: #f8f9fa;
     }
 
     .warning-card h3 {
-        color: #856404;
-        margin: 0 0 15px 0;
+        margin-bottom: 10px;
         font-size: 18px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        color: #333;
     }
 
     .warning-card ul {
-        color: #856404;
-        margin: 10px 0 0 20px;
+        margin-left: 20px;
         line-height: 1.8;
-    }
-
-    .info-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        padding: 25px;
-        margin-bottom: 25px;
     }
 
     .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 25px;
+        grid-template-columns: repeat(2,1fr);
+        gap: 10px;
+        margin-bottom: 20px;
     }
 
     .info-item {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
         text-align: center;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
     }
 
     .info-number {
-        font-size: 36px;
-        font-weight: 700;
-        color: #5a9b9e;
-        margin-bottom: 5px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
     }
 
     .info-label {
         font-size: 14px;
-        color: #6c757d;
-    }
-
-    .form-group {
-        margin-bottom: 25px;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #2c3e50;
-        font-size: 16px;
-    }
-
-    .required {
-        color: #e74c3c;
-        margin-left: 4px;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 15px 18px;
-        border: 2px solid #e9ecef;
-        border-radius: 8px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        background: #fff;
-        font-family: inherit;
-    }
-
-    .form-input:focus {
-        outline: none;
-        border-color: #5a9b9e;
-        box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
+        color: #666;
     }
 
     .form-row {
@@ -119,35 +86,64 @@
         gap: 15px;
     }
 
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .required {
+        color: red;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #777;
+    }
+
     .form-help {
-        font-size: 13px;
-        color: #7f8c8d;
-        margin-top: 6px;
+        margin-top: 5px;
+        font-size: 12px;
+        color: #777;
     }
 
     .form-textarea {
         min-height: 100px;
-        resize: vertical;
+    }
+
+    .char-counter {
+        text-align: right;
+        margin-top: 5px;
+        font-size: 12px;
+        color: #777;
     }
 
     .form-actions {
         display: flex;
-        gap: 15px;
-        padding-top: 10px;
+        gap: 10px;
+        margin-top: 20px;
     }
 
     .btn {
-        padding: 14px 28px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        padding: 10px 18px;
         border: none;
+        border-radius: 5px;
+        text-decoration: none;
         cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 15px;
+        font-size: 14px;
     }
 
     .btn-danger {
@@ -155,42 +151,25 @@
         color: white;
     }
 
-    .btn-danger:hover {
-        background: #c82333;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-    }
-
     .btn-secondary {
         background: #6c757d;
         color: white;
     }
 
-    .btn-secondary:hover {
-        background: #5a6268;
+    .error-message ul {
+        margin-top: 10px;
+        margin-left: 20px;
     }
 
-    .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        border-left: 4px solid #f5c6cb;
-    }
+    @media(max-width:768px){
+        .form-row,
+        .info-grid{
+            grid-template-columns:1fr;
+        }
 
-    .lock-icon {
-        font-size: 80px;
-        color: #ffc107;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .char-counter {
-        text-align: right;
-        font-size: 12px;
-        color: #7f8c8d;
-        margin-top: 5px;
+        .form-actions{
+            flex-direction:column;
+        }
     }
 </style>
 @endpush

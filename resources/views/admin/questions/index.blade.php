@@ -315,6 +315,128 @@
         color: #856404;
         border: 1px solid #ffeaa7;
     }
+
+    /* Filter Styles */
+    .filter-container {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+
+    .filter-form {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 200px;
+    }
+
+    .filter-label {
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-select {
+        padding: 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #495057;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .filter-select:hover {
+        border-color: #5a9b9e;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #5a9b9e;
+        box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
+    }
+
+    .filter-btn-apply {
+        padding: 10px 20px;
+        background: #5a9b9e;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        align-self: flex-end;
+    }
+
+    .filter-btn-apply:hover {
+        background: #4a8b8e;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(90, 155, 158, 0.2);
+    }
+
+    .filter-btn-reset {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        align-self: flex-end;
+    }
+
+    .filter-btn-reset:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-btn-apply,
+        .filter-btn-reset {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
 @endpush
 
@@ -372,6 +494,65 @@
         </div>
     </div>
 @endif
+
+<!-- Filter Pertanyaan -->
+<div class="filter-container">
+    <div class="filter-header">
+        <i class="fas fa-filter"></i>
+        Filter Pertanyaan
+    </div>
+    
+    <form action="{{ route('admin.questions.index') }}" method="GET" class="filter-form" id="filterForm">
+        <!-- Filter Status -->
+        <div class="filter-group">
+            <label class="filter-label" for="filter-status">
+                <i class="fas fa-toggle-on"></i> Status
+            </label>
+            <select name="status" id="filter-status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="all" {{ $filterStatus === 'all' ? 'selected' : '' }}>Semua</option>
+                <option value="active" {{ $filterStatus === 'active' ? 'selected' : '' }}>Aktif</option>
+                <option value="inactive" {{ $filterStatus === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+            </select>
+        </div>
+        
+        <!-- Filter Criteria (SAW) -->
+        <div class="filter-group">
+            <label class="filter-label" for="filter-criteria">
+                <i class="fas fa-chart-line"></i> Kriteria SAW
+            </label>
+            <select name="criteria" id="filter-criteria" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="all" {{ $filterCriteria === 'all' ? 'selected' : '' }}>Semua</option>
+                <option value="benefit" {{ $filterCriteria === 'benefit' ? 'selected' : '' }}>Benefit</option>
+                <option value="cost" {{ $filterCriteria === 'cost' ? 'selected' : '' }}>Cost</option>
+            </select>
+        </div>
+        
+        <!-- Filter Tipe Pertanyaan (Dinamis) -->
+        @if($availableTypes->count() > 0)
+        <div class="filter-group">
+            <label class="filter-label" for="filter-type">
+                <i class="fas fa-list"></i> Tipe Pertanyaan
+            </label>
+            <select name="type" id="filter-type" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="all" {{ $filterType === 'all' ? 'selected' : '' }}>Semua Tipe</option>
+                @foreach($availableTypes as $type)
+                    <option value="{{ $type }}" {{ $filterType === $type ? 'selected' : '' }}>
+                        {{ $typeLabels[$type] ?? ucfirst($type) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        @endif
+        
+        <!-- Tombol Reset (hanya muncul jika ada filter aktif) -->
+        @if($filterStatus !== 'all' || $filterCriteria !== 'all' || $filterType !== 'all')
+        <a href="{{ route('admin.questions.index') }}" class="filter-btn-reset">
+            <i class="fas fa-redo"></i>
+            Reset Filter
+        </a>
+        @endif
+    </form>
+</div>
 
 <!-- Sections -->
 <div class="sections-container">
@@ -446,7 +627,7 @@
 </div>
 
         <div class="section-body">
-            @if($section->allQuestions->count() > 0)
+            @if((is_array($section->allQuestions) ? count($section->allQuestions) : $section->allQuestions->count()) > 0)
                 <table class="questions-list">
                     <thead>
                         <tr>
@@ -648,8 +829,12 @@
         const periodName = '{{ $activePeriod ? $activePeriod->period_name : "" }}';
         const periodYear = '{{ $activePeriod ? $activePeriod->year : "" }}';
         
-        if (confirm(`KONFIRMASI STOP PERIODE\n\nAnda akan menghentikan periode:\n"${periodName}" (${periodYear})\n\nSetelah periode dihentikan:\n✓ Pertanyaan dapat ditambah/edit/hapus kembali\n✓ Data responden periode ini tersimpan permanen\n✓ Sistem kembali ke mode terbuka (unlocked)\n\nLanjutkan?`)) {
+        const userInput = prompt(`Apakah Anda yakin untuk mengakhiri periode ini?\n\nPeriode: ${periodName} (${periodYear})\n\nKetik "saya yakin" untuk mengakhiri periode ini:`);
+        
+        if (userInput !== null && userInput.toLowerCase().trim() === 'saya yakin') {
             document.getElementById('stopPeriodForm').submit();
+        } else if (userInput !== null) {
+            alert('Konfirmasi gagal. Anda harus mengetik "saya yakin" dengan benar.');
         }
     }
 

@@ -8,13 +8,17 @@
 
 @section('header-actions')
 <div class="header-actions">
-    <span class="admin-welcome">Selamat atang, {{ session('admin_name') }}</span>
+    <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
 </div>
 @endsection
 
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
+    /* =========================================
+       FLAT & SIMPLE DESIGN (NO SHADOWS)
+       ========================================= */
+       
     /* Action Buttons */
     .action-buttons {
         margin-bottom: 30px;
@@ -25,128 +29,68 @@
     }
 
     .btn {
-        padding: 12px 24px;
-        border-radius: 8px;
+        padding: 10px 20px;
+        border-radius: 6px;
         text-decoration: none;
         font-weight: 600;
-        transition: all 0.3s ease;
-        border: none;
+        transition: background-color 0.2s ease;
+        border: 1px solid transparent;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        font-size: 16px;
+        font-size: 14px;
     }
 
-    /* Hover lembut, tidak lebay */
-    .btn:hover {
-        filter: brightness(1.05);
-    }
+    .btn-primary { background: #5a9b9e; color: white; }
+    .btn-primary:hover { background: #4a8b8e; color: white; }
 
-    .btn-primary {
-        background: #5a9b9e;
-        color: white;
-    }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; color: white; }
 
-    .btn-primary:hover {
-        background: #4a8b8e;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.3);
-    }
+    .btn-warning { background: #ffc107; color: #212529; }
+    .btn-warning:hover { background: #e0a800; color: #212529; }
 
-    .btn-success {
-        background: #28a745;
-        color: white;
-    }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-info:hover { background: #138496; color: white; }
 
-    .btn-success:hover {
-        background: #218838;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-    }
-
-    .btn-warning {
-        background: #ffc107;
-        color: #212529;
-    }
-
-    .btn-warning:hover {
-        background: #e0a800;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-    }
-
-    .btn-info {
-        background: #17a2b8;
-        color: white;
-    }
-
-    .btn-info:hover {
-        background: #138496;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
-    }
-
-    .btn-danger {
-        background: #e74c3c;
-        color: white;
-    }
-
-    .btn-danger:hover {
-        background: #c0392b;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-    }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-danger:hover { background: #c0392b; color: white; }
 
     /* Tab Navigation */
     .tab-navigation {
         background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
         margin-bottom: 30px;
         overflow: hidden;
     }
 
     .tab-nav {
         display: flex;
-        background: #f8f9fa;
         flex-wrap: wrap;
     }
 
     .tab-item {
         flex: 1;
-        padding: 20px 25px;
+        padding: 15px 20px;
         text-align: center;
         background: #f8f9fa;
         color: #6c757d;
         text-decoration: none;
         font-weight: 600;
-        transition: all 0.3s ease;
-        border-right: 1px solid #e9ecef;
+        border-right: 1px solid #e2e8f0;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 8px;
         min-width: 50%;
+        transition: background-color 0.2s;
     }
 
-    .tab-item:last-child {
-        border-right: none;
-    }
-
-    .tab-item:hover {
-        background: #e9ecef;
-        color: #495057;
-    }
-
-    .tab-item.active {
-        background: #5a9b9e;
-        color: white;
-    }
-
-    .tab-icon {
-        font-size: 18px;
-    }
+    .tab-item:last-child { border-right: none; }
+    .tab-item:hover { background: #f1f5f9; color: #495057; }
+    .tab-item.active { background: #5a9b9e; color: white; }
 
     /* Summary Stats */
     .summary-stats {
@@ -159,14 +103,13 @@
 
     .summary-card {
         background: white;
-        padding: 18px 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e9ecef;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
     }
 
     .summary-number {
-        font-size: 32px;
+        font-size: 28px;
         font-weight: 700;
         color: #5a9b9e;
         margin-bottom: 5px;
@@ -174,383 +117,253 @@
 
     .summary-label {
         font-size: 13px;
-        color: #7f8c8d;
+        color: #64748b;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
-    /* ========== PERBAIKAN UTAMA: SECTION DAN QUESTION CARDS ========== */
-
-    /* Section Cards dengan counter reset untuk nomor pertanyaan */
+    /* Section Cards */
     .section-card {
         background: white;
-        border-radius: 15px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
         margin-bottom: 30px;
         overflow: hidden;
-        counter-reset: question-counter; /* Reset counter untuk setiap section */
+        counter-reset: question-counter;
     }
 
     .section-header {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        background: #2c3e50; /* Flat solid color */
         color: white;
-        padding: 30px 35px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Decorative element untuk section header */
-    .section-header::before {
-        content: '';
-        position: absolute;
-        top: -50px;
-        right: -50px;
-        width: 100px;
-        height: 100px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        z-index: 1;
+        padding: 20px 25px;
+        border-bottom: 1px solid #1a252f;
     }
 
     .section-title {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 10px;
-        position: relative;
-        z-index: 2;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .section-description {
-        font-size: 16px;
-        opacity: 0.9;
-        line-height: 1.5;
-        margin-bottom: 20px;
-        position: relative;
-        z-index: 2;
+        font-size: 15px;
+        color: #cbd5e1;
+        margin-bottom: 15px;
     }
 
-    /* Konsistensi radius */
-.section-card,
-.question-card,
-.chart-container,
-.summary-card {
-    border-radius: 14px;
-}
+    .section-meta {
+        display: flex;
+        gap: 15px;
+        font-size: 14px;
+        color: #94a3b8;
+    }
 
-    /* PERBAIKAN UTAMA: question-card dengan pemisah yang jelas */
+    /* Question Cards */
     .question-card {
-        border-bottom: none; /* Hilangkan border default */
-        padding: 35px 40px;
-        margin: 15px 20px 25px 20px; /* Margin untuk memberikan jarak dari tepi section */
-        position: relative;
+        padding: 25px;
+        margin: 15px 20px;
         background: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        position: relative;
     }
 
-    .question-card:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-        transform: translateY(-2px);
-    }
-
-    .question-card:last-child {
-        margin-bottom: 20px;
-    }
-
-    /* Nomor pertanyaan di pojok kiri atas */
+    /* Question Number Badge */
     .question-card::before {
         content: counter(question-counter);
         counter-increment: question-counter;
         position: absolute;
-        top: 15px;
-        left: 15px;
-        background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
+        top: 25px;
+        left: 25px;
+        background: #5a9b9e;
         color: white;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
         font-size: 13px;
-        z-index: 3;
-        box-shadow: 0 2px 8px rgba(90, 155, 158, 0.3);
-    }
-
-    /* Divider line antara pertanyaan yang lebih menarik */
-    .question-card:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        bottom: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80%;
-        height: 2px;
-        background: #e9ecef;
-        border-radius: 1px;
-        z-index: 1;
     }
 
     .question-header {
         margin-bottom: 20px;
-        padding-left: 50px; /* Beri ruang untuk nomor pertanyaan */
+        padding-left: 45px;
     }
 
     .question-text {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 10px;
-        line-height: 1.4;
-        padding-right: 20px;
+        color: #1e293b;
+        margin-bottom: 12px;
+        line-height: 1.5;
     }
 
     .question-meta {
         display: flex;
-        gap: 15px;
-        color: #7f8c8d;
-        font-size: 13px;
+        gap: 10px;
         flex-wrap: wrap;
-        align-items: center;
     }
 
     .question-meta span {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 5px;
-        background: #f8f9fa;
-        padding: 6px 12px;
-        border-radius: 20px;
+        gap: 6px;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
         font-weight: 500;
-        border: 1px solid #e9ecef;
-        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
     }
 
-    .question-meta span:hover {
-        background: #e9ecef;
-        border-color: #dee2e6;
-    }
-
-    /* Response stats dengan grid yang lebih responsive */
+    /* Stats Grid */
     .response-stats {
         display: grid;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .response-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-        transition: all 0.3s ease;
-    }
-
-    .response-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .response-text {
-        flex: 1;
-        font-weight: 600;
-        color: #2c3e50;
-        font-size: 16px;
-    }
-
-    .response-count {
-        background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 25px;
-        font-size: 13px;
-        font-weight: 700;
-        margin-left: 15px;
-        min-width: 50px;
-        text-align: center;
-    }
-
-    .response-percentage {
-        font-size: 12px;
-        color: #7f8c8d;
-        margin-left: 10px;
-    }
-
-    .chart-canvas-container {
-        position: relative;
-        height: 280px;
+        gap: 12px;
         margin-bottom: 20px;
     }
 
     .stat-item {
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        padding: 20px;
-        border-radius: 10px;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
         text-align: center;
-        border: 1px solid #e9ecef;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: #e9ecef;
-        border-radius: 10px 10px 0 0;
-    }
-
-    .stat-item:hover {
-        border-color: #e0e0e0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-        transform: translateY(-2px);
+        border: 1px solid #e2e8f0;
     }
 
     .stat-number {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         color: #5a9b9e;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
     }
 
     .stat-label {
         font-size: 12px;
-        color: #7f8c8d;
+        color: #64748b;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
         font-weight: 600;
     }
 
-    /* Response data styling yang lebih menarik */
-    .response-data {
-        margin-top: 20px;
-        background: #f8f9fa;
-        padding: 18px 20px;
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
+    /* Response List Items */
+    .response-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
     }
 
-    .chart-container {
+    .response-text {
+        flex: 1;
+        font-weight: 500;
+        color: #334155;
+        font-size: 14px;
+    }
+
+    .response-count {
+        background: #5a9b9e;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+
+    .response-percentage {
+        font-size: 12px;
+        color: #64748b;
+        margin-left: 6px;
+    }
+
+    /* Chart Containers */
+    .chart-container, .response-list {
         background: white;
-        padding: 18px 20px;
-        border-radius: 10px;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
         margin-top: 15px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        border: 1px solid #f1f3f4;
-        position: relative;
-        height: 350px; /* Fixed height for canvas */
     }
 
-    .chart-container h4 {
-        color: #2c3e50;
-        font-size: 18px;
+    .chart-container h4, .response-list h4, .sample-responses h4, .file-responses h4 {
+        color: #1e293b;
+        font-size: 16px;
         font-weight: 600;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 10px;
     }
 
-    /* Chart Controls */
+    .chart-canvas-container {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        margin-bottom: 15px;
+    }
+
+    /* Chart Toggle Controls */
     .chart-controls {
         display: flex;
         justify-content: center;
-        margin-bottom: 20px;
         gap: 10px;
+        margin-bottom: 15px;
     }
 
     .chart-toggle-btn {
-        padding: 8px 16px;
-        border: 1px solid #e0e0e0;
+        padding: 6px 14px;
+        border: 1px solid #cbd5e1;
         background: white;
-        color: #5a9b9e;
-        border-radius: 25px;
+        color: #64748b;
+        border-radius: 4px;
         cursor: pointer;
         font-size: 12px;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .chart-toggle-btn:hover {
-        background: #f0f8f8;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.2);
     }
 
     .chart-toggle-btn.active {
         background: #5a9b9e;
         color: white;
+        border-color: #5a9b9e;
     }
 
-    .chart-toggle-btn.active:hover {
-        background: #4a8b8e;
-    }
-
+    /* Simple Bars */
     .distribution-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f3f4;
-        transition: all 0.3s ease;
-    }
-
-    .distribution-item:hover {
-        background: #f8f9fa;
-        border-radius: 6px;
-        padding-left: 10px;
-        padding-right: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 14px;
+        color: #334155;
     }
 
     .distribution-item:last-child {
         border-bottom: none;
     }
 
-    .distribution-item span:first-child {
-        font-weight: 500;
-        color: #2c3e50;
-    }
-
     .distribution-bar {
-        height: 24px;
-        background: linear-gradient(90deg, #5a9b9e 0%, #7fb3b6 100%);
-        border-radius: 10px;
-        margin-left: 15px;
-        min-width: 30px;
-        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-        position: relative;
-        overflow: hidden;
+        height: 12px;
+        background: #5a9b9e;
+        border-radius: 4px;
+        margin-left: 10px;
+        min-width: 20px;
     }
 
-    .distribution-bar::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 50%;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
-        border-radius: 12px 12px 0 0;
-    }
-
-    /* File responses styling */
+    /* Files */
     .file-responses {
-        display: grid;
-        gap: 15px;
         margin-top: 15px;
     }
 
@@ -559,288 +372,105 @@
         align-items: center;
         gap: 15px;
         padding: 15px;
-        background: white;
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-        border-left: 4px solid #28a745;
-        transition: all 0.3s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .file-response:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        transform: translateY(-1px);
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 10px;
     }
 
     .file-icon {
         color: #28a745;
         font-size: 20px;
-        background: rgba(40, 167, 69, 0.1);
-        padding: 10px;
-        border-radius: 8px;
     }
 
-    .file-info {
-        flex: 1;
-    }
-
-    .file-name {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 5px;
-    }
-
-    .file-date {
-        font-size: 12px;
-        color: #7f8c8d;
-    }
-
-    .file-actions {
-        display: flex;
-        gap: 8px;
-    }
-
+    .file-info { flex: 1; }
+    .file-name { font-weight: 600; color: #1e293b; font-size: 14px; }
+    .file-date { font-size: 12px; color: #64748b; margin-top: 4px; }
+    
     .action-btn {
         padding: 6px 12px;
         border-radius: 4px;
         text-decoration: none;
         font-size: 12px;
         font-weight: 600;
-        transition: all 0.3s ease;
     }
 
-    .view-btn {
-        background: #17a2b8;
-        color: white;
-    }
+    .view-btn { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; }
+    .view-btn:hover { background: #e2e8f0; }
+    .download-btn { background: #28a745; color: white; border: 1px solid #28a745; }
+    .download-btn:hover { background: #218838; }
 
-    .download-btn {
-        background: #28a745;
-        color: white;
-    }
-
-    /* Sample responses styling */
+    /* Texts */
     .sample-responses {
         background: white;
-        border-radius: 10px;
+        border-radius: 8px;
         padding: 20px;
         margin-top: 15px;
-        border: 1px solid #e9ecef;
-    }
-
-    .sample-responses h4 {
-        color: #2c3e50;
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        border: 1px solid #e2e8f0;
     }
 
     .sample-response {
         padding: 12px 0;
-        border-bottom: 1px solid #f1f3f4;
-        transition: all 0.3s ease;
+        border-bottom: 1px solid #f1f5f9;
     }
 
-    .sample-response:hover {
-        background: #f8f9fa;
-        border-radius: 6px;
-        padding: 12px 10px;
-    }
+    .sample-response:last-child { border-bottom: none; }
+    .sample-response .response-text { font-style: italic; color: #334155; margin-bottom: 4px; }
+    .sample-response .response-date { font-size: 12px; color: #94a3b8; }
 
-    .sample-response:last-child {
-        border-bottom: none;
+    /* Layout Splits */
+    .response-split {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 20px;
+        align-items: start;
     }
-
-    .response-text {
-        font-style: italic;
-        color: #495057;
-        margin-bottom: 5px;
-        line-height: 1.4;
-    }
-
-    .response-date {
-        font-size: 12px;
-        color: #7f8c8d;
-        font-weight: 500;
+    
+    .response-list .response-stats {
+        max-height: 350px;
+        overflow-y: auto;
     }
 
     /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: #7f8c8d;
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        border-radius: 10px;
+        padding: 40px 20px;
+        color: #64748b;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px dashed #cbd5e1;
         margin: 20px;
-        border: 2px dashed #dee2e6;
-        animation: fadeInUp 0.5s ease-out;
     }
 
-    .empty-state i {
-        font-size: 48px;
-        margin-bottom: 20px;
-        opacity: 0.5;
-        color: #bdc3c7;
+    .empty-state i { font-size: 40px; margin-bottom: 15px; color: #cbd5e1; }
+    .empty-state h3 { font-size: 18px; margin-bottom: 10px; color: #334155; }
+    .empty-state p { font-size: 14px; margin-bottom: 20px; }
+
+    .admin-welcome { font-size: 14px; color: #64748b; }
+
+    /* Word breaks */
+    .question-text, .section-title, .section-description {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
-    .empty-state h3 {
-        font-size: 24px;
-        margin-bottom: 15px;
-        color: #2c3e50;
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .response-split { grid-template-columns: 1fr; }
+        .response-list .response-stats { max-height: none; }
     }
 
-    .empty-state p {
-        font-size: 16px;
-        line-height: 1.6;
-        margin-bottom: 25px;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-        word-break: break-word;
+    @media (max-width: 768px) {
+        .question-card { padding: 20px; }
+        .question-header { padding-left: 35px; }
+        .question-card::before { top: 20px; left: 15px; width: 24px; height: 24px; font-size: 12px; }
+        .response-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .response-count { margin-left: 0; }
     }
-
-    .admin-welcome {
-        font-size: 13px;
-        color: #7f8c8d;
-    }
-
-@media (max-width: 576px) {
-    .tab-item {
-        font-size: 13px;
-        padding: 12px 8px;
-    }
-}
-
-    /* Mobile responsive */
-@media (max-width: 992px) {
-    .response-split {
-        grid-template-columns: 1fr;
-    }
-
-    .response-list .response-stats {
-        max-height: none;
-    }
-}
-
-@media (max-width: 768px) {
-    .question-card::before {
-        top: 10px;
-        left: 10px;
-        width: 28px;
-        height: 28px;
-        font-size: 13px;
-    }
-
-    .response-split {
-        grid-template-columns: 1fr;
-    }
-
-    .question-header {
-        padding-left: 45px;
-    }
-
-    .response-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .response-count {
-        margin-left: 0;
-    }
-}
-
-
-    /* Animation untuk smooth loading */
-    .question-card {
-        animation: fadeInUp 0.6s ease-out;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Smooth scroll behavior */
-    html {
-        scroll-behavior: smooth;
-    }
-
-/**/
-/* Pastikan teks tidak terpotong */
-.question-text,
-.section-title,
-.section-description {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-/* Meta tidak saling tindih */
-.question-meta {
-    row-gap: 8px;
-}
-
-/* Header section aman untuk teks panjang */
-.section-header {
-    min-height: auto;
-}
-
-.chart-canvas-container {
-    width: 100%;
-    min-height: 260px;
-}
-
-.chart-container {
-    overflow-x: auto;
-}
-
-/* Layout kiri-kanan */
-.response-split {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 25px;
-    align-items: start;
-}
-
-/* Card kanan biar konsisten */
-.response-list {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border: 1px solid #f1f3f4;
-}
-
-/* Scroll kalau jawaban banyak */
-.response-list .response-stats {
-    max-height: 350px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-.response-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.response-list::-webkit-scrollbar-thumb {
-    background: #5a9b9e;
-    border-radius: 10px;
-}
-
-.response-chart {
-    width: 100%;
-}
-
-
 </style>
 @endpush
 
@@ -849,16 +479,13 @@
     <!-- Action Buttons -->
     <div class="action-buttons">
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
-            <i class="fas fa-cogs"></i>
-            Kelola Pertanyaan
+            <i class="fas fa-cogs"></i> Kelola Pertanyaan
         </a>
         <a href="{{ route('admin.export') }}" class="btn btn-success">
-            <i class="fas fa-download"></i>
-            Export Excel
+            <i class="fas fa-download"></i> Export Excel
         </a>
         <a href="{{ route('admin.hasil-survey.export-pdf') }}" class="btn btn-danger">
-            <i class="fas fa-file-pdf"></i>
-            Export PDF
+            <i class="fas fa-file-pdf"></i> Export PDF
         </a>
     </div>
 
@@ -931,7 +558,7 @@
                             </div>
                         </div>
 
-                        <div class="response-stats">
+                        <div class="response-stats" style="grid-template-columns: repeat(2, 1fr);">
                             <div class="stat-item">
                                 <div class="stat-number">{{ $stat['total_responses'] }}</div>
                                 <div class="stat-label">Jawaban</div>
@@ -950,10 +577,10 @@
                                         <h4><i class="fas fa-chart-bar"></i> Statistik Skala</h4>
                                         
                                         <div class="chart-controls">
-                                            <button class="chart-toggle-btn active" onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                                            <button class="chart-toggle-btn active" onclick="toggleChart('{{ $stat['question']->id }}', 'bar')">
                                                 <i class="fas fa-chart-bar"></i> Batang
                                             </button>
-                                            <button class="chart-toggle-btn" onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                                            <button class="chart-toggle-btn" onclick="toggleChart('{{ $stat['question']->id }}', 'doughnut')">
                                                 <i class="fas fa-chart-pie"></i> Donat
                                             </button>
                                         </div>
@@ -981,49 +608,43 @@
                                 @elseif(in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
                                     <!-- Chart-enabled Question Types dengan Toggle -->
                                     <div class="response-split">
+                                        <!-- KIRI: CHART -->
+                                        <div class="response-chart">
+                                            <div class="chart-container">
+                                                <h4><i class="fas fa-chart-pie"></i> Distribusi Jawaban</h4>
 
-    <!-- KIRI: CHART -->
-    <div class="response-chart">
-        <div class="chart-container">
-            <h4><i class="fas fa-chart-pie"></i> Distribusi Jawaban</h4>
+                                                <div class="chart-controls">
+                                                    <button class="chart-toggle-btn active" onclick="toggleChart('{{ $stat['question']->id }}', 'doughnut')">
+                                                        <i class="fas fa-chart-pie"></i> Donat
+                                                    </button>
+                                                    <button class="chart-toggle-btn" onclick="toggleChart('{{ $stat['question']->id }}', 'bar')">
+                                                        <i class="fas fa-chart-bar"></i> Batang
+                                                    </button>
+                                                </div>
 
-            <div class="chart-controls">
-                <button class="chart-toggle-btn active"
-                    onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
-                    <i class="fas fa-chart-pie"></i> Donat
-                </button>
-                <button class="chart-toggle-btn"
-                    onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
-                    <i class="fas fa-chart-bar"></i> Batang
-                </button>
-            </div>
+                                                <div class="chart-canvas-container">
+                                                    <canvas id="chart_{{ $stat['question']->id }}"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
 
-            <div class="chart-canvas-container">
-                <canvas id="chart_{{ $stat['question']->id }}"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- KANAN: LIST -->
-    <div class="response-list">
-        <div class="response-stats">
-            @foreach($stat['response_data'] as $response)
-                <div class="response-item">
-                    <span class="response-text">{{ $response->answer }}</span>
-                    <div>
-                        <span class="response-count">{{ $response->count }}</span>
-                        <span class="response-percentage">
-                            ({{ number_format(($response->count / $stat['total_responses']) * 100, 1) }}%)
-                        </span>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-
-</div>
-
-
+                                        <!-- KANAN: LIST -->
+                                        <div class="response-list">
+                                            <div class="response-stats" style="grid-template-columns: 1fr; gap: 8px;">
+                                                @foreach($stat['response_data'] as $response)
+                                                    <div class="response-item">
+                                                        <span class="response-text">{{ $response->answer }}</span>
+                                                        <div>
+                                                            <span class="response-count">{{ $response->count }}</span>
+                                                            <span class="response-percentage">
+                                                                ({{ number_format(($response->count / $stat['total_responses']) * 100, 1) }}%)
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
                             
                             @elseif(isset($stat['data']) && is_array($stat['data']) && count($stat['data']) > 0)
@@ -1046,13 +667,13 @@
                                             </div>
                                         </div>
                                         @if(isset($stat['data']['distribution']))
-                                            <h5>Distribusi Nilai:</h5>
+                                            <h5 style="margin-top: 15px; color: #475569;">Distribusi Nilai:</h5>
                                             @foreach($stat['data']['distribution'] as $value => $count)
                                                 <div class="distribution-item">
                                                     <span>Nilai {{ $value }}</span>
                                                     <div style="display: flex; align-items: center;">
-                                                        <span style="margin-right: 10px;">{{ $count }} orang</span>
-                                                        <div class="distribution-bar" style="width: {{ ($count / $stat['total_responses']) * 200 }}px;"></div>
+                                                        <span style="margin-right: 10px; font-size: 13px;">{{ $count }} orang</span>
+                                                        <div class="distribution-bar" style="width: {{ ($count / $stat['total_responses']) * 150 }}px;"></div>
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -1061,13 +682,13 @@
                                 @else
                                     <!-- Multiple Choice / Checkbox Fallback Display -->
                                     <div class="chart-container">
-                                        <h4><i class="fas fa-chart-pie"></i> Distribusi Jawaban</h4>
+                                        <h4><i class="fas fa-list"></i> Distribusi Jawaban</h4>
                                         @foreach($stat['data'] as $answer => $count)
                                             <div class="distribution-item">
                                                 <span>{{ $answer }}</span>
                                                 <div style="display: flex; align-items: center;">
-                                                    <span style="margin-right: 10px;">{{ $count }} orang</span>
-                                                    <div class="distribution-bar" style="width: {{ ($count / array_sum($stat['data'])) * 200 }}px;"></div>
+                                                    <span style="margin-right: 10px; font-size: 13px;">{{ $count }} orang</span>
+                                                    <div class="distribution-bar" style="width: {{ ($count / array_sum($stat['data'])) * 150 }}px;"></div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -1085,7 +706,7 @@
                                                 <div class="file-date">Upload: {{ isset($file['upload_date']) ? \Carbon\Carbon::parse($file['upload_date'])->format('d/m/Y H:i') : '-' }}</div>
                                             </div>
                                             @if(isset($file['response_id']))
-                                            <div class="file-actions">
+                                            <div style="display: flex; gap: 8px;">
                                                 @if(isset($file['file_data']['mime_type']) && str_starts_with($file['file_data']['mime_type'], 'image/'))
                                                     <a href="{{ route('admin.viewFile', $file['response_id']) }}" target="_blank" class="action-btn view-btn">
                                                         <i class="fas fa-eye"></i> Lihat
@@ -1148,7 +769,7 @@
                         </div>
                     </div>
 
-                    <div class="response-stats">
+                    <div class="response-stats" style="grid-template-columns: repeat(2, 1fr);">
                         <div class="stat-item">
                             <div class="stat-number">{{ $question->responses->count() }}</div>
                             <div class="stat-label">Total Jawaban</div>
@@ -1172,8 +793,8 @@
                                         <div class="distribution-item">
                                             <span>{{ $answer }}</span>
                                             <div style="display: flex; align-items: center;">
-                                                <span style="margin-right: 10px;">{{ $count }} orang</span>
-                                                <div class="distribution-bar" style="width: {{ ($count / $question->responses->count()) * 200 }}px;"></div>
+                                                <span style="margin-right: 10px; font-size: 13px;">{{ $count }} orang</span>
+                                                <div class="distribution-bar" style="width: {{ ($count / $question->responses->count()) * 150 }}px;"></div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -1203,13 +824,13 @@
                                             <div class="stat-label">Maximum</div>
                                         </div>
                                     </div>
-                                    <h5>Distribusi Nilai:</h5>
+                                    <h5 style="margin-top: 15px; color: #475569;">Distribusi Nilai:</h5>
                                     @foreach($distribution as $value => $count)
                                         <div class="distribution-item">
                                             <span>Nilai {{ $value }}</span>
                                             <div style="display: flex; align-items: center;">
-                                                <span style="margin-right: 10px;">{{ $count }} orang</span>
-                                                <div class="distribution-bar" style="width: {{ ($count / $question->responses->count()) * 200 }}px;"></div>
+                                                <span style="margin-right: 10px; font-size: 13px;">{{ $count }} orang</span>
+                                                <div class="distribution-bar" style="width: {{ ($count / $question->responses->count()) * 150 }}px;"></div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -1230,7 +851,7 @@
                                                 <div class="file-name">{{ $response->answer }}</div>
                                                 <div class="file-date">Upload: {{ $response->created_at->format('d/m/Y H:i') }}</div>
                                             </div>
-                                            <div class="file-actions">
+                                            <div style="display: flex; gap: 8px;">
                                                 @if(isset($response->answer_data['mime_type']) && str_starts_with($response->answer_data['mime_type'], 'image/'))
                                                     <a href="{{ route('admin.viewFile', $response->id) }}" target="_blank" class="action-btn view-btn">
                                                         <i class="fas fa-eye"></i> Lihat
@@ -1278,7 +899,7 @@
             <i class="fas fa-question-circle"></i>
             <h3>Belum Ada Pertanyaan</h3>
             <p>Anda belum membuat pertanyaan survei. Mulai dengan membuat pertanyaan pertama.</p>
-            <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
+            <a href="{{ route('admin.questions.index') }}" class="btn btn-primary" style="margin-top: 10px;">
                 <i class="fas fa-plus"></i> Buat Pertanyaan Pertama
             </a>
         </div>
@@ -1291,7 +912,7 @@
 <script>
     // Chart.js Configuration
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-    Chart.defaults.color = '#2c3e50';
+    Chart.defaults.color = '#334155';
 
     // Color Palette
     const colors = ['#5a9b9e', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'];
@@ -1368,17 +989,17 @@
 
         // Configure specific chart type options
         if (chartType === 'doughnut') {
-            chartConfig.options.cutout = '50%';
+            chartConfig.options.cutout = '55%';
             chartConfig.data.datasets[0].borderWidth = 2;
             chartConfig.data.datasets[0].borderColor = '#ffffff';
         } else if (chartType === 'bar') {
-            chartConfig.data.datasets[0].borderRadius = 8;
+            chartConfig.data.datasets[0].borderRadius = 4; // Lebih kotak / flat
             chartConfig.data.datasets[0].borderSkipped = false;
             chartConfig.data.datasets[0].backgroundColor = data.type === 'linear_scale' ? '#5a9b9e' : colors.slice(0, data.labels.length);
             chartConfig.options.scales = {
                 y: {
                     beginAtZero: true,
-                    grid: { color: '#e9ecef' }
+                    grid: { color: '#f1f5f9' }
                 },
                 x: {
                     grid: { display: false }
@@ -1397,14 +1018,21 @@
 
     // Function to toggle chart type
     function toggleChart(questionId, chartType) {
-        // Update button states
-        const buttons = document.querySelectorAll(`[onclick*="toggleChart(${questionId}"]`);
-        buttons.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.onclick.toString().includes(`'${chartType}'`)) {
-                btn.classList.add('active');
-            }
-        });
+        console.log('Toggle chart called:', questionId, chartType);
+        
+        // Update button states - improved selector
+        const questionCard = document.querySelector(`#chart_${questionId}`)?.closest('.question-card');
+        if (questionCard) {
+            const buttons = questionCard.querySelectorAll('.chart-toggle-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                const btnText = btn.textContent.toLowerCase();
+                if ((chartType === 'doughnut' && btnText.includes('donat')) || 
+                    (chartType === 'bar' && btnText.includes('batang'))) {
+                    btn.classList.add('active');
+                }
+            });
+        }
 
         // Recreate chart with new type
         createChart(questionId, chartType);
@@ -1425,12 +1053,5 @@
             createChart(questionId, defaultType);
         });
     });
-
-    // Auto refresh setiap 30 detik untuk data real-time
-    setTimeout(function() {
-        // location.reload();
-    }, 30000);
-
-    
 </script>
 @endpush

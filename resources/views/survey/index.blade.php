@@ -1,4 +1,4 @@
-{{-- resources/views/survey/index.blade.php --}}
+
 @extends('layouts.app')
 
 @section('title', 'Survei Kepuasan Layanan Diskominfo Lamongan')

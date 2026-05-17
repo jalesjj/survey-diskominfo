@@ -1,4 +1,4 @@
-{{-- resources/views/admin/jawaban-sections.blade.php --}}
+{{-- resources/views/admin/jawaban-sections.blade.php
 @extends('layouts.admin')
 
 @section('title', 'Jawaban Bagian - Survei Kepuasan')
@@ -796,10 +796,10 @@
                         @if(isset($stat['chart_enabled']) && $stat['chart_enabled'] && in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
                             <!-- Chart-enabled Question Types -->
                             <div class="chart-controls">
-                                <button class="chart-toggle-btn active" onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                                <button class="chart-toggle-btn active" onclick="toggleChart('{{ $stat['question']->id }}', 'doughnut')">
                                     <i class="fas fa-chart-pie"></i> Donat
                                 </button>
-                                <button class="chart-toggle-btn" onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                                <button class="chart-toggle-btn" onclick="toggleChart('{{ $stat['question']->id }}', 'bar')">
                                     <i class="fas fa-chart-bar"></i> Batang
                                 </button>
                             </div>
@@ -827,10 +827,10 @@
                         @elseif(isset($stat['chart_enabled']) && $stat['chart_enabled'] && $stat['question']->question_type === 'linear_scale')
                             <!-- Linear Scale with Chart Toggle -->
                             <div class="chart-controls">
-                                <button class="chart-toggle-btn active" onclick="toggleChart({{ $stat['question']->id }}, 'bar')">
+                                <button class="chart-toggle-btn active" onclick="toggleChart('{{ $stat['question']->id }}', 'bar')">
                                     <i class="fas fa-chart-bar"></i> Batang
                                 </button>
-                                <button class="chart-toggle-btn" onclick="toggleChart({{ $stat['question']->id }}, 'doughnut')">
+                                <button class="chart-toggle-btn" onclick="toggleChart('{{ $stat['question']->id }}', 'doughnut')">
                                     <i class="fas fa-chart-pie"></i> Donat
                                 </button>
                             </div>
@@ -1048,14 +1048,21 @@
 
     // Function to toggle chart type
     function toggleChart(questionId, chartType) {
-        // Update button states
-        const buttons = document.querySelectorAll(`[onclick*="toggleChart(${questionId}"]`);
-        buttons.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.onclick.toString().includes(`'${chartType}'`)) {
-                btn.classList.add('active');
-            }
-        });
+        console.log('Toggle chart called:', questionId, chartType);
+        
+        // Update button states - improved selector
+        const questionCard = document.querySelector(`#chart_${questionId}`)?.closest('.question-card');
+        if (questionCard) {
+            const buttons = questionCard.querySelectorAll('.chart-toggle-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                const btnText = btn.textContent.toLowerCase();
+                if ((chartType === 'doughnut' && btnText.includes('donat')) || 
+                    (chartType === 'bar' && btnText.includes('batang'))) {
+                    btn.classList.add('active');
+                }
+            });
+        }
 
         // Recreate chart with new type
         createChart(questionId, chartType);
@@ -1151,4 +1158,4 @@
         });
     });
 </script>
-@endpush
+@endpush --}}
