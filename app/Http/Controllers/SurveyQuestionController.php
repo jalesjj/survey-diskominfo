@@ -102,10 +102,17 @@ class SurveyQuestionController extends Controller
         // PENTING: Gunakan base Collection, bukan Eloquent Collection untuk merge
         $sections = collect([$defaultSection])->concat($dbSections);
         
-        // Filter sections yang memiliki pertanyaan (setelah filter applied)
-        $sections = $sections->filter(function($section) {
-            return is_array($section->allQuestions) ? count($section->allQuestions) > 0 : $section->allQuestions->count() > 0;
-        })->values();
+        // Filter sections yang memiliki pertanyaan HANYA jika ada filter aktif
+        // Jika tidak ada filter (semua = all), tampilkan semua sections termasuk yang kosong
+        $hasActiveFilter = ($filterStatus !== 'all' || $filterCriteria !== 'all' || $filterType !== 'all');
+        
+        if ($hasActiveFilter) {
+            // Ada filter aktif: hanya tampilkan sections yang punya pertanyaan
+            $sections = $sections->filter(function($section) {
+                return is_array($section->allQuestions) ? count($section->allQuestions) > 0 : $section->allQuestions->count() > 0;
+            })->values();
+        }
+        // Jika tidak ada filter, tampilkan semua sections (termasuk yang kosong)
  
         // Cek status lock
         $isLocked = SurveyPeriod::isLocked();
@@ -176,6 +183,7 @@ class SurveyQuestionController extends Controller
             'order_index' => $maxOrder + 1
         ]);
 
+        // Reset filter agar section baru langsung terlihat
         return redirect()->route('admin.questions.index')
                         ->with('success', 'Bagian baru berhasil ditambahkan.');
     }
@@ -297,6 +305,7 @@ class SurveyQuestionController extends Controller
             'is_required' => $request->boolean('is_required')
         ], $sawFields));
 
+        // Reset filter agar pertanyaan baru langsung terlihat
         return redirect()->route('admin.questions.index')
                         ->with('success', 'Pertanyaan berhasil ditambahkan.');
     }
@@ -414,75 +423,76 @@ class SurveyQuestionController extends Controller
             'is_required' => $request->boolean('is_required')
         ], $sawFields));
 
-        return redirect()->route('admin.questions.index')
+        // Preserve filter saat update pertanyaan
+        return redirect()->route('admin.questions.index', $request->query())
                         ->with('success', 'Pertanyaan berhasil diperbarui.');
     }
 
     // Hapus pertanyaan
-    public function deleteQuestion($questionId)
+    public function deleteQuestion(Request $request, $questionId)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
         // Cek jika pertanyaan adalah default question
         if (SurveyDefaults::isPermanentQuestion($questionId)) {
-            return redirect()->route('admin.questions.index')
+            return redirect()->route('admin.questions.index', $request->query())
                             ->with('error', 'Tidak dapat menghapus pertanyaan di bagian Data Diri karena pertanyaan ini permanen.');
         }
 
         $question = SurveyQuestion::findOrFail($questionId);
         $question->delete();
 
-        return redirect()->route('admin.questions.index')
+        return redirect()->route('admin.questions.index', $request->query())
                         ->with('success', 'Pertanyaan berhasil dihapus.');
     }
 
     // Toggle status pertanyaan
-    public function toggleQuestion($questionId)
+    public function toggleQuestion(Request $request, $questionId)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
         // Cek jika pertanyaan adalah default question
         if (SurveyDefaults::isPermanentQuestion($questionId)) {
-            return redirect()->route('admin.questions.index')
+            return redirect()->route('admin.questions.index', $request->query())
                             ->with('error', 'Tidak dapat mengubah status pertanyaan di bagian Data Diri karena pertanyaan ini permanen.');
         }
 
         $question = SurveyQuestion::findOrFail($questionId);
         $question->update(['is_active' => !$question->is_active]);
 
-        return redirect()->route('admin.questions.index');
+        return redirect()->route('admin.questions.index', $request->query());
     }
 
     // Hapus section
-    public function deleteSection($sectionId)
+    public function deleteSection(Request $request, $sectionId)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
         // Cek jika section adalah default section
         if (SurveyDefaults::isPermanentSection($sectionId)) {
-            return redirect()->route('admin.questions.index')
+            return redirect()->route('admin.questions.index', $request->query())
                             ->with('error', 'Tidak dapat menghapus bagian Data Diri karena bagian ini permanen.');
         }
 
         $section = SurveySection::findOrFail($sectionId);
         $section->delete(); // Akan menghapus pertanyaan juga karena foreign key cascade
 
-        return redirect()->route('admin.questions.index')
+        return redirect()->route('admin.questions.index', $request->query())
                         ->with('success', 'Bagian dan semua pertanyaannya berhasil dihapus.');
     }
 
     // Toggle status section
-    public function toggleSection($sectionId)
+    public function toggleSection(Request $request, $sectionId)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
         // Cek jika section adalah default section
         if (SurveyDefaults::isPermanentSection($sectionId)) {
-            return redirect()->route('admin.questions.index')
+            return redirect()->route('admin.questions.index', $request->query())
                             ->with('error', 'Tidak dapat mengubah status bagian Data Diri karena bagian ini permanen.');
         }
 
@@ -490,7 +500,7 @@ class SurveyQuestionController extends Controller
         $section->update(['is_active' => !$section->is_active]);
 
         $status = $section->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return redirect()->route('admin.questions.index')
+        return redirect()->route('admin.questions.index', $request->query())
                         ->with('success', "Bagian berhasil {$status}.");
     }
 
@@ -577,7 +587,8 @@ class SurveyQuestionController extends Controller
             'description' => $request->description
         ]);
      
-        return redirect()->route('admin.questions.index')
+        // Preserve filter saat update section
+        return redirect()->route('admin.questions.index', $request->query())
                         ->with('success', 'Bagian berhasil diperbarui.');
     }
 

@@ -441,6 +441,18 @@
 @endpush
 
 @section('content')
+<!-- Inline script untuk instant scroll restore SEBELUM page render -->
+<script>
+    // Restore scroll position ASAP untuk mencegah jump
+    (function() {
+        const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+        if (savedScrollPosition) {
+            const scrollPos = parseInt(savedScrollPosition);
+            window.scrollTo(0, scrollPos);
+        }
+    })();
+</script>
+
 <!-- Messages -->
 @if(session('success'))
     <div class="success-message">
@@ -562,9 +574,7 @@
     <div>
         <div class="section-title">
             @if(isset($section->is_permanent) && $section->is_permanent)
-                <span class="badge-permanent">
-                    <i class="fas fa-lock"></i> PERMANEN
-                </span>
+                {{-- Section Data Diri: Tidak ada badge PERMANEN --}}
             @elseif($isLocked)
                 <i class="fas fa-lock" style="opacity: 0.7;"></i>
             @endif
@@ -583,16 +593,7 @@
     </div>
     <div class="section-actions">
         @if(isset($section->is_permanent) && $section->is_permanent)
-            {{-- Tombol disabled untuk section permanen --}}
-            <button class="btn btn-disabled btn-sm" disabled title="Bagian permanen tidak dapat diedit">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-disabled btn-sm" disabled title="Bagian permanen tidak dapat diubah statusnya">
-                <i class="fas fa-{{ $section->is_active ? 'eye-slash' : 'eye' }}"></i>
-            </button>
-            <button class="btn btn-disabled btn-sm" disabled title="Bagian permanen tidak dapat dihapus">
-                <i class="fas fa-trash"></i>
-            </button>
+            {{-- Section Data Diri: Tidak ada tombol sama sekali --}}
         @elseif($isLocked)
             {{-- Tombol disabled saat sistem locked --}}
             <button class="btn btn-disabled btn-sm" disabled title="Sistem terkunci">
@@ -606,19 +607,19 @@
             </button>
         @else
             {{-- Tombol normal untuk section biasa --}}
-            <a href="{{ route('admin.questions.edit-section', $section->id) }}" class="btn btn-primary btn-sm" title="Edit Bagian">
+            <a href="{{ route('admin.questions.edit-section', $section->id) }}" class="btn btn-primary btn-sm" title="Edit Bagian" onclick="saveScrollPosition()">
                 <i class="fas fa-edit"></i>
             </a>
-            <a href="#" onclick="toggleSection({{ $section->id }})" class="btn btn-warning btn-sm" title="{{ $section->is_active ? 'Nonaktifkan Bagian' : 'Aktifkan Bagian' }}">
+            <a href="#" onclick="toggleSection({{ $section->id }}); return false;" class="btn btn-warning btn-sm" title="{{ $section->is_active ? 'Nonaktifkan Bagian' : 'Aktifkan Bagian' }}">
                 <i class="fas fa-{{ $section->is_active ? 'eye-slash' : 'eye' }}"></i>
             </a>
-            <a href="#" onclick="deleteSection({{ $section->id }}, '{{ addslashes($section->title) }}')" class="btn btn-danger btn-sm" title="Hapus Bagian">
+            <a href="#" onclick="deleteSection({{ $section->id }}, '{{ addslashes($section->title) }}'); return false;" class="btn btn-danger btn-sm" title="Hapus Bagian">
                 <i class="fas fa-trash"></i>
             </a>
         @endif
         
-        {{-- Tombol Tambah Pertanyaan - selalu tampil kecuali locked --}}
-        @if(!$isLocked)
+        {{-- Tombol Tambah Pertanyaan - tidak tampil untuk Data Diri --}}
+        @if(!$isLocked && (!isset($section->is_permanent) || !$section->is_permanent))
             <a href="{{ route('admin.questions.create-question', $section->id) }}" class="btn btn-success btn-sm" title="Tambah Pertanyaan">
                 <i class="fas fa-plus"></i> Pertanyaan
             </a>
@@ -644,14 +645,10 @@
                             <td>
                                 <div class="checkbox-container">
                                     @if(isset($question->is_permanent) && $question->is_permanent)
-                                        {{-- Checkbox disabled untuk pertanyaan permanen --}}
-                                        <input 
-                                            type="checkbox" 
-                                            class="custom-checkbox" 
-                                            checked 
-                                            disabled 
-                                            title="Pertanyaan permanen selalu aktif"
-                                        >
+                                        {{-- Pertanyaan Data Diri: Tampilkan teks "Aktif" tanpa checkbox --}}
+                                        <span style="color: #27ae60; font-weight: 600; font-size: 12px;">
+                                            <i class="fas fa-check-circle"></i> Aktif
+                                        </span>
                                     @elseif($isLocked)
                                         {{-- Checkbox disabled saat sistem locked --}}
                                         <input 
@@ -698,14 +695,9 @@
                             </td>
                             <td>
                                 @if(isset($question->is_permanent) && $question->is_permanent)
-    {{-- Tombol disabled untuk pertanyaan permanen --}}
+    {{-- Pertanyaan Data Diri: Tidak ada tombol sama sekali --}}
     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat diedit">
-            <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn btn-disabled btn-sm" disabled title="Pertanyaan permanen tidak dapat dihapus">
-            <i class="fas fa-trash"></i>
-        </button>
+        {{-- Kosong - tidak ada tombol --}}
     </div>
 @elseif($isLocked)
     {{-- Tombol disabled saat sistem locked --}}
@@ -720,10 +712,10 @@
 @else
     {{-- Tombol normal untuk pertanyaan biasa (Edit dan Hapus saja) --}}
     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-        <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit">
+        <a href="{{ route('admin.questions.edit-question', $question->id) }}" class="btn btn-primary btn-sm" title="Edit" onclick="saveScrollPosition()">
             <i class="fas fa-edit"></i>
         </a>
-        <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}')" class="btn btn-danger btn-sm" title="Hapus">
+        <a href="#" onclick="deleteQuestion({{ $question->id }}, '{{ addslashes($question->question_text) }}'); return false;" class="btn btn-danger btn-sm" title="Hapus">
             <i class="fas fa-trash"></i>
         </a>
     </div>
@@ -792,37 +784,46 @@
 @push('scripts')
 <script>
     function toggleSection(sectionId) {
-        if (confirm('Yakin ingin mengubah status bagian ini?\n\nJika dinonaktifkan, bagian ini tidak akan muncul di halaman responden.')) {
-            const form = document.getElementById('toggleSectionForm');
-            form.action = `/admin/questions/section/${sectionId}/toggle`;
-            form.submit();
-        }
+        // Simpan posisi scroll
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+        
+        const form = document.getElementById('toggleSectionForm');
+        // Ambil parameter filter dari URL saat ini
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParams = urlParams.toString();
+        form.action = `/admin/questions/section/${sectionId}/toggle${filterParams ? '?' + filterParams : ''}`;
+        form.submit();
     }
 
     function deleteSection(sectionId, sectionTitle) {
-        if (confirm(`Yakin ingin menghapus bagian "${sectionTitle}"?\n\nSemua pertanyaan di bagian ini juga akan terhapus dan tidak dapat dikembalikan.`)) {
-            const form = document.getElementById('deleteSectionForm');
-            form.action = `/admin/questions/section/${sectionId}`;
-            form.submit();
-        }
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+        const form = document.getElementById('deleteSectionForm');
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParams = urlParams.toString();
+        form.action = `/admin/questions/section/${sectionId}${filterParams ? '?' + filterParams : ''}`;
+        form.submit();
     }
 
     function toggleQuestion(questionId) {
-        // Simpan posisi scroll sebelum submit
         sessionStorage.setItem('scrollPosition', window.scrollY);
-        
         const form = document.getElementById('toggleQuestionForm');
-        form.action = `/admin/questions/question/${questionId}/toggle`;
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParams = urlParams.toString();
+        form.action = `/admin/questions/question/${questionId}/toggle${filterParams ? '?' + filterParams : ''}`;
         form.submit();
     }
 
     function deleteQuestion(questionId, questionText) {
-        const truncatedText = questionText.length > 50 ? questionText.substring(0, 50) + '...' : questionText;
-        if (confirm(`Yakin ingin menghapus pertanyaan:\n"${truncatedText}"\n\nData ini tidak dapat dikembalikan.`)) {
-            const form = document.getElementById('deleteQuestionForm');
-            form.action = `/admin/questions/question/${questionId}`;
-            form.submit();
-        }
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+        const form = document.getElementById('deleteQuestionForm');
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParams = urlParams.toString();
+        form.action = `/admin/questions/question/${questionId}${filterParams ? '?' + filterParams : ''}`;
+        form.submit();
+    }
+
+    function saveScrollPosition() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
     }
 
     function confirmStopPeriod() {
@@ -838,8 +839,17 @@
         }
     }
 
+    // Disable browser default scroll restoration
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
     // Auto hide success message & Restore scroll position
     document.addEventListener('DOMContentLoaded', function() {
+        // Unlock scroll (jika terkunci dari action sebelumnya)
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        
         // Hide success message
         const successMessage = document.querySelector('.success-message');
         if (successMessage) {
@@ -848,10 +858,17 @@
             }, 5000);
         }
 
-        // Restore scroll position setelah toggle
+        // Restore scroll position IMMEDIATELY
         const savedScrollPosition = sessionStorage.getItem('scrollPosition');
         if (savedScrollPosition) {
-            window.scrollTo(0, parseInt(savedScrollPosition));
+            // Set scroll ASAP tanpa animation
+            const scrollPos = parseInt(savedScrollPosition);
+            document.documentElement.scrollTop = scrollPos;
+            document.body.scrollTop = scrollPos;
+            window.scrollTo({
+                top: scrollPos,
+                behavior: 'instant' // Instant, no smooth scrolling
+            });
             // Hapus setelah restore agar tidak mengganggu navigasi normal
             sessionStorage.removeItem('scrollPosition');
         }
