@@ -1,6 +1,6 @@
 <?php
 // app/Http/Controllers/AdminController.php
-// FULL FILE - FIXED VERSION
+// FIXED VERSION - Total Responden Mengikuti Periode
 
 namespace App\Http\Controllers;
 
@@ -10,6 +10,7 @@ use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyResponse;
 use App\Models\SurveySection;
+use App\Models\SurveyPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,16 +56,47 @@ class AdminController extends Controller
         }
 
         $tab = $request->get('tab', 'questions');
-        $totalSurveys = Survey::count();
-        $questions = SurveyQuestion::active()->with(['section', 'responses'])->ordered()->get();
+        
+        // TAMBAHAN: Ambil parameter period_id dari request
+        $periodId = $request->get('period_id');
+        
+        // TAMBAHAN: Ambil semua periode untuk dropdown
+        $allPeriods = SurveyPeriod::orderBy('year', 'desc')->orderBy('id', 'desc')->get();
+        
+        // TAMBAHAN: Tentukan periode yang dipilih
+        if ($periodId) {
+            $selectedPeriod = SurveyPeriod::find($periodId);
+        } else {
+            // Default: ambil periode yang aktif, atau periode terbaru
+            $selectedPeriod = SurveyPeriod::where('is_active', true)->first() 
+                           ?? SurveyPeriod::orderBy('year', 'desc')->orderBy('id', 'desc')->first();
+        }
+        
+        // TAMBAHAN: Filter berdasarkan periode
+        if ($selectedPeriod) {
+            $totalSurveys = Survey::whereHas('responses', function($query) use ($selectedPeriod) {
+                $query->where('period_id', $selectedPeriod->id);
+            })->count();
+            
+            $questions = SurveyQuestion::active()
+                ->with(['section', 'responses' => function($query) use ($selectedPeriod) {
+                    $query->where('period_id', $selectedPeriod->id);
+                }])
+                ->ordered()
+                ->get();
+        } else {
+            // Jika belum ada periode sama sekali
+            $totalSurveys = Survey::count();
+            $questions = SurveyQuestion::active()->with(['section', 'responses'])->ordered()->get();
+        }
         
         switch ($tab) {
             case 'individual':
-                return $this->getIndividualData($totalSurveys, $questions);
+                return $this->getIndividualData($totalSurveys, $questions, $selectedPeriod, $allPeriods);
             case 'sections':
-                return $this->getSectionData($totalSurveys, $questions);
+                return $this->getSectionData($totalSurveys, $questions, $selectedPeriod, $allPeriods);
             default:
-                return $this->getQuestionsData($totalSurveys, $questions);
+                return $this->getQuestionsData($totalSurveys, $questions, $selectedPeriod, $allPeriods);
         }
     }
 
@@ -75,16 +107,47 @@ class AdminController extends Controller
         }
 
         $tab = $request->get('tab', 'questions');
-        $totalSurveys = Survey::count();
-        $questions = SurveyQuestion::active()->with(['section', 'responses'])->ordered()->get();
+        
+        // TAMBAHAN: Ambil parameter period_id dari request
+        $periodId = $request->get('period_id');
+        
+        // TAMBAHAN: Ambil semua periode untuk dropdown
+        $allPeriods = SurveyPeriod::orderBy('year', 'desc')->orderBy('id', 'desc')->get();
+        
+        // TAMBAHAN: Tentukan periode yang dipilih
+        if ($periodId) {
+            $selectedPeriod = SurveyPeriod::find($periodId);
+        } else {
+            // Default: ambil periode yang aktif, atau periode terbaru
+            $selectedPeriod = SurveyPeriod::where('is_active', true)->first() 
+                           ?? SurveyPeriod::orderBy('year', 'desc')->orderBy('id', 'desc')->first();
+        }
+        
+        // TAMBAHAN: Filter berdasarkan periode
+        if ($selectedPeriod) {
+            $totalSurveys = Survey::whereHas('responses', function($query) use ($selectedPeriod) {
+                $query->where('period_id', $selectedPeriod->id);
+            })->count();
+            
+            $questions = SurveyQuestion::active()
+                ->with(['section', 'responses' => function($query) use ($selectedPeriod) {
+                    $query->where('period_id', $selectedPeriod->id);
+                }])
+                ->ordered()
+                ->get();
+        } else {
+            // Jika belum ada periode sama sekali
+            $totalSurveys = Survey::count();
+            $questions = SurveyQuestion::active()->with(['section', 'responses'])->ordered()->get();
+        }
         
         switch ($tab) {
             case 'individual':
-                return $this->getIndividualData($totalSurveys, $questions);
+                return $this->getIndividualData($totalSurveys, $questions, $selectedPeriod, $allPeriods);
             case 'sections':
-                return $this->getSectionData($totalSurveys, $questions);
+                return $this->getSectionData($totalSurveys, $questions, $selectedPeriod, $allPeriods);
             default:
-                return $this->getQuestionsData($totalSurveys, $questions);
+                return $this->getQuestionsData($totalSurveys, $questions, $selectedPeriod, $allPeriods);
         }
     }
 
@@ -119,17 +182,88 @@ class AdminController extends Controller
         }
  
         try {
-            $survey = Survey::with(['responses'])->findOrFail($id);
+            // ✅ FIX: Ambil period_id dari request untuk filter responses
+            $periodId = request('period_id');
+            
+            Log::info('getSurveyDetail called', [
+                'survey_id' => $id,
+                'period_id' => $periodId
+            ]);
+            
+            // Load survey dengan filter responses berdasarkan period_id
+            $survey = Survey::with(['responses' => function($query) use ($periodId) {
+                if ($periodId) {
+                    $query->where('period_id', $periodId);
+                }
+            }])->findOrFail($id);
+            
+            Log::info('Survey loaded', [
+                'survey_id' => $survey->id,
+                'responses_count' => $survey->responses->count()
+            ]);
+            
+            // ✅ FIX: Cek jika tidak ada responses setelah filter
+            if ($survey->responses->isEmpty()) {
+                Log::warning('No responses found', [
+                    'survey_id' => $id,
+                    'period_id' => $periodId
+                ]);
+                
+                return response()->json([
+                    'error' => 'Tidak ada jawaban untuk responden ini di periode yang dipilih.'
+                ], 404);
+            }
+            
+            // ✅ FIX: Load questions manually karena SurveyResponse punya custom accessor
+            // Yang perlu handle both database questions dan default questions
+            $questionsLoaded = 0;
+            foreach ($survey->responses as $response) {
+                // Trigger accessor untuk load question
+                $question = $response->question;
+                
+                Log::info('Question loaded for response', [
+                    'response_id' => $response->id,
+                    'question_id' => $response->question_id,
+                    'question_exists' => $question ? 'yes' : 'no',
+                    'question_type' => $question ? get_class($question) : 'null'
+                ]);
+                
+                if ($question) {
+                    $questionsLoaded++;
+                }
+                
+                // Jika question dari database, load section-nya
+                if ($question && is_object($question) && method_exists($question, 'getAttribute')) {
+                    if (!isset($question->section) && $question->section_id) {
+                        $question->load('section');
+                    }
+                }
+            }
+            
+            Log::info('Questions loaded summary', [
+                'total_responses' => $survey->responses->count(),
+                'questions_loaded' => $questionsLoaded
+            ]);
  
             $responsesBySection = $survey->responses->groupBy(function($response) {
                 $question = $response->question;
+                
+                // ✅ FIX: Handle permanent questions (from SurveyDefaults)
+                if (!$question) {
+                    return 'default_section';
+                }
                 
                 if (is_object($question) && !($question instanceof \App\Models\SurveyQuestion)) {
                     return 'default_section';
                 }
                 
-                return $question->section_id ?? 'no_section';
+                return $question->section_id ?? 'default_section';
             });
+            
+            Log::info('Responses grouped by section', [
+                'sections_count' => $responsesBySection->count(),
+                'section_ids' => $responsesBySection->keys()->toArray()
+            ]);
  
             $detailData = [
                 'survey' => [
@@ -142,7 +276,10 @@ class AdminController extends Controller
             ];
  
             foreach ($responsesBySection as $sectionId => $responses) {
-                $firstQuestion = $responses->first()->question;
+                $firstResponse = $responses->first();
+                if (!$firstResponse) continue;
+                
+                $firstQuestion = $firstResponse->question;
                 
                 if ($sectionId === 'default_section') {
                     $section = (object) [
@@ -150,27 +287,44 @@ class AdminController extends Controller
                         'description' => null
                     ];
                 } else {
-                    $section = is_object($firstQuestion) && method_exists($firstQuestion, 'getAttribute') 
-                        ? $firstQuestion->section 
-                        : null;
+                    // ✅ FIX: Safe access to section
+                    $section = null;
+                    if ($firstQuestion && is_object($firstQuestion)) {
+                        $section = $firstQuestion->section;
+                    }
                 }
                 
                 $sectionData = [
                     'title' => $section ? $section->title : 'Tanpa Bagian',
-                    'description' => $section ? $section->description : '',
+                    'description' => $section ? ($section->description ?? '') : '',
                     'responses' => []
                 ];
  
                 foreach ($responses as $response) {
                     $question = $response->question;
                     
+                    Log::info('Processing response in section', [
+                        'response_id' => $response->id,
+                        'section_id' => $sectionId,
+                        'question_exists' => $question ? 'yes' : 'no'
+                    ]);
+                    
+                    // ✅ Skip if question is null
+                    if (!$question) {
+                        Log::warning('Question is null, skipping response', [
+                            'response_id' => $response->id,
+                            'question_id' => $response->question_id
+                        ]);
+                        continue;
+                    }
+                    
                     $responseData = [
                         'response_id' => $response->id,
-                        'question_text' => is_object($question) ? $question->question_text : 'Unknown',
-                        'question_type' => is_object($question) ? $question->question_type : 'short_text',
+                        'question_text' => is_object($question) ? ($question->question_text ?? 'Unknown') : 'Unknown',
+                        'question_type' => is_object($question) ? ($question->question_type ?? 'short_text') : 'short_text',
                         'question_type_label' => $this->getQuestionTypeLabel($question),
-                        'is_required' => is_object($question) ? $question->is_required : false,
-                        'answer' => $response->answer,
+                        'is_required' => is_object($question) ? ($question->is_required ?? false) : false,
+                        'answer' => $response->answer ?? '',
                         'answer_data' => $response->answer_data
                     ];
  
@@ -209,9 +363,28 @@ class AdminController extends Controller
  
                     $sectionData['responses'][] = $responseData;
                 }
- 
-                $detailData['sections'][] = $sectionData;
+                
+                // ✅ Hanya tambahkan section jika ada responses
+                if (count($sectionData['responses']) > 0) {
+                    $detailData['sections'][] = $sectionData;
+                    Log::info('Section added to detail', [
+                        'section_title' => $sectionData['title'],
+                        'responses_count' => count($sectionData['responses'])
+                    ]);
+                } else {
+                    Log::warning('Section skipped - no responses', [
+                        'section_id' => $sectionId,
+                        'section_title' => $sectionData['title']
+                    ]);
+                }
             }
+            
+            Log::info('Final detail data', [
+                'sections_count' => count($detailData['sections']),
+                'total_responses' => collect($detailData['sections'])->sum(function($section) {
+                    return count($section['responses']);
+                })
+            ]);
  
             return response()->json($detailData);
  
@@ -249,7 +422,7 @@ class AdminController extends Controller
         return $labels[$question->question_type] ?? $question->question_type;
     }
 
-    private function getQuestionsData($totalSurveys, $questions)
+    private function getQuestionsData($totalSurveys, $questions, $selectedPeriod = null, $allPeriods = [])
     {
         $defaultSection = SurveyDefaults::getDefaultSection();
         $defaultQuestions = SurveyDefaults::getDefaultQuestions();
@@ -274,12 +447,26 @@ class AdminController extends Controller
             $sectionQuestionStats = [];
             
             foreach ($section->questions as $question) {
+                // ✅ FIX: TAMBAHKAN FILTER PERIOD_ID
                 if (isset($question->is_permanent) && $question->is_permanent) {
-                    $validResponses = SurveyResponse::where('question_id', $question->id)
-                        ->whereHas('survey')
-                        ->get();
+                    $query = SurveyResponse::where('question_id', $question->id)
+                        ->whereHas('survey');
+                    
+                    // Filter berdasarkan periode jika ada
+                    if ($selectedPeriod) {
+                        $query->where('period_id', $selectedPeriod->id);
+                    }
+                    
+                    $validResponses = $query->get();
                 } else {
-                    $validResponses = $question->responses()->whereHas('survey')->get();
+                    $query = $question->responses()->whereHas('survey');
+                    
+                    // Filter berdasarkan periode jika ada
+                    if ($selectedPeriod) {
+                        $query->where('period_id', $selectedPeriod->id);
+                    }
+                    
+                    $validResponses = $query->get();
                 }
                 
                 $stats = [
@@ -344,18 +531,18 @@ class AdminController extends Controller
                 } elseif ($question->question_type === 'linear_scale') {
                     if ($validResponses->count() > 0) {
                         $responses = $validResponses->pluck('answer')->filter()->map(function($item) {
-                        return (int) $item;
-                    });
-                    $average = $responses->avg();
-                    $distribution = $responses->countBy();
-                    
-                    $chartData = collect();
-                    foreach ($distribution as $answer => $count) {
-                        $chartData->push((object)[
-                            'answer' => $answer,
-                            'count' => $count
-                        ]);
-                    }
+                            return (int) $item;
+                        });
+                        $average = $responses->avg();
+                        $distribution = $responses->countBy();
+                        
+                        $chartData = collect();
+                        foreach ($distribution as $answer => $count) {
+                            $chartData->push((object)[
+                                'answer' => $answer,
+                                'count' => $count
+                            ]);
+                        }
                         // ✅ Format khusus untuk linear_scale
                         $stats['response_data'] = [
                             'distribution' => $distribution->toArray(),
@@ -365,49 +552,42 @@ class AdminController extends Controller
                         $stats['chart_enabled'] = true;
                         $stats['data'] = $distribution->toArray();
                         $stats['average'] = round($average, 1);
-                        $stats['data']['average'] = round($average, 1);
-                        $stats['data']['min'] = $responses->min();
-                        $stats['data']['max'] = $responses->max();
                     } else {
-                        // Linear scale tanpa jawaban
                         $stats['response_data'] = [];
-                        $stats['chart_enabled'] = true;
-                        $stats['data'] = [];
-                        $stats['average'] = 0;
+                        $stats['chart_enabled'] = false;
                     }
-                    
+                } elseif ($question->question_type === 'file_upload') {
+                    // ✅ FIX: Tangani file upload dengan aman
+                    $stats['uploaded_files'] = $validResponses->map(function($response) {
+                        // Cek apakah answer_data ada dan valid
+                        $answerData = $response->answer_data;
+                        $isValidData = $answerData && is_array($answerData) && isset($answerData['filename']);
+                        
+                        return [
+                            'response_id' => $response->id,
+                            'filename' => $isValidData 
+                                ? $answerData['filename'] 
+                                : ($response->answer ?: 'File tidak tersedia'),
+                            'upload_date' => $response->created_at,
+                            'file_data' => $isValidData ? [
+                                'size' => $answerData['size'] ?? null,
+                                'mime_type' => $answerData['mime_type'] ?? null,
+                                'extension' => $answerData['extension'] ?? null,
+                                'path' => $answerData['path'] ?? null,
+                            ] : []
+                        ];
+                    })->toArray();
+                    $stats['chart_enabled'] = false;
                 } else {
-    // Handling khusus untuk file_upload
-    if ($question->question_type === 'file_upload') {
-        $stats['response_data'] = $validResponses->map(function($response) {
-            $answerData = $response->answer_data;
-            $isValidData = $answerData && is_array($answerData);
-            
-            return [
-                'response_id' => $response->id,
-                'filename' => $isValidData && isset($answerData['filename']) 
-                    ? $answerData['filename'] 
-                    : ($response->answer ?: 'File tidak tersedia'),
-                'upload_date' => $response->created_at,
-                'file_data' => $isValidData ? [
-                    'size' => $answerData['size'] ?? null,
-                    'mime_type' => $answerData['mime_type'] ?? null,
-                    'extension' => $answerData['extension'] ?? null,
-                    'path' => $answerData['path'] ?? null,
-                ] : []
-            ];
-        })->toArray();
-    } else {
-        // ✅ FIX: Untuk text questions, gunakan 'sample_responses'
-        $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
-            return [
-                'answer' => $response->answer,
-                'created_at' => $response->created_at->format('d/m/Y H:i')
-            ];
-        })->toArray();
-    }
-    $stats['chart_enabled'] = false;
-}
+                    // ✅ FIX: Untuk text questions, gunakan 'sample_responses'
+                    $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
+                        return [
+                            'answer' => $response->answer,
+                            'created_at' => $response->created_at->format('d/m/Y H:i')
+                        ];
+                    })->toArray();
+                    $stats['chart_enabled'] = false;
+                }
      
                 $sectionQuestionStats[] = $stats;
             }
@@ -423,11 +603,13 @@ class AdminController extends Controller
         return view('admin.jawaban', compact(
             'totalSurveys',
             'questions',
-            'sectionStats'
+            'sectionStats',
+            'selectedPeriod',
+            'allPeriods'
         ));
     }
 
-    private function getSectionData($totalSurveys, $questions)
+    private function getSectionData($totalSurveys, $questions, $selectedPeriod = null, $allPeriods = [])
     {
         $defaultSection = SurveyDefaults::getDefaultSection();
         $defaultQuestions = SurveyDefaults::getDefaultQuestions();
@@ -452,12 +634,24 @@ class AdminController extends Controller
             $sectionQuestionStats = [];
             
             foreach ($section->questions as $question) {
+                // ✅ FIX: TAMBAHKAN FILTER PERIOD_ID (sama seperti di getQuestionsData)
                 if (isset($question->is_permanent) && $question->is_permanent) {
-                    $validResponses = SurveyResponse::where('question_id', $question->id)
-                        ->whereHas('survey')
-                        ->get();
+                    $query = SurveyResponse::where('question_id', $question->id)
+                        ->whereHas('survey');
+                    
+                    if ($selectedPeriod) {
+                        $query->where('period_id', $selectedPeriod->id);
+                    }
+                    
+                    $validResponses = $query->get();
                 } else {
-                    $validResponses = $question->responses()->whereHas('survey')->get();
+                    $query = $question->responses()->whereHas('survey');
+                    
+                    if ($selectedPeriod) {
+                        $query->where('period_id', $selectedPeriod->id);
+                    }
+                    
+                    $validResponses = $query->get();
                 }
                 
                 $stats = [
@@ -522,19 +716,18 @@ class AdminController extends Controller
                 } elseif ($question->question_type === 'linear_scale') {
                     if ($validResponses->count() > 0) {
                         $responses = $validResponses->pluck('answer')->filter()->map(function($item) {
-                        return (int) $item;
-                    });
-                    $average = $responses->avg();
-                    $distribution = $responses->countBy();
-                    
-                    $chartData = collect();
-                    foreach ($distribution as $answer => $count) {
-                        $chartData->push((object)[
-                            'answer' => $answer,
-                            'count' => $count
-                        ]);
-                    }
-                        // ✅ Format khusus untuk linear_scale
+                            return (int) $item;
+                        });
+                        $average = $responses->avg();
+                        $distribution = $responses->countBy();
+                        
+                        $chartData = collect();
+                        foreach ($distribution as $answer => $count) {
+                            $chartData->push((object)[
+                                'answer' => $answer,
+                                'count' => $count
+                            ]);
+                        }
                         $stats['response_data'] = [
                             'distribution' => $distribution->toArray(),
                             'total_responses' => $validResponses->count(),
@@ -543,49 +736,39 @@ class AdminController extends Controller
                         $stats['chart_enabled'] = true;
                         $stats['data'] = $distribution->toArray();
                         $stats['average'] = round($average, 1);
-                        $stats['data']['average'] = round($average, 1);
-                        $stats['data']['min'] = $responses->min();
-                        $stats['data']['max'] = $responses->max();
                     } else {
-                        // Linear scale tanpa jawaban
                         $stats['response_data'] = [];
-                        $stats['chart_enabled'] = true;
-                        $stats['data'] = [];
-                        $stats['average'] = 0;
+                        $stats['chart_enabled'] = false;
                     }
-                    
+                } elseif ($question->question_type === 'file_upload') {
+                    $stats['uploaded_files'] = $validResponses->map(function($response) {
+                        $answerData = $response->answer_data;
+                        $isValidData = $answerData && is_array($answerData) && isset($answerData['filename']);
+                        
+                        return [
+                            'response_id' => $response->id,
+                            'filename' => $isValidData 
+                                ? $answerData['filename'] 
+                                : ($response->answer ?: 'File tidak tersedia'),
+                            'upload_date' => $response->created_at,
+                            'file_data' => $isValidData ? [
+                                'size' => $answerData['size'] ?? null,
+                                'mime_type' => $answerData['mime_type'] ?? null,
+                                'extension' => $answerData['extension'] ?? null,
+                                'path' => $answerData['path'] ?? null,
+                            ] : []
+                        ];
+                    })->toArray();
+                    $stats['chart_enabled'] = false;
                 } else {
-    // Handling khusus untuk file_upload
-    if ($question->question_type === 'file_upload') {
-        $stats['response_data'] = $validResponses->map(function($response) {
-            $answerData = $response->answer_data;
-            $isValidData = $answerData && is_array($answerData);
-            
-            return [
-                'response_id' => $response->id,
-                'filename' => $isValidData && isset($answerData['filename']) 
-                    ? $answerData['filename'] 
-                    : ($response->answer ?: 'File tidak tersedia'),
-                'upload_date' => $response->created_at,
-                'file_data' => $isValidData ? [
-                    'size' => $answerData['size'] ?? null,
-                    'mime_type' => $answerData['mime_type'] ?? null,
-                    'extension' => $answerData['extension'] ?? null,
-                    'path' => $answerData['path'] ?? null,
-                ] : []
-            ];
-        })->toArray();
-    } else {
-        // ✅ FIX: Untuk text questions, gunakan 'sample_responses'
-        $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
-            return [
-                'answer' => $response->answer,
-                'created_at' => $response->created_at->format('d/m/Y H:i')
-            ];
-        })->toArray();
-    }
-    $stats['chart_enabled'] = false;
-}
+                    $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
+                        return [
+                            'answer' => $response->answer,
+                            'created_at' => $response->created_at->format('d/m/Y H:i')
+                        ];
+                    })->toArray();
+                    $stats['chart_enabled'] = false;
+                }
      
                 $sectionQuestionStats[] = $stats;
             }
@@ -600,113 +783,45 @@ class AdminController extends Controller
      
         return view('admin.jawaban-sections', compact(
             'totalSurveys',
-            'questions', 
-            'sectionStats'
+            'questions',
+            'sectionStats',
+            'selectedPeriod',
+            'allPeriods'
         ));
     }
 
-    public function downloadFile($responseId)
+    private function getIndividualData($totalSurveys, $questions, $selectedPeriod = null, $allPeriods = [])
     {
-        if (!session('admin_id')) {
-            return redirect()->route('admin.login');
-        }
-
-        try {
-            $response = SurveyResponse::findOrFail($responseId);
-            
-            // ✅ FIX: Safe check untuk question dan answer_data
-            $question = $response->question;
-            
-            if (!$question || $question->question_type !== 'file_upload' || !$response->answer_data) {
-                abort(404, 'File tidak ditemukan');
-            }
-
-            // ✅ FIX: Safe access ke array keys
-            if (!is_array($response->answer_data) || !isset($response->answer_data['path'])) {
-                return redirect()->back()->with('error', 'Data file tidak valid');
-            }
-
-            $filePath = $response->answer_data['path'];
-            $originalFilename = $response->answer_data['filename'] ?? basename($filePath);
-            
-            if (!Storage::disk('public')->exists($filePath)) {
-                return redirect()->back()->with('error', 'File tidak ditemukan di server');
-            }
-
-            Log::info('File downloaded by admin', [
-                'admin_id' => session('admin_id'),
-                'response_id' => $responseId,
-                'filename' => $originalFilename,
-                'survey_id' => $response->survey_id
-            ]);
-
-            return Storage::disk('public')->download($filePath, $originalFilename);
-
-        } catch (\Exception $e) {
-            Log::error('File download error', [
-                'response_id' => $responseId,
-                'error' => $e->getMessage()
-            ]);
-            
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mendownload file');
-        }
-    }
-
-    public function viewFile($responseId)
-    {
-        if (!session('admin_id')) {
-            return redirect()->route('admin.login');
-        }
-
-        try {
-            $response = SurveyResponse::findOrFail($responseId);
-            
-            $question = $response->question;
-            
-            if (!$question || $question->question_type !== 'file_upload' || !$response->answer_data) {
-                abort(404);
-            }
-
-            if (!is_array($response->answer_data) || !isset($response->answer_data['path'])) {
-                abort(404);
-            }
-
-            $filePath = $response->answer_data['path'];
-            
-            if (!Storage::disk('public')->exists($filePath)) {
-                abort(404);
-            }
-
-            return Storage::disk('public')->response($filePath);
-
-        } catch (\Exception $e) {
-            abort(404);
-        }
-    }
-
-    private function getIndividualData($totalSurveys, $questions)
-    {
-        $surveys = Survey::with(['responses'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        $surveys->each(function($survey) {
-            $survey->responses->each(function($response) {
-                $question = $response->question;
+        // ✅ FIX: FILTER SURVEY DAN RESPONSES BERDASARKAN PERIODE
+        if ($selectedPeriod) {
+            // Filter survey yang punya responses di periode ini
+            // DAN load hanya responses yang ada di periode ini
+            $query = Survey::with(['responses' => function($q) use ($selectedPeriod) {
+                $q->where('period_id', $selectedPeriod->id);
+            }])
+            ->whereHas('responses', function($q) use ($selectedPeriod) {
+                $q->where('period_id', $selectedPeriod->id);
             });
-        });
-
+        } else {
+            // Jika tidak ada periode dipilih, ambil semua
+            $query = Survey::with('responses');
+        }
+        
+        $surveys = $query->orderBy('created_at', 'desc')->paginate(20);
+        
         return view('admin.jawaban-individual', compact(
+            'surveys',
             'totalSurveys',
             'questions',
-            'surveys'
+            'selectedPeriod',
+            'allPeriods'
         ));
     }
 
     public function logout()
     {
         session()->forget(['admin_id', 'admin_name', 'admin_role']);
-        return redirect()->route('admin.login');
+        return redirect()->route('admin.login')->with('success', 'Anda berhasil logout.');
     }
 
     public function export(Request $request)

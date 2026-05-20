@@ -6,12 +6,6 @@
 @section('page-title', 'Jawaban Survei')
 @section('page-subtitle', 'Lihat dan analisis hasil jawaban survei kepuasan masyarakat')
 
-@section('header-actions')
-<div class="header-actions">
-    <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
-</div>
-@endsection
-
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
@@ -476,6 +470,45 @@
 
 @section('content')
 <div class="dashboard-container">
+    {{-- DROPDOWN FILTER PERIODE & INFO PERIODE - SATU BARIS --}}
+    @if(isset($allPeriods) && $allPeriods->count() > 0)
+    <div style="background: white; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        {{-- Info Periode di Kiri --}}
+        @if(isset($selectedPeriod) && $selectedPeriod)
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-calendar-check" style="color: #5a9b9e;"></i>
+            <span style="font-weight: 600; color: #2c3e50; font-size: 14px;">
+                Periode: {{ $selectedPeriod->period_name }} ({{ $selectedPeriod->year }})
+                @if($selectedPeriod->is_active) <span style="color: #f39c12;">⭐</span> @endif
+            </span>
+        </div>
+        @else
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-calendar" style="color: #95a5a6;"></i>
+            <span style="font-weight: 600; color: #7f8c8d; font-size: 14px;">Periode: Semua</span>
+        </div>
+        @endif
+        
+        {{-- Dropdown di Kanan --}}
+        <form action="{{ route('admin.jawaban') }}" method="GET" id="periodFilterForm" style="margin: 0;">
+            <input type="hidden" name="tab" value="{{ request('tab', 'questions') }}">
+            <select 
+                name="period_id" 
+                onchange="document.getElementById('periodFilterForm').submit()" 
+                style="padding: 8px 35px 8px 15px; border: 2px solid #5a9b9e; border-radius: 8px; background: white url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%235a9b9e%27 d=%27M6 9L1 4h10z%27/%3E%3C/svg%3E') no-repeat right 12px center; color: #2c3e50; font-weight: 600; font-size: 14px; cursor: pointer; min-width: 250px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.3s ease;">
+                <option value="">📅 Semua Periode</option>
+                @foreach($allPeriods as $period)
+                    <option value="{{ $period->id }}" 
+                        {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
+                        {{ $period->period_name }} ({{ $period->year }})
+                        @if($period->is_active) ⭐ @endif
+                    </option>
+                @endforeach
+            </select>
+        </form>
+    </div>
+    @endif
+
     <!-- Action Buttons -->
     <div class="action-buttons">
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
@@ -492,12 +525,12 @@
     <!-- Tab Navigation -->
     <div class="tab-navigation">
         <div class="tab-nav">
-            <a href="{{ route('admin.jawaban', ['tab' => 'questions']) }}" 
+            <a href="{{ route('admin.jawaban', array_merge(['tab' => 'questions'], request('period_id') ? ['period_id' => request('period_id')] : [])) }}" 
                 class="tab-item {{ request('tab', 'questions') === 'questions' ? 'active' : '' }}">
                 <i class="tab-icon fas fa-question-circle"></i>
                 Pertanyaan & Jawaban
             </a>
-            <a href="{{ route('admin.jawaban', ['tab' => 'individual']) }}" 
+            <a href="{{ route('admin.jawaban', array_merge(['tab' => 'individual'], request('period_id') ? ['period_id' => request('period_id')] : [])) }}" 
                 class="tab-item {{ request('tab') === 'individual' ? 'active' : '' }}">
                 <i class="tab-icon fas fa-users"></i>
                 Individual

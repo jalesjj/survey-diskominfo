@@ -8,6 +8,25 @@
 
 @section('header-actions')
 <div class="header-actions">
+    {{-- DROPDOWN FILTER PERIODE - POSISI KANAN ATAS --}}
+    @if(isset($allPeriods) && $allPeriods->count() > 0)
+    <div class="period-filter-container">
+        <form action="{{ route('admin.jawaban') }}" method="GET" id="periodFilterForm">
+            <input type="hidden" name="tab" value="individual">
+            <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
+                <option value="">📅 Semua Periode</option>
+                @foreach($allPeriods as $period)
+                    <option value="{{ $period->id }}" 
+                        {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
+                        {{ $period->period_name }} ({{ $period->year }})
+                        @if($period->is_active) ⭐ @endif
+                    </option>
+                @endforeach
+            </select>
+        </form>
+    </div>
+    @endif
+    
     <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
 </div>
 @endsection
@@ -15,6 +34,116 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
+    /* =========================================
+       DROPDOWN PERIODE - STYLING
+       ========================================= */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .period-filter-container {
+        margin-right: auto;
+    }
+
+    .period-select {
+        padding: 8px 35px 8px 15px;
+        border: 2px solid #5a9b9e;
+        border-radius: 8px;
+        background: white;
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a9b9e' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        min-width: 250px;
+    }
+
+    .period-select:hover {
+        border-color: #4a8b8e;
+        box-shadow: 0 2px 8px rgba(90, 155, 158, 0.2);
+    }
+
+    .period-select:focus {
+        outline: none;
+        border-color: #5a9b9e;
+        box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
+    }
+
+    .admin-welcome {
+        white-space: nowrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .header-actions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .period-filter-container {
+            width: 100%;
+            margin-right: 0;
+        }
+
+        .period-select {
+            width: 100%;
+            min-width: auto;
+        }
+    }
+
+    /* =========================================
+       INFO BOX PERIODE - SEPERTI DI HALAMAN QUESTIONS
+       ========================================= */
+    .period-info-box {
+        background: white;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .period-info-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .period-info-left i {
+        color: #5a9b9e;
+    }
+
+    .period-info-text {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 14px;
+    }
+
+    .period-info-all {
+        font-weight: 600;
+        color: #7f8c8d;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .period-info-box {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
     /* =========================================
        FLAT & SIMPLE DESIGN (NO SHADOWS)
        ========================================= */
@@ -115,96 +244,104 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        transition: background-color 0.2s;
+        transition: all 0.2s ease;
     }
 
-    .tab-item:last-child { border-right: none; }
-    .tab-item:hover { background: #f1f5f9; color: #495057; }
-    .tab-item.active { background: #5a9b9e; color: white; }
+    .tab-item:last-child {
+        border-right: none;
+    }
+
+    .tab-item:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .tab-item.active {
+        background: white;
+        color: #5a9b9e;
+        border-bottom: 2px solid #5a9b9e;
+    }
+
+    .tab-icon {
+        font-size: 16px;
+    }
 
     /* Search and Filter Bar */
     .search-filter-bar {
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 30px;
-        border: 1px solid #e2e8f0;
         display: flex;
-        gap: 15px;
+        gap: 10px;
+        margin-bottom: 30px;
         flex-wrap: wrap;
-        align-items: center;
     }
 
     .search-input {
         flex: 1;
         min-width: 250px;
         padding: 10px 15px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #e2e8f0;
         border-radius: 6px;
-        font-size: 15px;
-        transition: border-color 0.2s ease;
+        font-size: 14px;
     }
-
-    .search-input:focus { outline: none; border-color: #5a9b9e; }
 
     .filter-select {
         padding: 10px 15px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #e2e8f0;
         border-radius: 6px;
         font-size: 14px;
-        color: #495057;
         background: white;
         cursor: pointer;
     }
 
-    .filter-select:focus { outline: none; border-color: #5a9b9e; }
-
     .search-btn {
+        padding: 10px 20px;
         background: #5a9b9e;
         color: white;
         border: none;
-        padding: 10px 20px;
         border-radius: 6px;
         font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 14px;
+        transition: background-color 0.2s ease;
     }
 
-    .search-btn:hover { background: #4a8b8e; }
+    .search-btn:hover {
+        background: #4a8b8e;
+    }
 
     /* Response Cards */
     .response-card {
         background: white;
         border-radius: 8px;
         border: 1px solid #e2e8f0;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         overflow: hidden;
+        transition: border-color 0.2s ease;
+    }
+
+    .response-card:hover {
+        border-color: #cbd5e0;
     }
 
     .response-header {
-        background: #2c3e50; /* Flat solid color */
-        color: white;
-        padding: 20px 25px;
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid #1a252f;
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .respondent-details h4 {
-        margin: 0 0 8px 0;
+        margin: 0 0 10px 0;
+        color: #2c3e50;
         font-size: 18px;
-        font-weight: 600;
     }
 
     .respondent-meta {
         display: flex;
-        gap: 15px;
-        font-size: 13px;
-        color: #cbd5e1;
+        gap: 20px;
         flex-wrap: wrap;
+        font-size: 13px;
+        color: #64748b;
     }
 
     .respondent-meta span {
@@ -213,194 +350,312 @@
         gap: 5px;
     }
 
-    .response-body { padding: 25px; }
+    .response-body {
+        padding: 20px;
+    }
 
     .response-summary {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 15px;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
+        text-align: center;
     }
 
     .summary-item {
-        background: #f8f9fa;
         padding: 15px;
+        background: #f8f9fa;
         border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        text-align: center;
     }
 
     .summary-value {
         font-size: 24px;
         font-weight: 700;
         color: #5a9b9e;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
     }
 
     .summary-title {
         font-size: 12px;
         color: #64748b;
+        font-weight: 600;
         text-transform: uppercase;
-        font-weight: 600;
     }
 
-    .response-actions {
+    .action-row {
         display: flex;
-        gap: 15px;
-        justify-content: flex-end;
-        padding-top: 20px;
-        border-top: 1px solid #e2e8f0;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
     }
 
-    .action-btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    .action-row .btn {
         font-size: 13px;
+        padding: 8px 16px;
     }
-
-    .detail-btn { background: #17a2b8; color: white; }
-    .detail-btn:hover { background: #138496; }
-    
-    .delete-btn { background: #dc3545; color: white; }
-    .delete-btn:hover { background: #c82333; }
 
     /* Empty State */
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        background: #f8f9fa;
+        background: white;
         border-radius: 8px;
-        border: 1px dashed #cbd5e1;
-        margin: 30px 0;
+        border: 1px solid #e2e8f0;
     }
 
-    .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 20px; }
-    .empty-state h3 { font-size: 20px; color: #334155; margin-bottom: 10px; }
-    .empty-state p { font-size: 15px; color: #64748b; margin-bottom: 25px; }
+    .empty-state i {
+        font-size: 64px;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #94a3b8;
+    }
 
     /* Pagination */
-    .pagination-wrapper { margin-top: 30px; display: flex; justify-content: center; }
-    .pagination { display: flex; gap: 5px; list-style: none; margin: 0; padding: 0; }
-    .page-item { border-radius: 4px; overflow: hidden; }
-    .page-link {
-        display: block;
-        padding: 10px 15px;
-        color: #5a9b9e;
-        text-decoration: none;
-        border: 1px solid #e2e8f0;
-        background: white;
+    .pagination-container {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
     }
-    .page-link:hover { background: #f1f5f9; border-color: #cbd5e1; }
-    .page-item.active .page-link { background: #5a9b9e; color: white; border-color: #5a9b9e; }
-    .page-item.disabled .page-link { color: #94a3b8; background: #f8f9fa; cursor: not-allowed; }
 
-    /* Detail Modal Styles */
+    .pagination {
+        display: flex;
+        gap: 5px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .pagination li {
+        display: inline-block;
+    }
+
+    .pagination a,
+    .pagination span {
+        display: block;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #64748b;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .pagination a:hover {
+        background: #f8f9fa;
+        border-color: #cbd5e0;
+    }
+
+    .pagination .active span {
+        background: #5a9b9e;
+        color: white;
+        border-color: #5a9b9e;
+    }
+
+    .pagination .disabled span {
+        color: #cbd5e0;
+        cursor: not-allowed;
+    }
+
+    /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
         z-index: 1000;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
-        background-color: rgba(15, 23, 42, 0.6); /* Flat overlay */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
     }
 
     .modal-content {
         background-color: white;
-        margin: 5% auto;
+        margin: 50px auto;
         padding: 0;
         border-radius: 8px;
         width: 90%;
-        max-width: 700px;
-        max-height: 80vh;
+        max-width: 800px;
+        max-height: 85vh;
         overflow: hidden;
-        border: 1px solid #e2e8f0;
-        position: relative;
+        display: flex;
+        flex-direction: column;
     }
 
     .modal-header {
         background: #5a9b9e;
         color: white;
-        padding: 20px 25px;
+        padding: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
-    .modal-title { font-size: 18px; font-weight: 600; margin: 0; flex: 1; }
-    .close { color: white; font-size: 24px; cursor: pointer; opacity: 0.8; }
-    .close:hover { opacity: 1; }
-    .modal-body { padding: 25px; max-height: 60vh; overflow-y: auto; }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
 
-    .detail-info {
-        background: #f8f9fa;
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s ease;
+    }
+
+    .close:hover {
+        color: #e2e8f0;
+    }
+
+    .modal-body {
         padding: 20px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        border: 1px solid #e2e8f0;
+        overflow-y: auto;
+        flex: 1;
     }
 
-    .detail-info h4 { color: #1e293b; margin-bottom: 15px; font-size: 16px; font-weight: 600; }
-    .detail-info p { color: #475569; margin: 0; line-height: 1.5; font-size: 14px;}
-
-    /* Toast Notification */
-    .toast {
-        position: fixed;
-        top: 20px; right: 20px;
-        background: white;
-        padding: 15px 20px;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        z-index: 10000;
-        min-width: 300px;
-        border-left: 4px solid #28a745;
+    .detail-section {
+        margin-bottom: 30px;
     }
 
-    .toast.error { border-left-color: #dc3545; }
-    .toast-icon { font-size: 20px; }
-    .toast.success .toast-icon { color: #28a745; }
-    .toast.error .toast-icon { color: #dc3545; }
-    .toast-content { flex: 1; }
-    .toast-title { font-weight: 600; margin-bottom: 2px; color: #1e293b; font-size: 14px; }
-    .toast-message { font-size: 13px; color: #64748b; }
-    .toast-close { cursor: pointer; color: #94a3b8; font-size: 16px; }
-    .toast-close:hover { color: #475569; }
+    .detail-section h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        border-bottom: 2px solid #5a9b9e;
+        padding-bottom: 10px;
+    }
 
-    /* Responsive */
+    .detail-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+
+    .detail-question {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .detail-answer {
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 8px;
+    }
+
+    .badge-required {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-optional {
+        background: #e0f2fe;
+        color: #075985;
+    }
+
+    /* Loading State */
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+    }
+
+    .spinner {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #5a9b9e;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
-        .action-buttons { flex-direction: column; align-items: stretch; }
-        .summary-stats { grid-template-columns: 1fr 1fr; }
-        .search-filter-bar { flex-direction: column; align-items: stretch; }
-        .search-input { min-width: auto; }
-        .tab-nav { flex-direction: column; }
-        .tab-item { border-right: none; border-bottom: 1px solid #e2e8f0; }
-        .tab-item:last-child { border-bottom: none; }
-        .response-header { flex-direction: column; text-align: center; gap: 10px; }
-        .respondent-meta { justify-content: center; }
-        .response-summary { grid-template-columns: 1fr; }
-        .response-actions { flex-direction: column; }
+        .summary-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .response-summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .search-filter-bar {
+            flex-direction: column;
+        }
+
+        .search-input {
+            width: 100%;
+        }
+
+        .modal-content {
+            width: 95%;
+            margin: 20px auto;
+        }
     }
 </style>
 @endpush
 
 @section('content')
+<div class="page-container">
 
-<!-- Action Buttons -->
+    {{-- INFO BOX PERIODE - SAMA SEPERTI DI HALAMAN QUESTIONS --}}
+    @if(isset($allPeriods) && $allPeriods->count() > 0)
+    <div class="period-info-box">
+        {{-- Info Periode di Kiri --}}
+        @if(isset($selectedPeriod) && $selectedPeriod)
+        <div class="period-info-left">
+            <i class="fas fa-calendar-check"></i>
+            <span class="period-info-text">
+                Periode: {{ $selectedPeriod->period_name }} ({{ $selectedPeriod->year }})
+                @if($selectedPeriod->is_active) <span style="color: #f39c12;">⭐</span> @endif
+            </span>
+        </div>
+        @else
+        <div class="period-info-left">
+            <i class="fas fa-calendar" style="color: #95a5a6;"></i>
+            <span class="period-info-all">Periode: Semua</span>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    <!-- Action Buttons -->
     <div class="action-buttons">
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
             <i class="fas fa-cogs"></i> Kelola Pertanyaan
         </a>
         <a href="{{ route('admin.export') }}" class="btn btn-success">
-            <i class="fas fa-download"></i> Export Data
+            <i class="fas fa-download"></i> Export Excel
         </a>
         <a href="{{ route('admin.hasil-survey.export-pdf') }}" class="btn btn-danger">
             <i class="fas fa-file-pdf"></i> Export PDF
@@ -430,11 +685,11 @@
 <!-- Tab Navigation -->
 <div class="tab-navigation">
     <div class="tab-nav">
-        <a href="{{ route('admin.jawaban', ['tab' => 'questions']) }}" class="tab-item">
+        <a href="{{ route('admin.jawaban', array_merge(['tab' => 'questions'], request('period_id') ? ['period_id' => request('period_id')] : [])) }}" class="tab-item">
             <i class="fas fa-question-circle tab-icon"></i>
             <span>Pertanyaan</span>
         </a>
-        <a href="{{ route('admin.jawaban', ['tab' => 'individual']) }}" class="tab-item active">
+        <a href="{{ route('admin.jawaban', array_merge(['tab' => 'individual'], request('period_id') ? ['period_id' => request('period_id')] : [])) }}" class="tab-item active">
             <i class="fas fa-users tab-icon"></i>
             <span>Individual</span>
         </a>
@@ -489,41 +744,13 @@
                         <div class="summary-value">{{ number_format(($survey->responses->whereNotNull('answer')->where('answer', '!=', '')->count() / max($questions->count(), 1)) * 100, 1) }}%</div>
                         <div class="summary-title">Kelengkapan</div>
                     </div>
-                    <div class="summary-item">
-                        <div class="summary-value">{{ $survey->responses->where('question.question_type', 'file_upload')->whereNotNull('answer_data')->count() }}</div>
-                        <div class="summary-title">File Diupload</div>
-                    </div>
                 </div>
 
-                <!-- Preview Jawaban (3 pertanyaan pertama) -->
-                @if($survey->responses->count() > 0)
-                <div style="margin-bottom: 20px;">
-                    <h5 style="color: #1e293b; margin-bottom: 12px; font-size: 15px; font-weight: 600;">
-                        <i class="fas fa-eye"></i> Preview Jawaban:
-                    </h5>
-                    @foreach($survey->responses->take(3) as $response)
-                        @if($response->question && $response->answer)
-                        <div style="background: #f8f9fa; padding: 12px 15px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                            <strong style="color: #334155; font-size: 13px;">{{ $response->question->question_text }}</strong>
-                            <div style="color: #475569; font-size: 13px; margin-top: 4px;">
-                                {{ Str::limit($response->answer, 100) }}
-                            </div>
-                        </div>
-                        @endif
-                    @endforeach
-                    @if($survey->responses->count() > 3)
-                        <small style="color: #64748b; font-style: italic; display: block; margin-top: 8px;">
-                            <i class="fas fa-plus-circle"></i> Dan {{ $survey->responses->count() - 3 }} jawaban lainnya...
-                        </small>
-                    @endif
-                </div>
-                @endif
-
-                <div class="response-actions">
-                    <button class="action-btn detail-btn" onclick="showDetailModal({{ $survey->id }})">
+                <div class="action-row">
+                    <button class="btn btn-info" onclick="viewDetail({{ $survey->id }})">
                         <i class="fas fa-eye"></i> Lihat Detail
                     </button>
-                    <button class="action-btn delete-btn" onclick="deleteSurvey({{ $survey->id }})">
+                    <button class="btn btn-danger" onclick="confirmDelete({{ $survey->id }})">
                         <i class="fas fa-trash"></i> Hapus
                     </button>
                 </div>
@@ -533,260 +760,170 @@
     </div>
 
     <!-- Pagination -->
-    <div class="pagination-wrapper">
+    <div class="pagination-container">
         {{ $surveys->appends(request()->query())->links() }}
     </div>
 @else
     <div class="empty-state">
-        <i class="fas fa-users"></i>
-        <h3>Belum Ada Responden</h3>
-        <p>Belum ada responden yang mengisi survei Anda. Bagikan link survei untuk mulai mengumpulkan data responden.</p>
-        <a href="{{ route('survey.index') }}" class="btn btn-primary" style="display: inline-flex;">
-            <i class="fas fa-external-link-alt"></i> Buka Survei
-        </a>
+        <i class="fas fa-inbox"></i>
+        <h3>Belum Ada Data Responden</h3>
+        <p>Belum ada survey yang diisi untuk periode ini. Silakan tunggu responden mengisi survey.</p>
     </div>
 @endif
 
-<!-- Detail Modal -->
+</div>
+
+<!-- Modal untuk Detail Jawaban -->
 <div id="detailModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Detail Responden</h2>
-            <span class="close" onclick="closeDetailModal()">&times;</span>
+            <h2>Detail Jawaban Responden</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
         </div>
         <div class="modal-body" id="modalBody">
-            <!-- Content will be loaded here -->
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Memuat data...</p>
+            </div>
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
-    function filterResponses() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const dateFilter = document.getElementById('dateFilter').value;
-        const responseCards = document.querySelectorAll('.response-card');
+function viewDetail(surveyId) {
+    const modal = document.getElementById('detailModal');
+    const modalBody = document.getElementById('modalBody');
+    
+    modal.style.display = 'block';
+    modalBody.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Memuat data...</p>
+        </div>
+    `;
 
-        responseCards.forEach(card => {
-            const surveyId = card.dataset.surveyId;
-            const cardText = card.textContent.toLowerCase();
-            const cardDate = card.querySelector('.respondent-meta span').textContent;
-            
-            let showCard = true;
+    // ✅ FIX: Ambil period_id dari URL dan kirim ke backend
+    const urlParams = new URLSearchParams(window.location.search);
+    const periodId = urlParams.get('period_id');
+    // ✅ FIX: URL yang benar sesuai route Laravel
+    const url = `/admin/survey/${surveyId}/detail${periodId ? '?period_id=' + periodId : ''}`;
 
-            if (searchTerm && !cardText.includes(searchTerm)) {
-                showCard = false;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                modalBody.innerHTML = `<p style="color: #dc3545;">Error: ${data.error}</p>`;
+                return;
             }
 
-            if (dateFilter && dateFilter !== '') {
-                // Logic Date Filtering
-            }
-
-            card.style.display = showCard ? 'block' : 'none';
-        });
-    }
-
-    function showDetailModal(surveyId) {
-        const modal = document.getElementById('detailModal');
-        const modalBody = document.getElementById('modalBody');
-        
-        modalBody.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #5a9b9e; margin-bottom: 20px;"></i>
-                <p style="color: #64748b;">Memuat detail responden...</p>
-            </div>
-        `;
-        
-        modal.style.display = 'block';
-        
-        fetch(`/admin/survey/${surveyId}/detail`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                let detailHTML = `
-                    <div class="detail-info">
-                        <h4><i class="fas fa-info-circle"></i> Informasi Responden</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; font-size: 14px;">
-                            <div><strong>ID Survei:</strong> #${data.survey.id}</div>
-                            <div><strong>Tanggal:</strong> ${data.survey.created_at}</div>
-                            <div><strong>IP Address:</strong> ${data.survey.ip_address}</div>
+            let html = `
+                <div class="detail-section">
+                    <h3><i class="fas fa-info-circle"></i> Informasi Survey</h3>
+                    <div class="detail-item">
+                        <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px;">
+                            <strong>ID Survey:</strong><span>${data.survey.id}</span>
+                            <strong>Tanggal:</strong><span>${data.survey.created_at}</span>
+                            <strong>IP Address:</strong><span>${data.survey.ip_address}</span>
+                            <strong>User Agent:</strong><span style="word-break: break-all;">${data.survey.user_agent}</span>
                         </div>
                     </div>
+                </div>
+            `;
+
+            data.sections.forEach(section => {
+                html += `
+                    <div class="detail-section">
+                        <h3><i class="fas fa-folder"></i> ${section.title}</h3>
+                        ${section.description ? `<p style="color: #64748b; margin-bottom: 15px;">${section.description}</p>` : ''}
                 `;
 
-                data.sections.forEach((section, sectionIndex) => {
-                    detailHTML += `
-                        <div class="detail-section" style="margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
-                            <div style="background: #2c3e50; color: white; padding: 15px 20px;">
-                                <h4 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px;">
-                                    <i class="fas fa-layer-group"></i> ${section.title}
-                                </h4>
-                                ${section.description ? `<p style="margin: 6px 0 0 0; color: #cbd5e1; font-size: 13px;">${section.description}</p>` : ''}
+                section.responses.forEach(response => {
+                    const requiredBadge = response.is_required 
+                        ? '<span class="badge badge-required">Wajib</span>' 
+                        : '<span class="badge badge-optional">Opsional</span>';
+                    
+                    html += `
+                        <div class="detail-item">
+                            <div class="detail-question">
+                                ${response.question_text} ${requiredBadge}
                             </div>
-                            <div style="background: white;">
-                    `;
-
-                    section.responses.forEach((response, responseIndex) => {
-                        const isLast = responseIndex === section.responses.length - 1;
-                        const borderClass = isLast ? '' : 'border-bottom: 1px solid #e2e8f0;';
-                        
-                        detailHTML += `
-                            <div style="padding: 20px; ${borderClass}">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                                    <h5 style="margin: 0; color: #1e293b; flex: 1; font-size: 14px; font-weight: 600;">${response.question_text}</h5>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span style="background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${response.question_type_label}</span>
-                                        ${response.is_required ? '<span style="color: #dc3545; font-size: 11px; font-weight: 600;"><i class="fas fa-asterisk"></i> Wajib</span>' : '<span style="color: #64748b; font-size: 11px;"><i class="far fa-circle"></i> Opsional</span>'}
-                                    </div>
-                                </div>
-                                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                        `;
-
-                        if (response.answer) {
-                            if (response.question_type === 'linear_scale' && response.scale_info) {
-                                detailHTML += `
-                                    <div style="text-align: center;">
-                                        <div style="font-size: 20px; font-weight: 700; color: #5a9b9e; margin-bottom: 5px;">${response.answer}</div>
-                                        <div style="font-size: 13px; color: #64748b;">
-                                            Skala ${response.scale_info.min} - ${response.scale_info.max}
-                                            ${response.scale_info.min_label || response.scale_info.max_label ? `<br><small>${response.scale_info.min_label} - ${response.scale_info.max_label}</small>` : ''}
-                                        </div>
-                                    </div>
-                                `;
-                            } else if (response.question_type === 'file_upload' && response.file_info) {
-                                detailHTML += `
-                                    <div style="display: flex; align-items: center; gap: 15px; justify-content: space-between; flex-wrap: wrap;">
-                                        <div style="display: flex; align-items: center; gap: 15px;">
-                                            <i class="fas fa-file" style="font-size: 20px; color: #28a745;"></i>
-                                            <div>
-                                                <div style="font-weight: 600; color: #1e293b; font-size: 13px;">${response.formatted_answer}</div>
-                                                <div style="font-size: 12px; color: #64748b;">
-                                                    ${response.file_info.size ? (response.file_info.size / 1024).toFixed(1) + ' KB' : 'Ukuran tidak diketahui'} 
-                                                    ${response.file_info.mime_type ? '• ' + response.file_info.mime_type : ''}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div style="display: flex; gap: 8px;">
-                                            ${isImage(response.file_info.mime_type) ? 
-                                                `<a href="/admin/response/${response.response_id}/view" target="_blank" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-eye"></i> Lihat
-                                                </a>` : ''
-                                            }
-                                            <a href="/admin/response/${response.response_id}/download" style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
-                                                <i class="fas fa-download"></i> Download
-                                            </a>
-                                        </div>
-                                    </div>
-                                `;
-                            } else {
-                                detailHTML += `<div style="color: #334155; line-height: 1.5; font-size: 13px;">${response.formatted_answer}</div>`;
-                            }
-                        } else {
-                            detailHTML += `<div style="color: #dc3545; font-style: italic; font-size: 13px;"><i class="fas fa-minus-circle"></i> Tidak dijawab</div>`;
-                        }
-
-                        detailHTML += `
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    detailHTML += `
+                            <div class="detail-answer">
+                                <strong>Jawaban:</strong> ${response.formatted_answer || '-'}
                             </div>
                         </div>
                     `;
                 });
 
-                modalBody.innerHTML = detailHTML;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                modalBody.innerHTML = `
-                    <div class="detail-info">
-                        <h4><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Error</h4>
-                        <p style="color: #dc3545;">Terjadi kesalahan saat memuat detail responden.</p>
-                    </div>
-                `;
+                html += `</div>`;
             });
-    }
 
-    function closeDetailModal() {
-        document.getElementById('detailModal').style.display = 'none';
-    }
+            modalBody.innerHTML = html;
+        })
+        .catch(error => {
+            modalBody.innerHTML = `<p style="color: #dc3545;">Terjadi kesalahan saat memuat data.</p>`;
+            console.error('Error:', error);
+        });
+}
 
-    window.onclick = function(event) {
-        const modal = document.getElementById('detailModal');
-        if (event.target === modal) {
-            closeDetailModal();
-        }
-    }
+function closeModal() {
+    document.getElementById('detailModal').style.display = 'none';
+}
 
-    function isImage(mimeType) {
-        if (!mimeType) return false;
-        return mimeType.startsWith('image/');
-    }
-
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-        const title = type === 'success' ? 'Berhasil!' : 'Error!';
-        
-        toast.innerHTML = `
-            <i class="fas ${icon} toast-icon"></i>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <i class="fas fa-times toast-close" onclick="this.parentElement.remove()"></i>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    function deleteSurvey(surveyId) {
+function confirmDelete(surveyId) {
+    if (confirm('Apakah Anda yakin ingin menghapus survey ini? Tindakan ini tidak dapat dibatalkan.')) {
         fetch(`/admin/survey/${surveyId}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message, 'success');
-                const card = document.querySelector(`[data-survey-id="${surveyId}"]`);
-                if (card) {
-                    card.style.display = 'none';
-                    const container = document.getElementById('responsesContainer');
-                    if (container && container.querySelectorAll('.response-card[style!="display: none;"]').length === 0) {
-                        location.reload();
-                    }
-                }
+                alert(data.message);
+                location.reload();
             } else {
-                showToast(data.message || 'Gagal menghapus survey', 'error');
+                alert('Error: ' + (data.error || 'Terjadi kesalahan'));
             }
         })
         .catch(error => {
+            alert('Terjadi kesalahan saat menghapus survey');
             console.error('Error:', error);
-            showToast('Terjadi kesalahan saat menghapus survey', 'error');
         });
     }
+}
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') filterResponses();
-        });
-        document.getElementById('dateFilter').addEventListener('change', filterResponses);
+function filterResponses() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const dateFilter = document.getElementById('dateFilter').value;
+    const cards = document.querySelectorAll('.response-card');
+
+    cards.forEach(card => {
+        let showCard = true;
+
+        // Filter by search text (you can customize this to search in survey data)
+        if (searchText && !card.textContent.toLowerCase().includes(searchText)) {
+            showCard = false;
+        }
+
+        // Filter by date (you can implement date filtering logic here)
+        if (dateFilter && dateFilter !== '') {
+            // Implement date filtering logic based on your requirements
+        }
+
+        card.style.display = showCard ? 'block' : 'none';
     });
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('detailModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
 </script>
 @endpush
+@endsection

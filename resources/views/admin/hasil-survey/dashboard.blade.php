@@ -14,8 +14,97 @@
 </div>
 @endsection
 
+@section('header-actions')
+<div class="header-actions">
+    {{-- DROPDOWN FILTER PERIODE - POSISI KANAN ATAS --}}
+    @if(isset($allPeriods) && $allPeriods->count() > 0)
+    <div class="period-filter-container">
+        <form action="{{ route('admin.hasil-survey') }}" method="GET" id="periodFilterForm">
+            <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
+                <option value="">📅 Semua Periode</option>
+                @foreach($allPeriods as $period)
+                    <option value="{{ $period->id }}" 
+                        {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
+                        {{ $period->period_name }} ({{ $period->year }})
+                        @if($period->is_active) ⭐ @endif
+                    </option>
+                @endforeach
+            </select>
+        </form>
+    </div>
+    @endif
+    
+    <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
+</div>
+@endsection
+
 @push('styles')
 <style>
+    /* =========================================
+       DROPDOWN PERIODE - STYLING
+       ========================================= */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .period-filter-container {
+        margin-right: auto;
+    }
+
+    .period-select {
+        padding: 8px 35px 8px 15px;
+        border: 2px solid #5a9b9e;
+        border-radius: 8px;
+        background: white;
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a9b9e' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        min-width: 250px;
+    }
+
+    .period-select:hover {
+        border-color: #4a8b8e;
+        box-shadow: 0 2px 8px rgba(90, 155, 158, 0.2);
+    }
+
+    .period-select:focus {
+        outline: none;
+        border-color: #5a9b9e;
+        box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
+    }
+
+    .admin-welcome {
+        white-space: nowrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .header-actions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .period-filter-container {
+            width: 100%;
+            margin-right: 0;
+        }
+
+        .period-select {
+            width: 100%;
+            min-width: auto;
+        }
+    }
+
     .page-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -385,6 +474,16 @@
 
 @section('content')
 <div class="page-container">
+    {{-- Tampilkan info periode yang dipilih --}}
+    @if(isset($selectedPeriod) && $selectedPeriod)
+    <div class="info-badge" style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 12px 20px; margin-bottom: 20px; border-radius: 6px;">
+        <i class="fas fa-calendar-check" style="color: #2196F3; margin-right: 8px;"></i>
+        <strong>Periode Aktif:</strong> {{ $selectedPeriod->period_name }} ({{ $selectedPeriod->year }})
+        @if($selectedPeriod->description)
+            <span style="margin-left: 10px; color: #666;">- {{ $selectedPeriod->description }}</span>
+        @endif
+    </div>
+    @endif
     
     @if($hasSAW)
         <!-- Stats Cards -->
@@ -554,9 +653,13 @@
             <i class="fas fa-chart-bar"></i>
             <h3>Belum Ada Data SAW</h3>
             <p>
-                {{ $message ?? 'Belum ada pertanyaan dengan pengaturan SAW yang aktif. 
+                @if(isset($selectedPeriod) && $selectedPeriod)
+                    Belum ada data SAW untuk periode {{ $selectedPeriod->period_name }}.
+                @else
+                    {{ $message ?? 'Belum ada pertanyaan dengan pengaturan SAW yang aktif.' }}
+                @endif
                 Silakan buat pertanyaan dengan tipe skala linier dan aktifkan fitur SAW 
-                pada halaman manajemen pertanyaan untuk melihat hasil perhitungan di sini.' }}
+                pada halaman manajemen pertanyaan untuk melihat hasil perhitungan di sini.
             </p>
         </div>
     @endif
