@@ -717,7 +717,12 @@
         <div class="response-card" data-survey-id="{{ $survey->id }}">
             <div class="response-header">
                 <div class="respondent-details">
-                    <h4>Responden #{{ $survey->id }}</h4>
+                    @php
+                        // ✅ Ambil nama dari responses dengan question_id = 'nama'
+                        $namaResponse = $survey->responses->where('question_id', 'nama')->first();
+                        $nama = $namaResponse ? $namaResponse->answer : 'Responden #' . $survey->id;
+                    @endphp
+                    <h4>{{ $nama }}</h4>
                     <div class="respondent-meta">
                         <span><i class="fas fa-calendar-alt"></i> {{ $survey->created_at->format('d/m/Y H:i') }}</span>
                         <span><i class="fas fa-globe"></i> {{ $survey->ip_address ?: 'Tidak diketahui' }}</span>
@@ -741,7 +746,13 @@
                         <div class="summary-title">Jawaban Terisi</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-value">{{ number_format(($survey->responses->whereNotNull('answer')->where('answer', '!=', '')->count() / max($questions->count(), 1)) * 100, 1) }}%</div>
+                        @php
+                            // ✅ FIX: Hitung kelengkapan berdasarkan total jawaban survey ini
+                            $totalJawaban = $survey->responses->count();
+                            $jawabanTerisi = $survey->responses->whereNotNull('answer')->where('answer', '!=', '')->count();
+                            $kelengkapan = $totalJawaban > 0 ? ($jawabanTerisi / $totalJawaban) * 100 : 0;
+                        @endphp
+                        <div class="summary-value">{{ number_format($kelengkapan, 1) }}%</div>
                         <div class="summary-title">Kelengkapan</div>
                     </div>
                 </div>
@@ -819,13 +830,9 @@ function viewDetail(surveyId) {
 
             let html = `
                 <div class="detail-section">
-                    <h3><i class="fas fa-info-circle"></i> Informasi Survey</h3>
                     <div class="detail-item">
                         <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px;">
-                            <strong>ID Survey:</strong><span>${data.survey.id}</span>
                             <strong>Tanggal:</strong><span>${data.survey.created_at}</span>
-                            <strong>IP Address:</strong><span>${data.survey.ip_address}</span>
-                            <strong>User Agent:</strong><span style="word-break: break-all;">${data.survey.user_agent}</span>
                         </div>
                     </div>
                 </div>
