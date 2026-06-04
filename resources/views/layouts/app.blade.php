@@ -349,7 +349,7 @@
             }
 
             .main-content {
-                padding: 30px 20px;
+                padding: 20px 15px;
             }
 
             .footer-content {
@@ -363,6 +363,46 @@
 
             .footer-section h3 {
                 margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 15px;
+            }
+
+            .logo-image {
+                width: 50px;
+                height: 50px;
+            }
+
+            .title-section h1 {
+                font-size: 18px;
+            }
+
+            .title-section h2 {
+                font-size: 16px;
+            }
+
+            .title-section h3 {
+                font-size: 14px;
+            }
+
+            .title-section h4 {
+                font-size: 13px;
+            }
+
+            .main-content {
+                padding: 15px 10px;
+            }
+
+            .badge {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .footer-content {
+                padding: 0 15px;
             }
         }
     </style>

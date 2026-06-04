@@ -11,7 +11,9 @@ use App\Models\SurveySection;
 use App\Models\SurveyPeriod;
 use App\Models\SAWCalculationResult; // TAMBAHAN: Import SAWCalculationResult
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\SAWRespondentService;
 
 class SurveyResultController extends Controller
 {
@@ -39,108 +41,127 @@ class SurveyResultController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
-
-        // TAMBAHAN: Ambil parameter period_id dari request
-        $periodId = $request->get('period_id');
-        
-        // TAMBAHAN: Ambil semua periode untuk dropdown
+ 
+        $periodId   = $request->get('period_id');
         $allPeriods = SurveyPeriod::orderBy('year', 'desc')->orderBy('id', 'desc')->get();
-        
-        // TAMBAHAN: Tentukan periode yang dipilih
+ 
         if ($periodId) {
             $selectedPeriod = SurveyPeriod::find($periodId);
         } else {
-            // Default: ambil periode yang aktif, atau periode terbaru
-            $selectedPeriod = SurveyPeriod::where('is_active', true)->first() 
+            $selectedPeriod = SurveyPeriod::where('is_active', true)->first()
                            ?? SurveyPeriod::orderBy('year', 'desc')->orderBy('id', 'desc')->first();
         }
-
-        // TAMBAHAN: Ambil data SAW berdasarkan periode
+ 
+        // ─── Helper: ambil data responden + skor SAW per responden ───────────
+        $sawService = new SAWRespondentService();
+ 
         if ($selectedPeriod) {
-            // Coba ambil dari database SAWCalculationResult dulu
+            // Ambil surveys yang punya respons di periode ini
+            $surveys = Survey::with(['responses' => function ($q) use ($selectedPeriod) {
+                            $q->where('period_id', $selectedPeriod->id);
+                        }])
+                        ->whereHas('responses', function ($q) use ($selectedPeriod) {
+                            $q->where('period_id', $selectedPeriod->id);
+                        })
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+        } else {
+            $surveys = Survey::with('responses')->orderBy('created_at', 'desc')->get();
+        }
+ 
+        // Hitung skor SAW per responden (1 query, efisien)
+        $respondentSawScores = $sawService->calculateForSurveys($surveys);
+        // ────────────────────────────────────────────────────────────────────
+ 
+        if ($selectedPeriod) {
             $sawResults = SAWCalculationResult::where('period_id', $selectedPeriod->id)->get();
-            
-            // Jika belum ada hasil SAW tersimpan, hitung ulang
+ 
             if ($sawResults->isEmpty()) {
                 $sawResults = $this->calculateSAWForPeriod($selectedPeriod->id);
             }
-            
+ 
             if ($sawResults->isEmpty()) {
                 return view('admin.hasil-survey.dashboard', [
-                    'criteriaResults' => collect(),
-                    'hasSAW' => false,
-                    'totalVi' => 0,
-                    'totalResponses' => 0,
-                    'selectedPeriod' => $selectedPeriod,
-                    'allPeriods' => $allPeriods,
-                    'message' => 'Tidak ada data SAW untuk periode ' . $selectedPeriod->period_name . '. 
-                                 Silakan aktifkan fitur SAW pada pertanyaan dengan tipe skala linier.'
+                    'criteriaResults'     => collect(),
+                    'hasSAW'              => false,
+                    'totalVi'             => 0,
+                    'totalResponses'      => 0,
+                    'selectedPeriod'      => $selectedPeriod,
+                    'allPeriods'          => $allPeriods,
+                    'message'             => 'Tidak ada data SAW untuk periode ' . $selectedPeriod->period_name . '. Silakan aktifkan fitur SAW pada pertanyaan dengan tipe skala linier.',
+                    'surveys'             => $surveys,
+                    'respondentSawScores' => $respondentSawScores,
                 ]);
             }
-            
-            $totalVi = $sawResults->sum('weighted_score');
-            $totalResponses = $selectedPeriod->total_respondents ?? 0;
-            
-            $criteriaResults = $sawResults->map(function($result) {
+ 
+            $totalVi        = $sawResults->sum('weighted_score');
+            $totalResponses = \DB::table('survey_responses')
+                ->where('period_id', $selectedPeriod->id)
+                ->distinct('survey_id')
+                ->count('survey_id');
+ 
+            $criteriaResults = $sawResults->map(function ($result) {
                 return [
-                    'criteria' => $result->criteria_name,
-                    'score' => $result->average_score,
+                    'criteria'        => $result->criteria_name,
+                    'score'           => $result->average_score,
                     'weight_normalized' => $result->weight_normalized,
-                    'normalized' => $result->normalized_score,
-                    'weighted_score' => $result->weighted_score,
-                    'interpretation' => $result->interpretation,
+                    'normalized'      => $result->normalized_score,
+                    'weighted_score'  => $result->weighted_score,
+                    'interpretation'  => $result->interpretation,
                     'total_responses' => $result->total_responses,
                     'questions_count' => $result->questions_count,
-                    'criteria_type' => $result->criteria_type,
+                    'criteria_type'   => $result->criteria_type,
                 ];
             });
-            
+ 
             return view('admin.hasil-survey.dashboard', [
-                'criteriaResults' => $criteriaResults,
-                'hasSAW' => true,
-                'totalVi' => $totalVi,
-                'totalResponses' => $totalResponses,
-                'selectedPeriod' => $selectedPeriod,
-                'allPeriods' => $allPeriods,
+                'criteriaResults'     => $criteriaResults,
+                'hasSAW'              => true,
+                'totalVi'             => $totalVi,
+                'totalResponses'      => $totalResponses,
+                'selectedPeriod'      => $selectedPeriod,
+                'allPeriods'          => $allPeriods,
+                'surveys'             => $surveys,             // ← TAMBAHAN
+                'respondentSawScores' => $respondentSawScores, // ← TAMBAHAN
             ]);
+ 
         } else {
-            // Jika belum ada periode sama sekali, gunakan perhitungan lama
-            // Get all SAW enabled questions
+            // Tidak ada periode sama sekali
             $sawQuestions = SurveyQuestion::where('enable_saw', true)
-                                        ->where('question_type', 'linear_scale')
-                                        ->whereNotNull('criteria_name')
-                                        ->with('responses')
-                                        ->get();
-
+                                ->where('question_type', 'linear_scale')
+                                ->whereNotNull('criteria_name')
+                                ->with('responses')
+                                ->get();
+ 
             if ($sawQuestions->isEmpty()) {
                 return view('admin.hasil-survey.dashboard', [
-                    'criteriaResults' => collect(),
-                    'hasSAW' => false,
-                    'totalVi' => 0,
-                    'totalResponses' => 0,
-                    'selectedPeriod' => null,
-                    'allPeriods' => $allPeriods,
-                    'message' => 'Tidak ada pertanyaan dengan pengaturan SAW yang aktif. 
-                                 Silakan aktifkan fitur SAW pada pertanyaan dengan tipe skala linier.'
+                    'criteriaResults'     => collect(),
+                    'hasSAW'              => false,
+                    'totalVi'             => 0,
+                    'totalResponses'      => 0,
+                    'selectedPeriod'      => null,
+                    'allPeriods'          => $allPeriods,
+                    'message'             => 'Tidak ada pertanyaan dengan pengaturan SAW yang aktif. Silakan aktifkan fitur SAW pada pertanyaan dengan tipe skala linier.',
+                    'surveys'             => $surveys,
+                    'respondentSawScores' => $respondentSawScores,
                 ]);
             }
-
-            // Calculate aggregate SAW results from all surveys
+ 
             $criteriaResults = $this->calculateAggregateSAWResults($sawQuestions);
-            $totalVi = $criteriaResults->sum('weighted_score');
-
-            // Count total responses
-            $totalResponses = SurveyResponse::whereHas('question', function($query) {
+            $totalVi         = $criteriaResults->sum('weighted_score');
+            $totalResponses  = SurveyResponse::whereHas('question', function ($query) {
                 $query->where('enable_saw', true);
             })->distinct('survey_id')->count();
-
+ 
             return view('admin.hasil-survey.dashboard', [
-                'criteriaResults' => $criteriaResults,
-                'hasSAW' => true,
-                'totalVi' => $totalVi,
-                'totalResponses' => $totalResponses,
-                'selectedPeriod' => null,
-                'allPeriods' => $allPeriods,
+                'criteriaResults'     => $criteriaResults,
+                'hasSAW'              => true,
+                'totalVi'             => $totalVi,
+                'totalResponses'      => $totalResponses,
+                'selectedPeriod'      => null,
+                'allPeriods'          => $allPeriods,
+                'surveys'             => $surveys,             // ← TAMBAHAN
+                'respondentSawScores' => $respondentSawScores, // ← TAMBAHAN
             ]);
         }
     }

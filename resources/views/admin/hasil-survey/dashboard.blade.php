@@ -469,6 +469,137 @@
             text-align: center;
         }
     }
+
+    /* =========================================
+       TABEL SAW PER RESPONDEN
+       ========================================= */
+    .respondent-table-container {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-top: 30px;
+        overflow: hidden;
+    }
+ 
+    .respondent-table-container .table-title {
+        padding: 20px 25px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+ 
+    .respondent-table-container .table-title h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+ 
+    .respondent-table-container .table-title p {
+        margin: 0;
+        font-size: 13px;
+        color: #64748b;
+    }
+ 
+    .respondent-saw-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+ 
+    .respondent-saw-table thead tr {
+        background: #f8f9fa;
+        border-bottom: 2px solid #e2e8f0;
+    }
+ 
+    .respondent-saw-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+ 
+    .respondent-saw-table th.text-center,
+    .respondent-saw-table td.text-center {
+        text-align: center;
+    }
+ 
+    .respondent-saw-table tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s ease;
+    }
+ 
+    .respondent-saw-table tbody tr:last-child {
+        border-bottom: none;
+    }
+ 
+    .respondent-saw-table tbody tr:hover {
+        background: #f8fafc;
+    }
+ 
+    .respondent-saw-table td {
+        padding: 12px 16px;
+        color: #374151;
+        vertical-align: middle;
+    }
+ 
+    .respondent-saw-table td.nama-col {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+ 
+    .respondent-saw-table td.skor-col {
+        font-weight: 700;
+        color: #5a9b9e;
+        font-size: 15px;
+    }
+ 
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 13px;
+    }
+ 
+    .rank-1 { background: #fef9c3; color: #854d0e; }
+    .rank-2 { background: #f1f5f9; color: #475569; }
+    .rank-3 { background: #fef3c7; color: #92400e; }
+    .rank-other { background: #f8f9fa; color: #94a3b8; }
+ 
+    .interp-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+ 
+    .interp-badge.sangat-baik   { background: #d1fae5; color: #065f46; }
+    .interp-badge.baik          { background: #dbeafe; color: #1e40af; }
+    .interp-badge.cukup         { background: #fef9c3; color: #854d0e; }
+    .interp-badge.kurang        { background: #ffedd5; color: #9a3412; }
+    .interp-badge.sangat-kurang { background: #fee2e2; color: #991b1b; }
+    .interp-badge.no-data       { background: #f1f5f9; color: #94a3b8; }
+ 
+    .respondent-table-container .table-footer {
+        padding: 12px 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e2e8f0;
+        font-size: 13px;
+        color: #64748b;
+        text-align: right;
+    }
 </style>
 @endpush
 
@@ -595,6 +726,105 @@
                 </div>
             </div>
         </div>
+
+        {{-- ============================================================
+             CARD: SAW PER RESPONDEN
+             ============================================================ --}}
+        @if(isset($surveys) && $surveys->count() > 0 && isset($respondentSawScores))
+        @php
+            // Buat daftar responden dengan skor SAW, filter yang punya data SAW
+            $respondentList = $surveys->map(function($survey) use ($respondentSawScores) {
+                $namaResp     = $survey->responses->where('question_id', 'nama')->first();
+                $emailResp    = $survey->responses->where('question_id', 'email')->first();
+                $genderResp   = $survey->responses->where('question_id', 'jenis_kelamin')->first();
+                $umurResp     = $survey->responses->where('question_id', 'umur')->first();
+                $pendidResp   = $survey->responses->where('question_id', 'jenis_pendidikan')->first();
+                $pekerjaanResp= $survey->responses->where('question_id', 'pekerjaan')->first();
+ 
+                $saw = $respondentSawScores[$survey->id] ?? ['score' => 0, 'has_saw' => false, 'interpretation' => '-'];
+ 
+                return [
+                    'survey_id'       => $survey->id,
+                    'nama'            => $namaResp?->answer ?? 'Responden #' . $survey->id,
+                    'email'           => $emailResp?->answer ?? '-',
+                    'jenis_kelamin'   => $genderResp?->answer ?? '-',
+                    'umur'            => $umurResp?->answer ?? '-',
+                    'jenis_pendidikan'=> $pendidResp?->answer ?? '-',
+                    'pekerjaan'       => $pekerjaanResp?->answer ?? '-',
+                    'saw_score'       => $saw['score'],
+                    'has_saw'         => $saw['has_saw'],
+                    'interpretation'  => $saw['interpretation'],
+                ];
+            })
+            ->filter(fn($r) => $r['has_saw'])        // hanya yang punya data SAW
+            ->sortByDesc('saw_score')                 // urutkan dari skor tertinggi
+            ->values();
+        @endphp
+ 
+        @if($respondentList->count() > 0)
+        <div class="respondent-table-container">
+            <div class="table-title">
+                <div>
+                    <h2><i class="fas fa-users" style="color:#5a9b9e; margin-right:8px;"></i>Hasil SAW Per Responden</h2>
+                    <p>Diurutkan dari nilai preferensi tertinggi · {{ $respondentList->count() }} responden</p>
+                </div>
+            </div>
+ 
+            <div class="respondent-table-scroll">
+                <table class="respondent-saw-table">
+                <thead>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th class="text-center">Jenis Kelamin</th>
+                        <th class="text-center">Umur</th>
+                        <th class="text-center">Pendidikan</th>
+                        <th class="text-center">Pekerjaan</th>
+                        <th class="text-center">Skor V<sub>i</sub></th>
+                        <th class="text-center">Interpretasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($respondentList as $i => $resp)
+                    @php
+                        $rank = $i + 1;
+                        $rankClass = $rank === 1 ? 'rank-1' : ($rank === 2 ? 'rank-2' : ($rank === 3 ? 'rank-3' : 'rank-other'));
+                        $interpClass = match($resp['interpretation']) {
+                            'Sangat Baik'   => 'sangat-baik',
+                            'Baik'          => 'baik',
+                            'Cukup'         => 'cukup',
+                            'Kurang'        => 'kurang',
+                            'Sangat Kurang' => 'sangat-kurang',
+                            default         => 'no-data',
+                        };
+                    @endphp
+                    <tr>
+                        <td class="text-center">
+                            <span class="rank-badge {{ $rankClass }}">{{ $rank }}</span>
+                        </td>
+                        <td class="nama-col">{{ $resp['nama'] }}</td>
+                        <td>{{ $resp['email'] }}</td>
+                        <td class="text-center">{{ $resp['jenis_kelamin'] }}</td>
+                        <td class="text-center">{{ $resp['umur'] }}</td>
+                        <td class="text-center">{{ $resp['jenis_pendidikan'] }}</td>
+                        <td class="text-center">{{ $resp['pekerjaan'] }}</td>
+                        <td class="text-center skor-col">{{ number_format($resp['saw_score'], 3) }}</td>
+                        <td class="text-center">
+                            <span class="interp-badge {{ $interpClass }}">{{ $resp['interpretation'] }}</span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            </div>
+ 
+            <div class="table-footer">
+                Total {{ $respondentList->count() }} responden dengan data SAW
+            </div>
+        </div>
+        @endif
+        @endif
 
         <!-- Modal untuk Detail -->
         @foreach($criteriaResults as $index => $result)

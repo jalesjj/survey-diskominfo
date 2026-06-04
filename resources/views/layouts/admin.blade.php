@@ -60,6 +60,7 @@
             background: rgba(0, 0, 0, 0.5);
             z-index: 998;
             opacity: 0;
+            pointer-events: none;
             transition: opacity 0.3s ease;
         }
 
@@ -408,6 +409,11 @@
             </div>
 
             <div class="sidebar-menu">
+                <a href="{{ route('admin.dashboard.new') }}" class="menu-item @yield('active-dashboard')">
+                    <i class="fas fa-tachometer-alt menu-icon"></i>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+
                 <a href="{{ route('admin.jawaban') }}" class="menu-item @yield('active-jawaban')">
                     <span class="menu-icon"><i class="fas fa-comments"></i></span>
                     <span class="menu-text">Jawaban</span>

@@ -11,6 +11,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FooterLinkController;
 use App\Http\Controllers\ContactInfoController;
 use App\Http\Controllers\SurveyPeriodController;
+use App\Http\Controllers\DashboardController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,7 @@ Route::get('/admin/jawaban/individual', [AdminController::class, 'jawabanIndivid
 Route::get('/admin/export', [AdminController::class, 'export'])->name('admin.export');
 Route::delete('/admin/survey/{id}', [AdminController::class, 'deleteSurvey'])->name('admin.deleteSurvey');
 Route::get('/admin/survey/{id}/detail', [AdminController::class, 'getSurveyDetail'])->name('admin.survey.detail');
+Route::get('/admin/dashboard-new', [DashboardController::class, 'index'])->name('admin.dashboard.new');
 
 // Admin File Management Routes
 Route::get('/admin/files', [AdminController::class, 'uploadedFiles'])->name('admin.uploadedFiles');

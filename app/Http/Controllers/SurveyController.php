@@ -68,6 +68,14 @@ class SurveyController extends Controller
             $activePeriod = SurveyPeriod::getActivePeriod();
             
             if (!$activePeriod) {
+                // PERBAIKAN: Return JSON untuk AJAX request
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Survey sedang tidak aktif. Silakan coba lagi nanti.'
+                    ], 400);
+                }
+                
                 return redirect()->route('survey.index')
                     ->with('error', 'Survey sedang tidak aktif. Silakan coba lagi nanti.');
             }
@@ -84,8 +92,18 @@ class SurveyController extends Controller
 
             DB::beginTransaction();
 
-            // Validasi basic
-            $request->validate([
+            // ============================================================
+            // PERBAIKAN: Ambil nama dan email dari question_nama dan question_email
+            // Karena form mengirim sebagai question_nama dan question_email, bukan nama dan email
+            // ============================================================
+            $nama = $request->input('question_nama');
+            $email = $request->input('question_email');
+
+            // Validasi basic menggunakan Validator facade
+            $validator = \Illuminate\Support\Facades\Validator::make([
+                'nama' => $nama,
+                'email' => $email,
+            ], [
                 'nama' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
             ], [
@@ -94,10 +112,23 @@ class SurveyController extends Controller
                 'email.email' => 'Format email tidak valid.',
             ]);
 
+            if ($validator->fails()) {
+                // Return JSON untuk AJAX
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validasi gagal',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+                
+                return back()->withErrors($validator->errors())->withInput();
+            }
+
             // Create survey record
             $survey = Survey::create([
-                'nama' => $request->nama,
-                'email' => $request->email,
+                'nama' => $nama,
+                'email' => $email,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->header('User-Agent'),
                 'submitted_at' => now(),
@@ -252,12 +283,35 @@ class SurveyController extends Controller
                 'total_files' => $totalFiles
             ]);
 
+            // PERBAIKAN: Return JSON untuk AJAX request
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Terima kasih! Survei Anda telah berhasil dikirim.',
+                    'data' => [
+                        'survey_id' => $survey->id,
+                        'total_responses' => $totalResponses,
+                        'total_files' => $totalFiles
+                    ]
+                ]);
+            }
+
             return redirect()->route('survey.index')
                            ->with('success', 'Terima kasih! Survei Anda telah berhasil dikirim.');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             Log::error('Validation error', ['errors' => $e->errors()]);
+            
+            // PERBAIKAN: Return JSON untuk AJAX request
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -265,6 +319,15 @@ class SurveyController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+            
+            // PERBAIKAN: Return JSON untuk AJAX request
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat mengirim survei: ' . $e->getMessage()
+                ], 500);
+            }
+            
             return back()->with('error', 'Terjadi kesalahan saat mengirim survei: ' . $e->getMessage())->withInput();
         }
     }

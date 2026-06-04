@@ -1,3 +1,4 @@
+{{-- resources/views/survey/index.blade.php --}}
 
 @extends('layouts.app')
 
@@ -316,6 +317,12 @@
         position: absolute;
         opacity: 0;
         cursor: pointer;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        margin: 0;
+        z-index: 1;
     }
 
     .scale-option label {
@@ -480,29 +487,61 @@
 
     @media (max-width: 768px) {
         .section-body {
-            .question-description {
-        font-size: 13px;
-        padding: 6px 10px;
-        margin-bottom: 12px;
-    }
+            padding: 25px 20px;
+        }
+
+        .section-body .question-description {
+            font-size: 13px;
+            padding: 6px 10px;
+            margin-bottom: 12px;
+        }
+
+        .section-header {
+            padding: 20px 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+        }
+
+        .question-label {
+            font-size: 16px;
         }
 
         .navigation-buttons {
             flex-direction: column-reverse;
         }
 
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
         .linear-scale {
             flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            gap: 12px;
         }
 
         .scale-options {
             justify-content: center;
             flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .scale-option label {
+            width: 48px;
+            height: 48px;
+            font-size: 16px;
         }
 
         .radio-group, .checkbox-group {
             gap: 8px;
+        }
+
+        .radio-option label, .checkbox-option label {
+            padding: 14px 15px 14px 48px;
+            font-size: 15px;
         }
 
         .progress-bar {
@@ -524,6 +563,22 @@
             font-size: 12px;
             padding: 6px 10px;
             bottom: 35px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .section-body {
+            padding: 20px 15px;
+        }
+
+        .scale-options {
+            gap: 8px;
+        }
+
+        .scale-option label {
+            width: 42px;
+            height: 42px;
+            font-size: 15px;
         }
     }
 </style>
@@ -802,6 +857,9 @@
     }
 
     // Updated JavaScript section for survey/index.blade.php
+// PETUNJUK: Cari fungsi submitSurvey() di file resources/views/survey/index.blade.php
+// Kemudian GANTI bagian fetch dengan kode di bawah ini:
+
 function submitSurvey() {
     if (isSubmitting) return;
     
@@ -822,16 +880,25 @@ function submitSurvey() {
         console.log(key, value);
     }
 
+    // PERBAIKAN: Tambahkan header X-Requested-With untuk AJAX detection
     fetch('{{ route("survey.store") }}', {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest',  // ← TAMBAHKAN INI!
+            'Accept': 'application/json'           // ← TAMBAHKAN INI!
         }
     })
     .then(response => {
         console.log('Response status:', response.status);
         console.log('Response headers:', response.headers);
+        
+        // PERBAIKAN: Check content type sebelum parse JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server tidak mengembalikan JSON. Mungkin terjadi redirect atau error.');
+        }
         
         // Handle both success and error responses
         return response.json().then(data => ({
@@ -899,7 +966,7 @@ function submitSurvey() {
         
         isSubmitting = false;
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Kirim Survei';
+        submitBtn.textContent = 'Kirim Survei';
     });
 }
 

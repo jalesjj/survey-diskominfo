@@ -5,6 +5,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\SurveyDefaults;
+use App\Services\SAWRespondentService;
 use App\Models\AdminUser;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
@@ -794,8 +795,6 @@ class AdminController extends Controller
     {
         // ✅ FIX: FILTER SURVEY DAN RESPONSES BERDASARKAN PERIODE
         if ($selectedPeriod) {
-            // Filter survey yang punya responses di periode ini
-            // DAN load hanya responses yang ada di periode ini
             $query = Survey::with(['responses' => function($q) use ($selectedPeriod) {
                 $q->where('period_id', $selectedPeriod->id);
             }])
@@ -803,18 +802,21 @@ class AdminController extends Controller
                 $q->where('period_id', $selectedPeriod->id);
             });
         } else {
-            // Jika tidak ada periode dipilih, ambil semua
             $query = Survey::with('responses');
         }
-        
+
         $surveys = $query->orderBy('created_at', 'desc')->paginate(20);
         
+        $sawService = new \App\Services\SAWRespondentService();
+        $sawScores  = $sawService->calculateForSurveys($surveys);
+ 
         return view('admin.jawaban-individual', compact(
             'surveys',
             'totalSurveys',
             'questions',
             'selectedPeriod',
-            'allPeriods'
+            'allPeriods',
+            'sawScores'     
         ));
     }
 

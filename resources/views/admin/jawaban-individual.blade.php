@@ -622,6 +622,43 @@
             margin: 20px auto;
         }
     }
+
+    /*=========================================
+    SAW BADGE — paste di dalam blok <style>
+    ========================================= */
+    .saw-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        margin-left: 10px;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .saw-badge.sangat-baik  { background: #d1fae5; color: #065f46; }
+    .saw-badge.baik         { background: #dbeafe; color: #1e40af; }
+    .saw-badge.cukup        { background: #fef9c3; color: #854d0e; }
+    .saw-badge.kurang       { background: #ffedd5; color: #9a3412; }
+    .saw-badge.sangat-kurang{ background: #fee2e2; color: #991b1b; }
+    .saw-badge.no-saw       { background: #f1f5f9; color: #94a3b8; }
+    
+    /* Tambahkan di dalam blok <style> yang sudah ada */
+.respondent-table-scroll {
+    max-height: 305px;  /* tinggi sekitar 5 baris (1 baris ~56px + header ~49px) */
+    overflow-y: auto;
+}
+
+/* Supaya header tetap terlihat saat scroll */
+.respondent-saw-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f8f9fa;
+}
 </style>
 @endpush
 
@@ -722,7 +759,31 @@
                         $namaResponse = $survey->responses->where('question_id', 'nama')->first();
                         $nama = $namaResponse ? $namaResponse->answer : 'Responden #' . $survey->id;
                     @endphp
-                    <h4>{{ $nama }}</h4>
+                    @php
+                        $sawData  = $sawScores[$survey->id] ?? ['score' => 0, 'has_saw' => false, 'interpretation' => '-'];
+                        $sawClass = match(true) {
+                            !$sawData['has_saw']                                 => 'no-saw',
+                            $sawData['interpretation'] === 'Sangat Baik'         => 'sangat-baik',
+                            $sawData['interpretation'] === 'Baik'                => 'baik',
+                            $sawData['interpretation'] === 'Cukup'               => 'cukup',
+                            $sawData['interpretation'] === 'Kurang'              => 'kurang',
+                            default                                              => 'sangat-kurang',
+                        };
+                    @endphp
+                    
+                    <h4>
+                        {{ $nama }}
+                        @if($sawData['has_saw'])
+                            <span class="saw-badge {{ $sawClass }}">
+                                <i class=""></i>
+                                {{ number_format($sawData['score'], 3) }} &mdash; {{ $sawData['interpretation'] }}
+                            </span>
+                        @else
+                            <span class="saw-badge no-saw">
+                                <i class="fas fa-minus"></i> Tidak ada data SAW
+                            </span>
+                        @endif
+                    </h4>
                     <div class="respondent-meta">
                         <span><i class="fas fa-calendar-alt"></i> {{ $survey->created_at->format('d/m/Y H:i') }}</span>
                         <span><i class="fas fa-globe"></i> {{ $survey->ip_address ?: 'Tidak diketahui' }}</span>
