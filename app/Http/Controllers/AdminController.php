@@ -581,7 +581,7 @@ class AdminController extends Controller
                     $stats['chart_enabled'] = false;
                 } else {
                     // ✅ FIX: Untuk text questions, gunakan 'sample_responses'
-                    $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
+                    $stats['sample_responses'] = $validResponses->map(function($response) {
                         return [
                             'answer' => $response->answer,
                             'created_at' => $response->created_at->format('d/m/Y H:i')
@@ -762,7 +762,7 @@ class AdminController extends Controller
                     })->toArray();
                     $stats['chart_enabled'] = false;
                 } else {
-                    $stats['sample_responses'] = $validResponses->take(5)->map(function($response) {
+                    $stats['sample_responses'] = $validResponses->map(function($response) {
                         return [
                             'answer' => $response->answer,
                             'created_at' => $response->created_at->format('d/m/Y H:i')
@@ -808,7 +808,7 @@ class AdminController extends Controller
         $surveys = $query->orderBy('created_at', 'desc')->paginate(20);
         
         $sawService = new \App\Services\SAWRespondentService();
-        $sawScores  = $sawService->calculateForSurveys($surveys);
+        $sawScores  = $sawService->calculateForSurveys($surveys, $selectedPeriod?->id);
  
         return view('admin.jawaban-individual', compact(
             'surveys',
@@ -833,14 +833,52 @@ class AdminController extends Controller
         }
 
         try {
-            $questions = SurveyQuestion::active()->ordered()->get();
-            
-            if ($questions->isEmpty()) {
+            // Ambil period_id dari request
+            $periodId = $request->get('period_id');
+            $selectedPeriod = $periodId ? SurveyPeriod::find($periodId) : null;
+
+            // Default questions (Data Diri) - selalu ikut export
+            $defaultQuestions = SurveyDefaults::getDefaultQuestions();
+
+            // Pertanyaan DB: hanya aktif yang section-nya juga aktif
+            $dbQuestions = SurveyQuestion::active()
+                ->whereHas('section', function($q) {
+                    $q->where('is_active', true);
+                })
+                ->ordered()
+                ->get();
+
+            // Gabungkan: Data Diri dulu, lalu pertanyaan DB
+            $allExportQuestions = collect($defaultQuestions)->merge($dbQuestions);
+
+            if ($dbQuestions->isEmpty() && collect($defaultQuestions)->isEmpty()) {
                 return back()->with('error', 'Tidak ada pertanyaan yang tersedia untuk diekspor.');
             }
 
-            $surveys = Survey::with(['responses.question'])->orderBy('created_at', 'asc')->get();
-            
+            // ID pertanyaan aktif (DB) + string ID (Data Diri) untuk filter responses
+            $activeDbQuestionIds = $dbQuestions->pluck('id')->toArray();
+            $defaultQuestionIds = collect($defaultQuestions)->pluck('id')->toArray();
+
+            // Load surveys - filter berdasarkan periode jika dipilih
+            $surveysQuery = Survey::with(['responses' => function($q) use ($activeDbQuestionIds, $defaultQuestionIds, $periodId) {
+                $q->where(function($sub) use ($activeDbQuestionIds, $defaultQuestionIds) {
+                    $sub->whereIn('question_id', $activeDbQuestionIds)
+                        ->orWhereIn('question_id', $defaultQuestionIds);
+                });
+                if ($periodId) {
+                    $q->where('period_id', $periodId);
+                }
+            }]);
+
+            // Filter survey hanya yang punya responses di periode ini
+            if ($selectedPeriod) {
+                $surveysQuery->whereHas('responses', function($q) use ($periodId) {
+                    $q->where('period_id', $periodId);
+                });
+            }
+
+            $surveys = $surveysQuery->orderBy('created_at', 'asc')->get();
+
             if ($surveys->isEmpty()) {
                 return back()->with('error', 'Tidak ada data survey untuk diekspor.');
             }
@@ -848,10 +886,11 @@ class AdminController extends Controller
             $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Data Survey');
-            
+
             $headerRow = ['ID Survey', 'Tanggal Pengisian'];
-            foreach ($questions as $question) {
-                $headerRow[] = $question->question_text;
+            foreach ($allExportQuestions as $question) {
+                $text = is_array($question) ? $question['question_text'] : $question->question_text;
+                $headerRow[] = $text;
             }
             
             $sheet->fromArray($headerRow, null, 'A1');
@@ -895,13 +934,15 @@ class AdminController extends Controller
                     $responseMap[$response->question_id] = $response;
                 }
                 
-                foreach ($questions as $question) {
+                foreach ($allExportQuestions as $question) {
                     $answer = '-';
-                    
-                    if (isset($responseMap[$question->id])) {
-                        $response = $responseMap[$question->id];
-                        
-                        switch ($question->question_type) {
+                    $qId   = is_array($question) ? $question['id']            : $question->id;
+                    $qType = is_array($question) ? $question['question_type'] : $question->question_type;
+
+                    if (isset($responseMap[$qId])) {
+                        $response = $responseMap[$qId];
+
+                        switch ($qType) {
                             case 'checkbox':
                                 if ($response->answer_data && is_array($response->answer_data)) {
                                     $answer = implode('; ', $response->answer_data);
@@ -909,22 +950,21 @@ class AdminController extends Controller
                                     $answer = $response->answer ?: '-';
                                 }
                                 break;
-                                
+
                             case 'file_upload':
-                                // ✅ FIX: Safe access dengan isset
                                 if ($response->answer_data && is_array($response->answer_data) && isset($response->answer_data['filename'])) {
                                     $answer = $response->answer_data['filename'];
                                 } else {
                                     $answer = $response->answer ?: 'File tidak tersedia';
                                 }
                                 break;
-                                
+
                             default:
                                 $answer = $response->answer ?: '-';
                                 break;
                         }
                     }
-                    
+
                     $rowData[] = $answer;
                 }
                 
@@ -958,7 +998,8 @@ class AdminController extends Controller
             
             $sheet->freezePane('A2');
             
-            $filename = 'survey_export_' . date('Y-m-d_His') . '.xlsx';
+            $periodSuffix = $selectedPeriod ? '_' . $selectedPeriod->year . '_' . str_replace(' ', '-', $selectedPeriod->period_name) : '';
+            $filename = 'survey_export' . $periodSuffix . '_' . date('Y-m-d_His') . '.xlsx';
             
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment;filename="' . $filename . '"');

@@ -469,19 +469,6 @@
 
 @section('content')
 <div class="page-container">
-    @if(session('success'))
-    <div class="success-message">
-        <span><i class="fas fa-check-circle"></i></span>
-        {{ session('success') }}
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="error-message">
-        <span><i class="fas fa-times-circle"></i></span>
-        {{ session('error') }}
-    </div>
-    @endif
 
     <!-- Upload Section - Always Visible -->
     <div class="upload-section">
@@ -611,9 +598,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Console info
-console.log('📊 Asset Management System v2.0');
-console.log('📈 Total assets: {{ $assets->count() }}');
-console.log('✅ Active assets: {{ $assets->where("is_active", true)->count() }}');
-console.log('🚀 Multiple upload ready');
+console.log('Asset Management System v2.0');
+console.log('Total assets: {{ $assets->count() }}');
+console.log('Active assets: {{ $assets->where("is_active", true)->count() }}');
+console.log('Multiple upload ready');
 </script>
 @endsection

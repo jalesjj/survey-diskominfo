@@ -453,21 +453,6 @@
     })();
 </script>
 
-<!-- Messages -->
-@if(session('success'))
-    <div class="success-message">
-        <i class="fas fa-check-circle"></i>
-        {{ session('success') }}
-    </div>
-@endif
-
-@if(session('error'))
-    <div class="error-message">
-        <i class="fas fa-exclamation-circle"></i>
-        {{ session('error') }}
-    </div>
-@endif
-
 <!-- Action Buttons -->
 <div class="action-buttons">
     @if(!$isLocked)

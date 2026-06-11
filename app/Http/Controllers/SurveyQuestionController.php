@@ -194,6 +194,12 @@ class SurveyQuestionController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Cek sistem terkunci
+        if (SurveyPeriod::isLocked()) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Sistem sedang terkunci. Tidak dapat menambah pertanyaan selama periode aktif.');
+        }
+
         // Cek jika section adalah default section
         if (SurveyDefaults::isPermanentSection($sectionId)) {
             return redirect()->route('admin.questions.index')
@@ -210,6 +216,12 @@ class SurveyQuestionController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Cek sistem terkunci
+        if (SurveyPeriod::isLocked()) {
+            return redirect()->route('admin.questions.index')
+                            ->with('error', 'Sistem sedang terkunci. Tidak dapat menambah pertanyaan selama periode aktif.');
+        }
 
         // Cek jika section adalah default section
         if (SurveyDefaults::isPermanentSection($sectionId)) {
@@ -627,11 +639,9 @@ class SurveyQuestionController extends Controller
      
         // Validate
         $request->validate([
-            'period_name' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'description' => 'nullable|string|max:1000'
         ], [
-            'period_name.required' => 'Nama periode harus diisi',
             'year.required' => 'Tahun harus diisi',
             'year.integer' => 'Tahun harus berupa angka',
             'year.min' => 'Tahun minimal 2020',
@@ -641,7 +651,7 @@ class SurveyQuestionController extends Controller
         // Create period
         $period = SurveyPeriod::create([
             'survey_id' => 1, // Default survey ID
-            'period_name' => $request->period_name,
+            'period_name' => 'SKM ' . $request->year,
             'year' => $request->year,
             'start_date' => now(),
             'end_date' => now()->addYear(), // Default 1 year

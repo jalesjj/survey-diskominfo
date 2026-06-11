@@ -73,25 +73,28 @@ class DashboardController extends Controller
 
                 // ✅ DIURUTKAN: terbaik (tertinggi) di atas, terburuk (terendah) di bawah
                 $criteriaChartData = $sawResults
-                    ->sortByDesc('weighted_score') // urutkan tertinggi ke terendah
+                    ->sortByDesc('normalized_score') // urutkan berdasar normalized_score
                     ->map(function($result) {
-                        $weighted = $result->weighted_score;
-                        if ($weighted >= 0.15) {
-                            $interpretation = 'Excellent';
-                        } elseif ($weighted >= 0.12) {
+                        $normalized = $result->normalized_score;
+
+                        // Interpretasi berdasarkan normalized_score (0–1)
+                        if ($normalized >= 0.9) {
                             $interpretation = 'Sangat Baik';
-                        } elseif ($weighted >= 0.08) {
+                        } elseif ($normalized >= 0.8) {
                             $interpretation = 'Baik';
-                        } elseif ($weighted >= 0.05) {
+                        } elseif ($normalized >= 0.6) {
                             $interpretation = 'Cukup';
+                        } elseif ($normalized >= 0.4) {
+                            $interpretation = 'Kurang';
                         } else {
                             $interpretation = 'Perlu Perbaikan';
                         }
 
                         return [
-                            'criteria'      => $result->criteria_name,
-                            'weighted_score' => (float) $result->weighted_score,
-                            'interpretation' => $interpretation,
+                            'criteria'         => $result->criteria_name,
+                            'weighted_score'   => (float) $result->weighted_score,
+                            'normalized_score' => (float) $result->normalized_score,
+                            'interpretation'   => $interpretation,
                         ];
                     })->values()->toArray();
 

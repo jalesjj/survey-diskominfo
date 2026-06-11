@@ -403,6 +403,31 @@
         border: 1px solid #e2e8f0;
     }
 
+    .sample-responses h4 {
+        margin: 0 0 12px 0;
+    }
+
+    .sample-responses-scroll {
+        max-height: 280px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .sample-responses-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .sample-responses-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .sample-responses-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
     .sample-response {
         padding: 12px 0;
         border-bottom: 1px solid #f1f5f9;
@@ -496,11 +521,11 @@
                 name="period_id" 
                 onchange="document.getElementById('periodFilterForm').submit()" 
                 style="padding: 8px 35px 8px 15px; border: 2px solid #5a9b9e; border-radius: 8px; background: white url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%235a9b9e%27 d=%27M6 9L1 4h10z%27/%3E%3C/svg%3E') no-repeat right 12px center; color: #2c3e50; font-weight: 600; font-size: 14px; cursor: pointer; min-width: 250px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.3s ease;">
-                <option value="">📅 Semua Periode</option>
+                <option value="">Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}" 
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
-                        {{ $period->period_name }} ({{ $period->year }})
+                        {{ $period->year }}
                         @if($period->is_active) ⭐ @endif
                     </option>
                 @endforeach
@@ -514,12 +539,12 @@
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
             <i class="fas fa-cogs"></i> Kelola Pertanyaan
         </a>
-        <a href="{{ route('admin.export') }}" class="btn btn-success">
+        <a href="{{ route('admin.export', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}" class="btn btn-success">
             <i class="fas fa-download"></i> Export Excel
         </a>
-        <a href="{{ route('admin.hasil-survey.export-pdf') }}" class="btn btn-danger">
+        {{-- <a href="{{ route('admin.hasil-survey.export-pdf', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}" class="btn btn-danger">
             <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
+        </a> --}}
     </div>
 
     <!-- Tab Navigation -->
@@ -596,10 +621,10 @@
                                 <div class="stat-number">{{ $stat['total_responses'] }}</div>
                                 <div class="stat-label">Jawaban</div>
                             </div>
-                            <div class="stat-item">
+                            {{-- <div class="stat-item">
                                 <div class="stat-number">{{ $stat['response_rate'] }}%</div>
                                 <div class="stat-label">Tingkat Respons</div>
-                            </div>
+                            </div> --}}
                         </div>
 
                         <div class="response-data">
@@ -756,13 +781,15 @@
                             @elseif(isset($stat['sample_responses']) && is_array($stat['sample_responses']) && count($stat['sample_responses']) > 0)
                                 <!-- Text Responses Display -->
                                 <div class="sample-responses">
-                                    <h4><i class="fas fa-comment-dots"></i> Contoh Jawaban ({{ count($stat['sample_responses']) }} dari {{ $stat['total_responses'] }})</h4>
+                                    <h4><i class="fas fa-comment-dots"></i> Semua Jawaban ({{ count($stat['sample_responses']) }})</h4>
+                                    <div class="sample-responses-scroll">
                                     @foreach($stat['sample_responses'] as $response)
                                         <div class="sample-response">
                                             <div class="response-text">"{{ $response['answer'] }}"</div>
                                             <div class="response-date">{{ $response['created_at'] }}</div>
                                         </div>
                                     @endforeach
+                                    </div>
                                 </div>
                             @else
                                 <div class="empty-state">
@@ -907,13 +934,15 @@
                             @else
                                 <!-- Text/Textarea Simple View -->
                                 <div class="sample-responses">
-                                    <h4><i class="fas fa-comment-dots"></i> Contoh Jawaban ({{ min(5, $question->responses->count()) }} dari {{ $question->responses->count() }})</h4>
-                                    @foreach($question->responses->take(5) as $response)
+                                    <h4><i class="fas fa-comment-dots"></i> Semua Jawaban ({{ $question->responses->count() }})</h4>
+                                    <div class="sample-responses-scroll">
+                                    @foreach($question->responses as $response)
                                         <div class="sample-response">
-                                            <div class="response-text">"{{ Str::limit($response->answer, 100) }}"</div>
+                                            <div class="response-text">"{{ Str::limit($response->answer, 150) }}"</div>
                                             <div class="response-date">{{ $response->created_at->format('d/m/Y H:i') }}</div>
                                         </div>
                                     @endforeach
+                                    </div>
                                 </div>
                             @endif
                         </div>

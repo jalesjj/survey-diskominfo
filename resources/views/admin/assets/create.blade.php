@@ -370,20 +370,6 @@
     </div>
 
     <div class="form-body">
-        @if(session('success'))
-        <div class="success-message">
-            <span><i class="fas fa-check-circle"></i></span>
-            {{ session('success') }}
-        </div>
-        @endif
-
-        @if(session('error'))
-        <div class="error-message">
-            <span><i class="fas fa-times-circle"></i></span>
-            {{ session('error') }}
-        </div>
-        @endif
-
         <form method="POST" action="{{ route('admin.assets.store') }}" enctype="multipart/form-data" id="uploadForm">
             @csrf
             
@@ -652,8 +638,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Console info
-console.log('📤 Asset Upload System - Logo Only Version');
-console.log('🎯 Dropdown removed, type auto-set to logo');
-console.log('🚀 Simplified user experience');
+console.log('Asset Upload System - Logo Only Version');
+console.log('Dropdown removed, type auto-set to logo');
+console.log('Simplified user experience');
 </script>
 @endsection

@@ -21,11 +21,11 @@
     <div class="period-filter-container">
         <form action="{{ route('admin.hasil-survey') }}" method="GET" id="periodFilterForm">
             <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
-                <option value="">📅 Semua Periode</option>
+                <option value="">Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}" 
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
-                        {{ $period->period_name }} ({{ $period->year }})
+                        {{ $period->year }}
                         @if($period->is_active) ⭐ @endif
                     </option>
                 @endforeach
@@ -207,6 +207,7 @@
     .simple-table tbody td:not(:first-child) {
         text-align: center;
     }
+
 
     /* Cell Styles - Minimal */
     .criteria-name {
@@ -478,7 +479,13 @@
         border-radius: 8px;
         border: 1px solid #e2e8f0;
         margin-top: 30px;
-        overflow: hidden;
+        overflow: visible;
+    }
+
+    /* Jaga border-radius di ujung bawah card */
+    .respondent-table-container .table-footer {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
     }
  
     .respondent-table-container .table-title {
@@ -600,6 +607,62 @@
         color: #64748b;
         text-align: right;
     }
+
+    /* Dropdown filter urutan */
+    .sort-select {
+        padding: 6px 28px 6px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #374151;
+        background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2364748b' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 10px center;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+
+    .sort-select:hover,
+    .sort-select:focus {
+        border-color: #5a9b9e;
+        outline: none;
+    }
+
+    /* Scroll wrapper tabel per responden - max 5 baris */
+    .respondent-table-scroll {
+        max-height: calc(46px + 5 * 49px); /* thead + 5 baris */
+        overflow-y: auto;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .respondent-table-scroll::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .respondent-table-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .respondent-table-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .respondent-table-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* thead sticky saat scroll vertikal */
+    .respondent-table-scroll .respondent-saw-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f8f9fa;
+    }
 </style>
 @endpush
 
@@ -633,11 +696,11 @@
                 name="period_id"
                 onchange="document.getElementById('periodFilterFormContent').submit()"
                 style="padding: 8px 35px 8px 15px; border: 2px solid #5a9b9e; border-radius: 8px; background: white url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%235a9b9e%27 d=%27M6 9L1 4h10z%27/%3E%3C/svg%3E') no-repeat right 12px center; color: #2c3e50; font-weight: 600; font-size: 14px; cursor: pointer; min-width: 250px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.3s ease;">
-                <option value="">📅 Semua Periode</option>
+                <option value="">Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}"
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
-                        {{ $period->period_name }} ({{ $period->year }})
+                        {{ $period->year }}
                         @if($period->is_active) ⭐ @endif
                     </option>
                 @endforeach
@@ -650,7 +713,7 @@
         <!-- Stats Cards -->
         <div class="dashboard-stats">
             <div class="stat-card">
-                <div class="stat-label">Total Nilai Preferensi</div>
+                <div class="stat-label">Total Nilai Semua Kriteria</div>
                 <div class="stat-value">{{ number_format($totalVi, 3) }}</div>
             </div>
             <div class="stat-card">
@@ -676,8 +739,15 @@
 
         <!-- Table -->
         <div class="table-container">
-            <div class="table-title">
+            <div class="table-title" style="display:flex; align-items:center; justify-content:space-between;">
                 <h2>Hasil Perhitungan SAW</h2>
+                <a href="{{ route('admin.hasil-survey.export-pdf', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}"
+                style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:#e74c3c; color:white; border-radius:6px; text-decoration:none; transition:background 0.2s;"
+                onmouseover="this.style.background='#c0392b'"
+                onmouseout="this.style.background='#e74c3c'"
+                title="Export PDF">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
             </div>
 
             <table class="simple-table">
@@ -699,7 +769,7 @@
                             </td>
                             <td>
                                 <button class="btn-detail" onclick="showDetail{{ $loop->index }}()">
-                                    <i class="fas fa-eye"></i> Lihat Detail
+                                    <i class="fas fa-eye"></i> 
                                 </button>
                             </td>
                         </tr>
@@ -709,7 +779,7 @@
 
             <!-- Total -->
             <div class="total-box">
-                <div class="total-label">Total Nilai Preferensi (V<sub>i</sub>)</div>
+                <div class="total-label">Total Nilai Semua Kriteria</div>
                 <div>
                     <div class="total-value">{{ number_format($totalVi, 4) }}</div>
                     @php
@@ -766,7 +836,17 @@
             <div class="table-title">
                 <div>
                     <h2><i class="fas fa-users" style="color:#5a9b9e; margin-right:8px;"></i>Hasil SAW Per Responden</h2>
-                    <p>Diurutkan dari nilai preferensi tertinggi · {{ $respondentList->count() }} responden</p>
+                    
+                    <p id="respondent-sort-label">Diurutkan dari nilai preferensi tertinggi · {{ $respondentList->count() }} responden</p>
+                </div>
+                
+                <div>
+                    
+                    <select class="sort-select" id="respondent-sort" onchange="sortRespondentTable(this.value)">
+                        <option value="terbaik">Terbaik</option>
+                        <option value="terjelek">Terjelek</option>
+                        <option value="terbaru">Terbaru</option>
+                    </select>
                 </div>
             </div>
  
@@ -781,11 +861,12 @@
                         <th class="text-center">Umur</th>
                         <th class="text-center">Pendidikan</th>
                         <th class="text-center">Pekerjaan</th>
-                        <th class="text-center">Skor V<sub>i</sub></th>
-                        <th class="text-center">Interpretasi</th>
+                        <th class="text-center">Total Skor</sub></th>
+                        <th class="text-center">Keterangan</th>
+                        <th class="text-center">Detail</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="respondent-tbody">
                     @foreach($respondentList as $i => $resp)
                     @php
                         $rank = $i + 1;
@@ -799,7 +880,7 @@
                             default         => 'no-data',
                         };
                     @endphp
-                    <tr>
+                    <tr data-score="{{ $resp['saw_score'] }}" data-id="{{ $resp['survey_id'] }}">
                         <td class="text-center">
                             <span class="rank-badge {{ $rankClass }}">{{ $rank }}</span>
                         </td>
@@ -812,6 +893,11 @@
                         <td class="text-center skor-col">{{ number_format($resp['saw_score'], 3) }}</td>
                         <td class="text-center">
                             <span class="interp-badge {{ $interpClass }}">{{ $resp['interpretation'] }}</span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn-detail" onclick="showRespDetail{{ $i }}()">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </td>
                     </tr>
                     @endforeach
@@ -826,7 +912,155 @@
         @endif
         @endif
 
-        <!-- Modal untuk Detail -->
+        {{-- Modal Detail Per Responden --}}
+        @if(isset($respondentList))
+        @foreach($respondentList as $i => $resp)
+        @php
+            $sawQuestionsResp   = \App\Models\SurveyQuestion::where('enable_saw', true)
+                                    ->where('question_type', 'linear_scale')
+                                    ->whereNotNull('criteria_name')
+                                    ->get();
+            $criteriaGroupsResp = $sawQuestionsResp->groupBy('criteria_name');
+            $surveyRespAnswers  = \App\Models\SurveyResponse::where('survey_id', $resp['survey_id'])
+                                    ->whereIn('question_id', $sawQuestionsResp->pluck('id'))
+                                    ->get()->keyBy('question_id');
+
+            $answeredResp = [];
+            foreach ($criteriaGroupsResp as $cName => $cQs) {
+                $firstQ = $cQs->first();
+                $scores = [];
+                foreach ($cQs as $cQ) {
+                    $ans = $surveyRespAnswers->get((string) $cQ->id);
+                    if ($ans) $scores[] = (float) $ans->answer;
+                }
+                if (empty($scores)) continue;
+                $answeredResp[] = [
+                    'name'     => $cName,
+                    'weight'   => $firstQ->criteria_weight ?? 0,
+                    'avgScore' => array_sum($scores) / count($scores),
+                    'settings' => $firstQ->settings ?? [],
+                    'type'     => $firstQ->criteria_type ?? 'benefit',
+                ];
+            }
+            $totalWResp = array_sum(array_column($answeredResp, 'weight'));
+            $respVi     = 0;
+            $respRows   = [];
+            foreach ($answeredResp as $ar) {
+                $wNorm = $totalWResp > 0 ? $ar['weight'] / $totalWResp : 0;
+                $sMax  = $ar['settings']['scale_max'] ?? 5;
+                $sMin  = $ar['settings']['scale_min'] ?? 1;
+                $xij   = round($ar['avgScore'], 4);
+                $rij   = $ar['type'] === 'benefit'
+                            ? ($sMax > 0 ? $xij / $sMax : 0)
+                            : ($xij > 0 ? $sMin / $xij : 0);
+                $rij   = max(0, min(1, $rij));
+                $vij   = round($wNorm * $rij, 4);
+                $respVi += $vij;
+                $respRows[] = [
+                    'name'  => $ar['name'],
+                    'type'  => $ar['type'],
+                    'xij'   => $xij,
+                    'wj'    => $ar['weight'],
+                    'wNorm' => round($wNorm, 4),
+                    'sMax'  => $sMax,
+                    'sMin'  => $sMin,
+                    'rij'   => round($rij, 4),
+                    'vij'   => $vij,
+                ];
+            }
+            $respVi = round($respVi, 4);
+            $respInterpClass = strtolower(str_replace(' ', '-', $resp['interpretation']));
+        @endphp
+        <div class="modal-overlay" id="resp-modal{{ $i }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Detail SAW: {{ $resp['nama'] }}</h3>
+                    <button class="modal-close" onclick="closeRespDetail{{ $i }}()">&times;</button>
+                </div>
+                <div class="modal-body">
+
+                    {{-- Identitas --}}
+                    <div class="detail-section">
+                        <div class="detail-section-title">Identitas Responden</div>
+                        <div class="detail-row">
+                            <span class="detail-label">Nama</span>
+                            <span class="detail-value">{{ $resp['nama'] }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Jenis Kelamin</span>
+                            <span class="detail-value">{{ $resp['jenis_kelamin'] }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Pendidikan</span>
+                            <span class="detail-value">{{ $resp['jenis_pendidikan'] }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Pekerjaan</span>
+                            <span class="detail-value">{{ $resp['pekerjaan'] }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Per kriteria --}}
+                    @foreach($respRows as $rr)
+                    <div class="detail-section">
+                        <div class="detail-section-title">{{ $rr['name'] }} &nbsp;·&nbsp;
+                            <span class="badge-status badge-{{ $rr['type'] === 'benefit' ? 'baik' : 'cukup' }}" style="font-size:10px; text-transform:none; letter-spacing:0;">
+                                {{ ucfirst($rr['type']) }}
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">x<sub>ij</sub> (rata-rata jawaban)</span>
+                            <span class="detail-value">{{ $rr['xij'] }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">w<sub>j</sub> (bobot ternormalisasi)</span>
+                            <span class="detail-value">{{ number_format($rr['wNorm'], 4) }}
+                                <span style="font-size:11px; color:#999; font-family:inherit;">({{ $rr['wj'] }}/{{ $totalWResp }})</span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">r<sub>ij</sub> (normalisasi)</span>
+                            <span class="detail-value">{{ number_format($rr['rij'], 4) }}
+                                <span style="font-size:11px; color:#999; font-family:inherit;">
+                                    @if($rr['type'] === 'benefit')
+                                        ({{ $rr['xij'] }} / {{ $rr['sMax'] }})
+                                    @else
+                                        ({{ $rr['sMin'] }} / {{ $rr['xij'] }})
+                                    @endif
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">V<sub>ij</sub> = w<sub>j</sub> × r<sub>ij</sub></span>
+                            <span class="detail-value">{{ number_format($rr['vij'], 4) }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+
+                    {{-- Total Vi --}}
+                    <div class="detail-section">
+                        <div class="detail-section-title">Nilai Preferensi Akhir</div>
+                        <div class="detail-row">
+                            <span class="detail-label">V<sub>i</sub> = Σ V<sub>ij</sub></span>
+                            <span class="detail-value" style="font-size:20px; color:#333;">{{ $respVi }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Keterangan</span>
+                            <span class="detail-value">
+                                <span class="badge-status badge-{{ $respInterpClass }}">
+                                    {{ $resp['interpretation'] }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        @endforeach
+        @endif
+
+        <!-- Modal untuk Detail Perkriteria -->
         @foreach($criteriaResults as $index => $result)
         <div class="modal-overlay" id="modal{{ $index }}">
             <div class="modal-content">
@@ -890,7 +1124,7 @@
                             <span class="detail-label">Nilai Terbobot (w×r)</span>
                             <span class="detail-value">{{ number_format($result['weighted_score'], 4) }}</span>
                         </div>
-                    </div>
+                    </div> 
 
                     <div class="detail-section">
                         <div class="detail-section-title">Interpretasi</div>
@@ -960,7 +1194,74 @@
                 closeModal{{ $index }}();
             }
             @endforeach
+            @if(isset($respondentList))
+            @foreach($respondentList as $i => $resp)
+            if (document.getElementById('resp-modal{{ $i }}') && document.getElementById('resp-modal{{ $i }}').classList.contains('active')) {
+                closeRespDetail{{ $i }}();
+            }
+            @endforeach
+            @endif
         }
     });
+
+    // Modal per responden
+    @if(isset($respondentList))
+    @foreach($respondentList as $i => $resp)
+    function showRespDetail{{ $i }}() {
+        document.getElementById('resp-modal{{ $i }}').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeRespDetail{{ $i }}() {
+        document.getElementById('resp-modal{{ $i }}').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    document.getElementById('resp-modal{{ $i }}').addEventListener('click', function(e) {
+        if (e.target === this) closeRespDetail{{ $i }}();
+    });
+    @endforeach
+    @endif
+
+    // ============================================================
+    // SORT TABEL RESPONDEN
+    // ============================================================
+    function sortRespondentTable(mode) {
+        const tbody = document.getElementById('respondent-tbody');
+        if (!tbody) return;
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const label = document.getElementById('respondent-sort-label');
+
+        rows.sort(function(a, b) {
+            if (mode === 'terbaik') {
+                return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
+            } else if (mode === 'terjelek') {
+                return parseFloat(a.dataset.score) - parseFloat(b.dataset.score);
+            } else {
+                // terbaru: survey_id lebih besar = lebih baru
+                return parseInt(b.dataset.id) - parseInt(a.dataset.id);
+            }
+        });
+
+        // Update label subtitle
+        const count = rows.length;
+        if (mode === 'terbaik') {
+            label.textContent = 'Diurutkan dari nilai preferensi tertinggi · ' + count + ' responden';
+        } else if (mode === 'terjelek') {
+            label.textContent = 'Diurutkan dari nilai preferensi terendah · ' + count + ' responden';
+        } else {
+            label.textContent = 'Diurutkan dari responden terbaru · ' + count + ' responden';
+        }
+
+        // Re-render rows + update nomor urut
+        rows.forEach(function(row, i) {
+            const rankBadge = row.querySelector('.rank-badge');
+            if (rankBadge) {
+                const rank = i + 1;
+                rankBadge.textContent = rank;
+                rankBadge.className = 'rank-badge ' + (rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other');
+            }
+            tbody.appendChild(row);
+        });
+    }
 </script>
 @endpush

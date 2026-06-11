@@ -5,13 +5,23 @@
 @section('title', 'Survei Kepuasan Layanan Diskominfo Lamongan')
 
 @push('styles')
+<!-- Menambahkan font Poppins untuk tampilan yang lebih modern -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
+    /* Menerapkan font ke elemen-elemen utama */
+    body, .form-input, .btn, .progress-speech-bubble, .section-title, .question-label {
+        font-family: 'Poppins', sans-serif;
+    }
+
     .progress-container {
         background: white;
         border-bottom: 1px solid #e9ecef;
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 100;
         padding: 20px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
     .progress-bar {
@@ -50,8 +60,7 @@
         font-size: 14px;
         font-weight: 600;
         white-space: nowrap;
-        opacity: 0;
-        animation: bounceIn 0.6s ease forwards;
+        opacity: 1; /* Animasi dihapus, opacity langsung 1 */
     }
 
     .progress-speech-bubble::after {
@@ -65,6 +74,19 @@
         border-left: 6px solid transparent;
         border-right: 6px solid transparent;
         border-top: 6px solid #2c3e50;
+    }
+
+    /* Saat scroll: bubble pindah ke bawah logo */
+    .progress-speech-bubble.bubble-below {
+        bottom: auto;
+        top: 56px;
+    }
+
+    .progress-speech-bubble.bubble-below::after {
+        top: auto;
+        bottom: 100%;
+        border-top: none;
+        border-bottom: 6px solid #2c3e50;
     }
 
     .progress-logo {
@@ -87,57 +109,42 @@
         font-weight: 600;
     }
 
-    @keyframes bounceIn {
-        0% {
-            opacity: 0;
-            transform: translateX(-50%) scale(0.3);
-        }
-        50% {
-            opacity: 1;
-            transform: translateX(-50%) scale(1.1);
-        }
-        100% {
-            opacity: 1;
-            transform: translateX(-50%) scale(1);
-        }
-    }
-
     .section-container {
         display: none;
         opacity: 0;
-        transform: translateY(20px);
         transition: all 0.4s ease;
         max-width: 800px;
         margin: 0 auto 30px auto;
         background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
         overflow: hidden;
     }
 
     .section-container.active {
         display: block;
         opacity: 1;
-        transform: translateY(0);
     }
 
     .section-header {
-        background: linear-gradient(135deg, #5a9b9e 0%, #4a8b8e 100%);
+        background: #5a9b9e;
         color: white;
         padding: 30px 40px;
         text-align: center;
     }
 
     .section-title {
-        font-size: 24px;
-        font-weight: 600;
+        font-size: 26px; /* Diperbesar sedikit */
+        font-weight: 700; /* Dibuat lebih tebal */
         margin-bottom: 10px;
+        letter-spacing: -0.5px; /* Memberi kesan lebih padat dan modern */
     }
 
     .section-description {
-        font-size: 16px;
+        font-size: 15px;
         opacity: 0.9;
-        line-height: 1.5;
+        line-height: 1.6;
+        font-weight: 400;
     }
 
     .section-body {
@@ -150,7 +157,7 @@
 
     .question-label {
         display: block;
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 600;
         color: #2c3e50;
         margin-bottom: 15px;
@@ -158,19 +165,19 @@
     }
 
     .question-description {
-    font-size: 14px;
-    color: #6c757d;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    padding: 8px 12px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    line-height: 1.5;
-}
+        font-size: 14px;
+        color: #6c757d;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        padding: 8px 12px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        line-height: 1.5;
+    }
 
-.question-description:empty {
-    display: none;
-}
+    .question-description:empty {
+        display: none;
+    }
 
     .required-mark {
         color: #e74c3c;
@@ -182,16 +189,14 @@
         padding: 15px 18px;
         border: 2px solid #e9ecef;
         border-radius: 8px;
-        font-size: 16px;
+        font-size: 15px;
         transition: all 0.3s ease;
         background: #fff;
-        font-family: inherit;
     }
 
     .form-input:focus {
         outline: none;
         border-color: #5a9b9e;
-        box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
     }
 
     .form-textarea {
@@ -233,6 +238,7 @@
         border-radius: 8px;
         cursor: pointer;
         font-weight: 500;
+        font-size: 15px;
         transition: all 0.3s ease;
         position: relative;
         padding-left: 50px;
@@ -344,7 +350,6 @@
         background: #5a9b9e;
         border-color: #5a9b9e;
         color: white;
-        transform: scale(1.1);
     }
 
     /* File Upload */
@@ -401,7 +406,7 @@
     .btn {
         padding: 15px 30px;
         border-radius: 8px;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         border: none;
         cursor: pointer;
@@ -419,8 +424,6 @@
 
     .btn-primary:hover:not(:disabled) {
         background: #4a8b8e;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(90, 155, 158, 0.3);
     }
 
     .btn-secondary {
@@ -430,15 +433,11 @@
 
     .btn-secondary:hover {
         background: #5a6268;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
     }
 
     .btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
     }
 
     .success-message {
@@ -450,7 +449,7 @@
         margin: 0 auto;
         background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
     }
 
     .success-icon {
@@ -463,6 +462,7 @@
         font-size: 28px;
         margin-bottom: 15px;
         color: #2c3e50;
+        font-weight: 700;
     }
 
     .success-message p {
@@ -501,7 +501,7 @@
         }
 
         .section-title {
-            font-size: 20px;
+            font-size: 22px;
         }
 
         .question-label {
@@ -541,7 +541,7 @@
 
         .radio-option label, .checkbox-option label {
             padding: 14px 15px 14px 48px;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .progress-bar {
@@ -624,7 +624,6 @@
                     @endif
                 </label>
 
-                {{-- Tambahkan bagian untuk menampilkan deskripsi pertanyaan --}}
                 @if($question->question_description)
                     <div class="question-description">
                         {{ $question->question_description }}
@@ -771,17 +770,61 @@
     const totalSections = {{ $sections->count() }};
     let isSubmitting = false;
 
+    // ============================================================
+    // PROGRESS BAR BERDASARKAN JUMLAH PERTANYAAN YANG DIISI
+    // Hanya pertanyaan wajib (required) yang dihitung untuk progress
+    // ============================================================
+    function countRequiredQuestions() {
+        // Hitung semua input required di seluruh form (unik berdasarkan name)
+        const allInputs = document.querySelectorAll('#surveyForm [required]');
+        const uniqueNames = new Set();
+        allInputs.forEach(input => uniqueNames.add(input.name));
+        return uniqueNames.size;
+    }
+
+    function countAnsweredRequired() {
+        const allInputs = document.querySelectorAll('#surveyForm [required]');
+        const uniqueNames = new Set();
+        allInputs.forEach(input => uniqueNames.add(input.name));
+
+        let answered = 0;
+        uniqueNames.forEach(name => {
+            const inputs = document.querySelectorAll(`#surveyForm [name="${CSS.escape(name)}"][required]`);
+            if (inputs.length === 0) return;
+
+            const firstInput = inputs[0];
+            if (firstInput.type === 'radio') {
+                const checked = document.querySelector(`#surveyForm [name="${CSS.escape(name)}"]:checked`);
+                if (checked) answered++;
+            } else if (firstInput.type === 'checkbox') {
+                const checked = document.querySelector(`#surveyForm [name="${CSS.escape(name)}"]:checked`);
+                if (checked) answered++;
+            } else {
+                // text, textarea, select, file
+                if (firstInput.value && firstInput.value.trim() !== '') answered++;
+            }
+        });
+
+        return answered;
+    }
+
     function updateProgress() {
-        const progress = ((currentSection + 1) / totalSections) * 100;
+        const total = countRequiredQuestions();
+        const answered = countAnsweredRequired();
+
+        let progress = 0;
+        if (total === 0) {
+            // Tidak ada pertanyaan wajib — ikuti section seperti semula
+            progress = ((currentSection + 1) / totalSections) * 100;
+        } else {
+            progress = (answered / total) * 100;
+        }
+
+        progress = Math.min(progress, 100);
+
         document.getElementById('progressBar').style.width = progress + '%';
         document.getElementById('progressLogoContainer').style.left = progress + '%';
         document.getElementById('progressBubble').textContent = Math.round(progress) + '%';
-        
-        // Trigger animasi bubble
-        const bubble = document.getElementById('progressBubble');
-        bubble.style.animation = 'none';
-        bubble.offsetHeight; // Trigger reflow
-        bubble.style.animation = 'bounceIn 0.6s ease forwards';
     }
 
     function showError(message) {
@@ -856,119 +899,90 @@
         }
     }
 
-    // Updated JavaScript section for survey/index.blade.php
-// PETUNJUK: Cari fungsi submitSurvey() di file resources/views/survey/index.blade.php
-// Kemudian GANTI bagian fetch dengan kode di bawah ini:
-
-function submitSurvey() {
-    if (isSubmitting) return;
-    
-    if (!validateCurrentSection()) {
-        return;
-    }
-
-    isSubmitting = true;
-    const submitBtn = event.target;
-    submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Mengirim...';
-
-    const formData = new FormData(document.getElementById('surveyForm'));
-    
-    // Debug: Log form data
-    console.log('Form data being sent:');
-    for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-    }
-
-    // PERBAIKAN: Tambahkan header X-Requested-With untuk AJAX detection
-    fetch('{{ route("survey.store") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'X-Requested-With': 'XMLHttpRequest',  // ← TAMBAHKAN INI!
-            'Accept': 'application/json'           // ← TAMBAHKAN INI!
+    function submitSurvey() {
+        if (isSubmitting) return;
+        
+        if (!validateCurrentSection()) {
+            return;
         }
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
-        // PERBAIKAN: Check content type sebelum parse JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server tidak mengembalikan JSON. Mungkin terjadi redirect atau error.');
-        }
-        
-        // Handle both success and error responses
-        return response.json().then(data => ({
-            status: response.status,
-            ok: response.ok,
-            data: data
-        }));
-    })
-    .then(({status, ok, data}) => {
-        console.log('Response data:', data);
-        
-        if (ok && data.success) {
-            // Hide current section
-            document.querySelector(`[data-section="${currentSection}"]`).classList.remove('active');
-            
-            // Show success message
-            document.getElementById('successMessage').style.display = 'block';
-            
-            // Update progress to 100%
-            document.getElementById('progressBar').style.width = '100%';
-            document.getElementById('progressLogoContainer').style.left = '100%';
-            document.getElementById('progressBubble').textContent = '100%';
-            
-            // Scroll to top
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
 
-            // Clear any saved draft data
-            try {
-                sessionStorage.removeItem('surveyDraft');
-            } catch (e) {
-                console.warn('Could not clear session storage');
+        isSubmitting = true;
+        const submitBtn = event.target;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Mengirim...';
+
+        const formData = new FormData(document.getElementById('surveyForm'));
+
+        fetch('{{ route("survey.store") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest', 
+                'Accept': 'application/json'          
+            }
+        })
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server tidak mengembalikan JSON. Mungkin terjadi redirect atau error.');
             }
             
-            console.log('Survey submitted successfully!', data);
-        } else {
-            // Handle validation errors
-            if (status === 422 && data.errors) {
-                let errorMessages = [];
-                Object.values(data.errors).forEach(errorArray => {
-                    if (Array.isArray(errorArray)) {
-                        errorMessages = errorMessages.concat(errorArray);
-                    }
+            return response.json().then(data => ({
+                status: response.status,
+                ok: response.ok,
+                data: data
+            }));
+        })
+        .then(({status, ok, data}) => {
+            if (ok && data.success) {
+                document.querySelector(`[data-section="${currentSection}"]`).classList.remove('active');
+                document.getElementById('successMessage').style.display = 'block';
+                
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressLogoContainer').style.left = '100%';
+                document.getElementById('progressBubble').textContent = '100%';
+                
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
                 });
-                throw new Error(errorMessages.join('\n') || 'Validation failed');
+
+                try {
+                    sessionStorage.removeItem('surveyDraft');
+                } catch (e) {
+                    console.warn('Could not clear session storage');
+                }
             } else {
-                throw new Error(data.message || 'Server error occurred');
+                if (status === 422 && data.errors) {
+                    let errorMessages = [];
+                    Object.values(data.errors).forEach(errorArray => {
+                        if (Array.isArray(errorArray)) {
+                            errorMessages = errorMessages.concat(errorArray);
+                        }
+                    });
+                    throw new Error(errorMessages.join('\n') || 'Validation failed');
+                } else {
+                    throw new Error(data.message || 'Server error occurred');
+                }
             }
-        }
-    })
-    .catch(error => {
-        console.error('Submit error:', error);
-        
-        let errorMessage = 'Terjadi kesalahan saat mengirim survei.';
-        
-        if (error.message && error.message !== 'Failed to fetch') {
-            errorMessage = error.message;
-        } else if (error.message === 'Failed to fetch') {
-            errorMessage = 'Koneksi terputus. Periksa koneksi internet Anda.';
-        }
-        
-        showError(errorMessage + ' Silakan coba lagi.');
-        
-        isSubmitting = false;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Kirim Survei';
-    });
-}
+        })
+        .catch(error => {
+            let errorMessage = 'Terjadi kesalahan saat mengirim survei.';
+            
+            if (error.message && error.message !== 'Failed to fetch') {
+                errorMessage = error.message;
+            } else if (error.message === 'Failed to fetch') {
+                errorMessage = 'Koneksi terputus. Periksa koneksi internet Anda.';
+            }
+            
+            showError(errorMessage + ' Silakan coba lagi.');
+            
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Kirim Survei';
+        });
+    }
 
     function updateFileLabel(input) {
         const fileUpload = input.closest('.file-upload');
@@ -983,7 +997,6 @@ function submitSurvey() {
         }
     }
 
-    // Auto-save functionality
     let autoSaveTimeout;
     function autoSave() {
         clearTimeout(autoSaveTimeout);
@@ -1002,7 +1015,6 @@ function submitSurvey() {
                 }
             }
             
-            // Save to sessionStorage (dalam environment yang mendukung)
             try {
                 sessionStorage.setItem('surveyDraft', JSON.stringify(savedData));
             } catch (e) {
@@ -1011,15 +1023,21 @@ function submitSurvey() {
         }, 1000);
     }
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         updateProgress();
         
-        // Add auto-save listeners
-        document.addEventListener('input', autoSave);
-        document.addEventListener('change', autoSave);
+        // ============================================================
+        // UPDATE PROGRESS SETIAP KALI ADA INPUT BERUBAH
+        // ============================================================
+        document.getElementById('surveyForm').addEventListener('input', function() {
+            updateProgress();
+            autoSave();
+        });
+        document.getElementById('surveyForm').addEventListener('change', function() {
+            updateProgress();
+            autoSave();
+        });
 
-        // Load saved data on page load
         try {
             const savedData = sessionStorage.getItem('surveyDraft');
             if (savedData) {
@@ -1040,12 +1058,24 @@ function submitSurvey() {
                         }
                     });
                 }
+
+                // Update progress setelah restore data
+                updateProgress();
             }
         } catch (e) {
             // Error loading saved data
         }
         
-        // Add keyboard navigation
+        // Pindahkan bubble ke bawah logo saat progress-container sticky (scroll > 0)
+        window.addEventListener('scroll', function() {
+            const bubble = document.getElementById('progressBubble');
+            if (window.scrollY > 10) {
+                bubble.classList.add('bubble-below');
+            } else {
+                bubble.classList.remove('bubble-below');
+            }
+        });
+        
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && e.ctrlKey) {
                 if (currentSection < totalSections - 1) {

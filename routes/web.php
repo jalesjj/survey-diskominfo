@@ -67,6 +67,7 @@ Route::prefix('admin/questions')->name('admin.questions.')->group(function () {
 Route::get('/admin/hasil-survey', [SurveyResultController::class, 'dashboard'])->name('admin.hasil-survey');
 Route::get('/admin/hasil-survey/export-pdf', [SurveyResultController::class, 'exportPDF'])->name('admin.hasil-survey.export-pdf');
 
+
 // Admin User Management Routes
 Route::prefix('admin/users')->name('admin.users.')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('index');

@@ -208,13 +208,6 @@
 @endpush
 
 @section('content')
-@if(session('success'))
-    <div class="success-message">
-        <i class="fas fa-check-circle"></i>
-        {{ session('success') }}
-    </div>
-@endif
-
 <div class="form-container">
     <div class="form-header">
         <div class="form-title"><i class="fas fa-address-book"></i> Informasi Kontak</div>

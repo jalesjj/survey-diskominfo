@@ -74,11 +74,9 @@ class SurveyResultController extends Controller
         // ────────────────────────────────────────────────────────────────────
  
         if ($selectedPeriod) {
-            $sawResults = SAWCalculationResult::where('period_id', $selectedPeriod->id)->get();
- 
-            if ($sawResults->isEmpty()) {
-                $sawResults = $this->calculateSAWForPeriod($selectedPeriod->id);
-            }
+            // Selalu recalculate agar data yang tersimpan selalu akurat
+            // (menghindari pakai data lama yang dihitung dengan bobot global yang salah)
+            $sawResults = $this->calculateSAWForPeriod($selectedPeriod->id);
  
             if ($sawResults->isEmpty()) {
                 return view('admin.hasil-survey.dashboard', [
@@ -269,86 +267,123 @@ class SurveyResultController extends Controller
 
     /**
      * HITUNG SAW UNTUK PERIODE TERTENTU
-     * 
-     * Method ini menghitung SAW untuk periode spesifik dan menyimpannya ke database
+     *
+     * Perbaikan:
+     * 1. Normalisasi bobot HANYA dari kriteria yang benar-benar dijawab di periode ini
+     *    (bukan dari semua pertanyaan SAW global) agar total Vi bisa mencapai 1.0
+     * 2. scale_max / scale_min diambil dari settings tiap pertanyaan, bukan hard-coded 5/1
+     * 3. Selalu recalculate (updateOrCreate) agar data lama yang salah ikut diperbaiki
      */
     private function calculateSAWForPeriod($periodId)
     {
         // Ambil semua pertanyaan dengan enable_saw
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
+            ->whereNotNull('criteria_name')
             ->get();
 
         if ($sawQuestions->isEmpty()) {
             return collect();
         }
 
-        // Hitung total bobot untuk normalisasi
-        $totalWeight = $sawQuestions->sum('criteria_weight');
-
         // Group by criteria_name
         $criteriaGroups = $sawQuestions->groupBy('criteria_name');
 
-        $results = [];
+        // PASS 1: kumpulkan kriteria yang benar-benar ada jawabannya di periode ini
+        $answeredCriteria = [];
 
         foreach ($criteriaGroups as $criteriaName => $questions) {
-            $criteriaType = $questions->first()->criteria_type;
-            $criteriaWeight = $questions->first()->criteria_weight;
+            $firstQuestion  = $questions->first();
+            $criteriaWeight = $firstQuestion->criteria_weight ?? 0;
+            $criteriaType   = $firstQuestion->criteria_type ?? 'benefit';
+            $settings       = $firstQuestion->settings ?? [];
 
-            // Hitung rata-rata skor untuk kriteria ini
+            // Ambil scale_max / scale_min dari settings pertanyaan (bukan hard-code)
+            $scaleMax = isset($settings['scale_max']) ? (float) $settings['scale_max'] : 5;
+            $scaleMin = isset($settings['scale_min']) ? (float) $settings['scale_min'] : 1;
+
             $totalScore = 0;
             $totalCount = 0;
-            
+
             foreach ($questions as $question) {
                 $responses = SurveyResponse::where('question_id', $question->id)
                     ->where('period_id', $periodId)
                     ->get();
-                
+
                 foreach ($responses as $response) {
-                    $totalScore += (float)$response->answer;
+                    $totalScore += (float) $response->answer;
                     $totalCount++;
                 }
             }
 
-            if ($totalCount == 0) continue;
-
-            $averageScore = $totalScore / $totalCount;
-
-            // Normalisasi bobot
-            $weightNormalized = $totalWeight > 0 ? $criteriaWeight / $totalWeight : 0;
-
-            // Normalisasi nilai (asumsi max = 5 untuk linear scale)
-            $maxValue = 5;
-            $minValue = 1;
-
-            if ($criteriaType === 'benefit') {
-                $normalizedScore = $averageScore / $maxValue;
-            } else { // cost
-                $normalizedScore = $minValue / $averageScore;
+            // Lewati kriteria yang tidak ada jawabannya
+            if ($totalCount == 0) {
+                continue;
             }
 
-            // Nilai terbobot
-            $weightedScore = $weightNormalized * $normalizedScore;
+            $answeredCriteria[] = [
+                'criteria_name'   => $criteriaName,
+                'criteria_type'   => $criteriaType,
+                'criteria_weight' => $criteriaWeight,
+                'average_score'   => $totalScore / $totalCount,
+                'total_responses' => $totalCount,
+                'questions_count' => $questions->count(),
+                'scale_max'       => $scaleMax,
+                'scale_min'       => $scaleMin,
+            ];
+        }
 
-            // Interpretasi
-            $interpretation = $this->getSAWInterpretation($normalizedScore);
+        if (empty($answeredCriteria)) {
+            return collect();
+        }
 
-            // Simpan ke database
+        // PASS 2: total bobot HANYA dari kriteria yang dijawab
+        $answeredTotalWeight = array_sum(array_column($answeredCriteria, 'criteria_weight'));
+
+        if ($answeredTotalWeight == 0) {
+            return collect();
+        }
+
+        // PASS 3: normalisasi, hitung weighted score, simpan ke DB
+        $results = [];
+
+        foreach ($answeredCriteria as $criteria) {
+            // Bobot ternormalisasi (dari kriteria yang dijawab saja)
+            $weightNormalized = $criteria['criteria_weight'] / $answeredTotalWeight;
+
+            // Normalisasi SAW menggunakan scale dari settings pertanyaan
+            if ($criteria['criteria_type'] === 'benefit') {
+                $normalizedScore = $criteria['scale_max'] > 0
+                    ? ($criteria['average_score'] / $criteria['scale_max'])
+                    : 0;
+            } else {
+                // cost: nilai rendah = bagus
+                $normalizedScore = $criteria['average_score'] > 0
+                    ? ($criteria['scale_min'] / $criteria['average_score'])
+                    : 0;
+            }
+
+            $normalizedScore = max(0.0, min(1.0, $normalizedScore));
+            $weightedScore   = $weightNormalized * $normalizedScore;
+            $interpretation  = $this->getSAWInterpretation($normalizedScore);
+
+            // Selalu updateOrCreate agar data lama yang salah ikut diperbarui
             $sawResult = SAWCalculationResult::updateOrCreate(
                 [
-                    'period_id' => $periodId,
-                    'criteria_name' => $criteriaName,
+                    'period_id'     => $periodId,
+                    'criteria_name' => $criteria['criteria_name'],
                 ],
                 [
-                    'criteria_type' => $criteriaType,
-                    'criteria_weight' => $criteriaWeight,
-                    'weight_normalized' => $weightNormalized,
-                    'average_score' => $averageScore,
-                    'normalized_score' => $normalizedScore,
-                    'weighted_score' => $weightedScore,
-                    'interpretation' => $interpretation,
-                    'total_responses' => $totalCount,
-                    'questions_count' => $questions->count(),
+                    'criteria_type'   => $criteria['criteria_type'],
+                    'criteria_weight' => $criteria['criteria_weight'],
+                    'weight_normalized' => round($weightNormalized, 4),
+                    'average_score'   => round($criteria['average_score'], 4),
+                    'normalized_score' => round($normalizedScore, 4),
+                    'weighted_score'  => round($weightedScore, 4),
+                    'interpretation'  => $interpretation,
+                    'total_responses' => $criteria['total_responses'],
+                    'questions_count' => $criteria['questions_count'],
+                    'calculated_at'   => now(),
                 ]
             );
 
@@ -380,26 +415,35 @@ class SurveyResultController extends Controller
      * 4. Ringkasan Statistik per Pertanyaan
      * 5. Lampiran (Penjelasan Metode SAW)
      */
-    public function exportPDF()
+    public function exportPDF(Request $request)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Ambil periode dari request
+        $periodId = $request->get('period_id');
+        $selectedPeriod = $periodId ? SurveyPeriod::find($periodId) : null;
 
         // Get SAW questions
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
                                     ->where('question_type', 'linear_scale')
                                     ->whereNotNull('criteria_name')
-                                    ->with('responses')
+                                    ->with(['responses' => function($q) use ($periodId) {
+                                        if ($periodId) $q->where('period_id', $periodId);
+                                    }])
                                     ->get();
 
         // Calculate SAW results
         $criteriaResults = $this->calculateAggregateSAWResults($sawQuestions);
         $totalVi = $criteriaResults->sum('weighted_score');
 
-        // Get all surveys with responses
-        $surveys = Survey::with(['responses.question.section'])
-                        ->whereHas('responses')
-                        ->get();
+        // Get surveys - filter berdasarkan periode jika dipilih
+        $surveysQuery = Survey::with(['responses.question.section'])
+                        ->whereHas('responses', function($q) use ($periodId) {
+                            if ($periodId) $q->where('period_id', $periodId);
+                        });
+
+        $surveys = $surveysQuery->get();
 
         // Calculate SAW score for each survey
         $surveysWithSAW = $surveys->map(function($survey) use ($sawQuestions) {
@@ -408,10 +452,14 @@ class SurveyResultController extends Controller
             return $survey;
         })->sortByDesc('saw_score')->values();
 
-        // Get all questions with sections
+        // Get all questions with sections - filter responses by periode
         $sections = SurveySection::where('is_active', true)
-                                ->with(['allQuestions' => function($q) {
-                                    $q->where('is_active', true)->with('responses')->orderBy('order_index');
+                                ->with(['allQuestions' => function($q) use ($periodId) {
+                                    $q->where('is_active', true)
+                                      ->with(['responses' => function($r) use ($periodId) {
+                                          if ($periodId) $r->where('period_id', $periodId);
+                                      }])
+                                      ->orderBy('order_index');
                                 }])
                                 ->orderBy('order_index')
                                 ->get();
@@ -438,6 +486,11 @@ class SurveyResultController extends Controller
             ];
         });
 
+        // Label periode untuk judul PDF
+        $periodLabel = $selectedPeriod
+            ? $selectedPeriod->period_name . ' ' . $selectedPeriod->year
+            : 'Semua Periode';
+
         // Prepare data for PDF
         $data = [
             'title' => 'LAPORAN DATA SURVEI',
@@ -445,6 +498,8 @@ class SurveyResultController extends Controller
             'total_responses' => $surveysWithSAW->count(),
             'period_start' => $surveys->min('created_at')?->format('d F Y') ?? '-',
             'period_end' => $surveys->max('created_at')?->format('d F Y') ?? '-',
+            'period_label' => $periodLabel,
+            'selected_period' => $selectedPeriod,
             
             // SAW Results
             'criteriaResults' => $criteriaResults,
@@ -461,8 +516,204 @@ class SurveyResultController extends Controller
         $pdf = Pdf::loadView('admin.hasil-survey.export-pdf', $data);
         $pdf->setPaper('a4', 'portrait');
         
-        $filename = 'Laporan_Survey_' . now()->format('Y-m-d_His') . '.pdf';
+        $periodSuffix = $selectedPeriod
+            ? '_' . $selectedPeriod->year . '_' . str_replace(' ', '-', $selectedPeriod->period_name)
+            : '';
+        $filename = 'Laporan_Survey' . $periodSuffix . '_' . now()->format('Y-m-d_His') . '.pdf';
         
+        return $pdf->download($filename);
+    }
+
+    /**
+     * EXPORT PDF — PERHITUNGAN SAW PER RESPONDEN
+     *
+     * Menampilkan detail rumus SAW lengkap untuk setiap responden:
+     *   wj    = Wj / ΣWj
+     *   xij   = rata-rata jawaban responden i pada kriteria j
+     *   rij   = xij / scale_max  (benefit)  |  scale_min / xij  (cost)
+     *   Vij   = wj × rij
+     *   Vi    = Σ Vij
+     */
+    public function exportPDFRespondent(Request $request)
+    {
+        $authCheck = $this->checkAdminAuth();
+        if ($authCheck) return $authCheck;
+ 
+        $periodId       = $request->get('period_id');
+        $selectedPeriod = $periodId ? SurveyPeriod::find($periodId) : null;
+ 
+        // ── 1. Ambil semua pertanyaan SAW ──────────────────────────────────────
+        $sawQuestions = SurveyQuestion::where('enable_saw', true)
+            ->where('question_type', 'linear_scale')
+            ->whereNotNull('criteria_name')
+            ->get();
+ 
+        // ── 2. Kelompokkan per kriteria ────────────────────────────────────────
+        $criteriaGroups = $sawQuestions->groupBy('criteria_name');
+ 
+        // ── 3. Hitung total bobot ──────────────────────────────────────────────
+        $totalWeight = 0;
+        foreach ($criteriaGroups as $cName => $cQuestions) {
+            $totalWeight += $cQuestions->first()->criteria_weight ?? 0;
+        }
+ 
+        // ── 4. Bangun konfigurasi kriteria (untuk cover & tabel header) ────────
+        $criteriaConfig = [];
+        foreach ($criteriaGroups as $cName => $cQuestions) {
+            $firstQ = $cQuestions->first();
+            $wj     = $firstQ->criteria_weight ?? 0;
+            $settings = $firstQ->settings ?? [];
+            $criteriaConfig[] = [
+                'name'  => $cName,
+                'type'  => $firstQ->criteria_type ?? 'benefit',
+                'weight'=> $wj,
+                'wNorm' => $totalWeight > 0 ? round($wj / $totalWeight, 4) : 0,
+                'sMax'  => $settings['scale_max'] ?? 5,
+                'sMin'  => $settings['scale_min'] ?? 1,
+            ];
+        }
+ 
+        // ── 5. Ambil surveys (filter periode) ─────────────────────────────────
+        $questionIds  = $sawQuestions->pluck('id');
+        $surveysQuery = Survey::with(['responses' => function ($q) use ($questionIds, $periodId) {
+            $q->whereIn('question_id', $questionIds);
+            if ($periodId) $q->where('period_id', $periodId);
+        }]);
+ 
+        if ($selectedPeriod) {
+            $surveysQuery->whereHas('responses', function ($q) use ($periodId) {
+                $q->where('period_id', $periodId);
+            });
+        }
+ 
+        $surveys = $surveysQuery->orderBy('created_at', 'desc')->get();
+ 
+        // ── 6. Hitung SAW per responden ────────────────────────────────────────
+        $respondentRows = [];
+ 
+        foreach ($surveys as $survey) {
+            // Jawaban responden ini (keyed by question_id)
+            $surveyResponses = $survey->responses->keyBy('question_id');
+ 
+            // Kumpulkan kriteria yang dijawab
+            $answeredCriteria = [];
+            foreach ($criteriaGroups as $cName => $cQuestions) {
+                $firstQ = $cQuestions->first();
+                $scores = [];
+                foreach ($cQuestions as $cQ) {
+                    $resp = $surveyResponses->get((string) $cQ->id);
+                    if ($resp) {
+                        $scores[] = (float) $resp->answer;
+                    }
+                }
+                if (empty($scores)) continue;
+ 
+                $settings = $firstQ->settings ?? [];
+                $answeredCriteria[] = [
+                    'name'     => $cName,
+                    'weight'   => $firstQ->criteria_weight ?? 0,
+                    'avgScore' => array_sum($scores) / count($scores),
+                    'settings' => $settings,
+                    'type'     => $firstQ->criteria_type ?? 'benefit',
+                ];
+            }
+ 
+            if (empty($answeredCriteria)) continue;
+ 
+            // Total bobot hanya dari kriteria yang dijawab
+            $answeredTotalWeight = array_sum(array_column($answeredCriteria, 'weight'));
+            if ($answeredTotalWeight == 0) continue;
+ 
+            // Hitung tiap kriteria dan total Vi
+            $details = [];
+            $totalVi = 0;
+ 
+            foreach ($answeredCriteria as $ac) {
+                $wNorm    = $ac['weight'] / $answeredTotalWeight;
+                $sMax     = $ac['settings']['scale_max'] ?? 5;
+                $sMin     = $ac['settings']['scale_min'] ?? 1;
+                $xij      = round($ac['avgScore'], 4);
+ 
+                if ($ac['type'] === 'benefit') {
+                    $rij = $sMax > 0 ? $xij / $sMax : 0;
+                } else {
+                    $rij = $xij > 0 ? $sMin / $xij : 0;
+                }
+ 
+                $rij  = max(0, min(1, $rij));
+                $vij  = $wNorm * $rij;
+                $totalVi += $vij;
+ 
+                $details[] = [
+                    'name'  => $ac['name'],
+                    'type'  => $ac['type'],
+                    'xij'   => $xij,
+                    'wj'    => $ac['weight'],
+                    'wNorm' => round($wNorm, 4),
+                    'sMax'  => $sMax,
+                    'sMin'  => $sMin,
+                    'rij'   => round($rij, 4),
+                    'vij'   => round($vij, 4),
+                ];
+            }
+ 
+            // Interpretasi
+            $vi = round($totalVi, 4);
+            if ($vi >= 0.9)      $interpretation = 'Sangat Baik';
+            elseif ($vi >= 0.8)  $interpretation = 'Baik';
+            elseif ($vi >= 0.6)  $interpretation = 'Cukup';
+            elseif ($vi >= 0.4)  $interpretation = 'Kurang';
+            else                  $interpretation = 'Sangat Kurang';
+ 
+            // Ambil data identitas responden
+            $responses = $survey->responses->keyBy('question_id');
+            $nama     = optional($survey->responses->where('question_id', 'nama')->first())->answer ?? 'Responden #' . $survey->id;
+            $email    = optional($survey->responses->where('question_id', 'email')->first())->answer ?? '-';
+            $gender   = optional($survey->responses->where('question_id', 'jenis_kelamin')->first())->answer ?? '-';
+            $umur     = optional($survey->responses->where('question_id', 'umur')->first())->answer ?? '-';
+            $pendidik = optional($survey->responses->where('question_id', 'jenis_pendidikan')->first())->answer ?? '-';
+            $pekerjaan= optional($survey->responses->where('question_id', 'pekerjaan')->first())->answer ?? '-';
+ 
+            $respondentRows[] = [
+                'survey_id'        => $survey->id,
+                'nama'             => $nama,
+                'email'            => $email,
+                'jenis_kelamin'    => $gender,
+                'umur'             => $umur,
+                'jenis_pendidikan' => $pendidik,
+                'pekerjaan'        => $pekerjaan,
+                'details'          => $details,
+                'vi'               => $vi,
+                'interpretation'   => $interpretation,
+            ];
+        }
+ 
+        // Urutkan dari Vi tertinggi
+        usort($respondentRows, fn($a, $b) => $b['vi'] <=> $a['vi']);
+ 
+        // ── 7. Susun data dan generate PDF ────────────────────────────────────
+        $periodLabel = $selectedPeriod
+            ? $selectedPeriod->period_name . ' ' . $selectedPeriod->year
+            : 'Semua Periode';
+ 
+        $data = [
+            'title'          => 'LAPORAN PERHITUNGAN SAW PER RESPONDEN',
+            'periodLabel'    => $periodLabel,
+            'selectedPeriod' => $selectedPeriod,
+            'generatedAt'    => now()->format('d F Y H:i:s'),
+            'criteriaConfig' => $criteriaConfig,
+            'totalCriteria'  => count($criteriaConfig),
+            'respondentRows' => $respondentRows,
+        ];
+ 
+        $pdf = Pdf::loadView('admin.hasil-survey.export-pdf-respondent', $data);
+        $pdf->setPaper('a4', 'landscape');   // landscape karena kolom banyak
+ 
+        $periodSuffix = $selectedPeriod
+            ? '_' . $selectedPeriod->year . '_' . str_replace(' ', '-', $selectedPeriod->period_name)
+            : '';
+        $filename = 'SAW_Per_Responden' . $periodSuffix . '_' . now()->format('Y-m-d_His') . '.pdf';
+ 
         return $pdf->download($filename);
     }
 

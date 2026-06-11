@@ -19,11 +19,11 @@
     <div class="period-filter-container">
         <form action="{{ route('admin.dashboard.new') }}" method="GET" id="periodFilterForm">
             <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
-                <option value="">📅 Semua Periode</option>
+                <option value="">Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}" 
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
-                        {{ $period->period_name }} ({{ $period->year }})
+                        {{ $period->year }}
                         @if($period->is_active) ⭐ @endif
                     </option>
                 @endforeach
@@ -232,8 +232,37 @@
 
     .chart-body {
         position: relative;
-        height: 400px;
+        max-height: 420px;
+        overflow-y: auto;
         padding: 10px 0;
+        /* scrollbar styling */
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .chart-body::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .chart-body::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .chart-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .chart-body::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* wrapper di dalam chart-body yang punya tinggi dinamis */
+    .chart-inner {
+        position: relative;
+        min-height: 300px;
     }
 
     /* =========================================
@@ -485,7 +514,7 @@
         }
 
         .chart-body {
-            height: 350px;
+            max-height: 380px;
         }
     }
 
@@ -519,7 +548,7 @@
         }
 
         .chart-body {
-            height: 300px;
+            max-height: 320px;
         }
 
         .chart-container {
@@ -551,7 +580,7 @@
         {{-- CARD 1: Total Nilai Preferensi --}}
         <div class="stat-card card-nilai">
             <div class="stat-label">
-                <i class="fas fa-chart-line"></i> Total Nilai Preferensi
+                <i class="fas fa-chart-line"></i> Total Nilai Semua Kriteria
             </div>
             <div class="stat-value">
                 {{ number_format($totalNilaiPreferensi, 4) }}
@@ -601,7 +630,9 @@
             </div>
         </div>
         <div class="chart-body">
-            <canvas id="criteriaChart"></canvas>
+            <div class="chart-inner" id="criteriaChartInner">
+                <canvas id="criteriaChart"></canvas>
+            </div>
         </div>
     </div>
     @endif
@@ -632,7 +663,7 @@
                         <th>Periode</th>
                         <th>Kriteria</th>
                         <th>Predikat</th>
-                        <th>Total Nilai Preferensi (Vi)</th>
+                        <th>Total Nilai Semua Kriteria</th>
                         <th>Responden</th>
                     </tr>
                 </thead>
@@ -666,7 +697,7 @@
                             @if($p['jumlah_kriteria'] > 0)
                                 <strong>{{ number_format($p['total_vi'], 4) }}</strong>
                             @else
-                                <span style="color:#94a3b8;">Belum dihitung</span>
+                                <span style="color:#94a3b8;">tidak ada</span>
                             @endif
                         </td>
                         <td>{{ number_format($p['responden']) }}</td>
@@ -690,10 +721,10 @@
         <h3><i class="fas fa-info-circle"></i> Informasi Dashboard</h3>
         <p>
             Dashboard ini menampilkan ringkasan data survey dari periode yang dipilih. 
-            <strong>Total Nilai Preferensi</strong> dihitung menggunakan metode Simple Additive Weighting (SAW), 
+            <strong>Total Nilai Semua Kriteria</strong> dihitung menggunakan metode Simple Additive Weighting (SAW), 
             <strong>Kriteria Aktif</strong> menunjukkan jumlah kriteria yang digunakan dalam perhitungan SAW, 
             dan <strong>Total Responden</strong> adalah jumlah partisipan yang telah mengisi survey pada periode tersebut.
-            Pada tabel perbandingan antar periode, jumlah kriteria dapat berbeda — sehingga nilai Vi antar periode
+            Pada tabel perbandingan antar periode, jumlah kriteria dapat berbeda — sehingga nilai total semua kriteria antar periode
             sebaiknya dibaca bersama konteks jumlah kriterianya.
         </p>
     </div>
@@ -716,6 +747,7 @@
                 'Sangat Baik':      '#3b82f6',
                 'Baik':             '#8b5cf6',
                 'Cukup':            '#f59e0b',
+                'Kurang':            '#f97316',
                 'Perlu Perbaikan':  '#ef4444',
                 'Tidak Ada Data':   '#94a3b8'
             };
@@ -730,8 +762,14 @@
         const criteriaData = @json($criteriaChartData);
 
         const labels = criteriaData.map(item => item.criteria);
-        const values = criteriaData.map(item => item.weighted_score);
+        const values = criteriaData.map(item => item.normalized_score);
         const colors = criteriaData.map(item => getColorByInterpretation(item.interpretation));
+
+        // Tinggi dinamis: 52px per bar + padding
+        const barHeight = 52;
+        const chartHeight = Math.max(300, criteriaData.length * barHeight + 60);
+        const inner = document.getElementById('criteriaChartInner');
+        if (inner) inner.style.height = chartHeight + 'px';
 
         const ctx = document.getElementById('criteriaChart').getContext('2d');
         new Chart(ctx, {
@@ -739,7 +777,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Nilai Terbobot (w×r)',
+                    label: 'Nilai Ternormalisasi (r)',
                     data: values,
                     backgroundColor: colors,
                     borderColor: colors,
@@ -761,7 +799,8 @@
                             label: function(context) {
                                 const item = criteriaData[context.dataIndex];
                                 return [
-                                    'Nilai: ' + item.weighted_score.toFixed(4),
+                                    'Nilai Ternormalisasi: ' + item.normalized_score.toFixed(3),
+                                    'Nilai Terbobot: ' + item.weighted_score.toFixed(4),
                                     'Keterangan: ' + item.interpretation
                                 ];
                             }
@@ -771,7 +810,7 @@
                 scales: {
                     x: {
                         beginAtZero: true,
-                        max: Math.max(...values) * 1.15,
+                        max: 1.0,
                         grid: { color: 'rgba(0,0,0,0.04)' },
                         ticks: {
                             font: { size: 11 },
@@ -801,6 +840,7 @@
                 'Sangat Baik':      '#3b82f6',
                 'Baik':             '#8b5cf6',
                 'Cukup':            '#f59e0b',
+                'Kurang':            '#f97316',
                 'Perlu Perbaikan':  '#ef4444',
             };
             return map[predikat] || '#94a3b8';
@@ -817,7 +857,7 @@
             data: {
                 labels: periodeLabels,
                 datasets: [{
-                    label: 'Total Nilai Preferensi (Vi)',
+                    label: 'Total Nilai',
                     data: periodeValues,
                     borderColor: '#5a9b9e',
                     borderWidth: 2.5,

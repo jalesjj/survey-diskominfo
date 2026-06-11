@@ -459,7 +459,15 @@
                 <h1>Survei Kepuasan Layanan</h1>
                 <h2>Diskominfo Kabupaten Lamongan</h2>
                 <h3>Survey Kepuasan Masyarakat (SKM)</h3>
-                <h4>Tahun {{ date('Y') }}</h4>
+                @php
+                    try {
+                        $activePeriodForTitle = \App\Models\SurveyPeriod::getActivePeriod();
+                        $titleYear = $activePeriodForTitle ? $activePeriodForTitle->year : date('Y');
+                    } catch (\Exception $e) {
+                        $titleYear = date('Y');
+                    }
+                @endphp
+                <h4>Tahun {{ $titleYear }}</h4>
             </div>
         </div>
 

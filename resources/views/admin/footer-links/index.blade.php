@@ -255,13 +255,6 @@
 @endpush
 
 @section('content')
-@if(session('success'))
-    <div class="success-message">
-        <i class="fas fa-check-circle"></i>
-        {{ session('success') }}
-    </div>
-@endif
-
 <div class="page-header">
     <div>
         <h2 style="margin: 0; color: #2c3e50;">Manajemen Footer Links</h2>

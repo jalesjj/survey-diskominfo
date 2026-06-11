@@ -45,16 +45,17 @@ class SAWRespondentService
         }
 
         $criteriaGroups = $sawQuestions->groupBy('criteria_name');
-        $totalVi        = 0;
+
+        // STEP 1: kumpulkan kriteria yang dijawab
+        $answeredCriteria = [];
 
         foreach ($criteriaGroups as $criteriaName => $questions) {
-            $firstQuestion    = $questions->first();
-            $criteriaWeight   = $firstQuestion->criteria_weight ?? 0;
-            $weightNormalized = $criteriaWeight / $totalWeight;
+            $firstQuestion  = $questions->first();
+            $criteriaWeight = $firstQuestion->criteria_weight ?? 0;
 
             $scores = [];
             foreach ($questions as $question) {
-                $response = $surveyResponses->get($question->id);
+                $response = $surveyResponses->get((string) $question->id);
                 if ($response) {
                     $scores[] = (float) $response->answer;
                 }
@@ -64,19 +65,38 @@ class SAWRespondentService
                 continue;
             }
 
-            $avgScore = array_sum($scores) / count($scores);
+            $answeredCriteria[] = [
+                'weight'   => $criteriaWeight,
+                'avgScore' => array_sum($scores) / count($scores),
+                'settings' => $firstQuestion->settings ?? [],
+                'type'     => $firstQuestion->criteria_type ?? 'benefit',
+            ];
+        }
 
-            // Ambil skala dari settings pertanyaan — SAMA dengan per-kriteria
-            $settings = $firstQuestion->settings ?? [];
-            $scaleMax = $settings['scale_max'] ?? 5;
-            $scaleMin = $settings['scale_min'] ?? 1;
+        if (empty($answeredCriteria)) {
+            return ['score' => 0, 'has_saw' => false, 'interpretation' => '-'];
+        }
 
-            $criteriaType = $firstQuestion->criteria_type ?? 'benefit';
+        // STEP 2: totalWeight dari kriteria yang dijawab saja
+        $answeredTotalWeight = array_sum(array_column($answeredCriteria, 'weight'));
 
-            if ($criteriaType === 'benefit') {
-                $normalized = $scaleMax > 0 ? ($avgScore / $scaleMax) : 0;
+        if ($answeredTotalWeight == 0) {
+            return ['score' => 0, 'has_saw' => false, 'interpretation' => '-'];
+        }
+
+        // STEP 3: hitung Vi
+        $totalVi = 0;
+
+        foreach ($answeredCriteria as $criteria) {
+            $weightNormalized = $criteria['weight'] / $answeredTotalWeight;
+
+            $scaleMax = $criteria['settings']['scale_max'] ?? 5;
+            $scaleMin = $criteria['settings']['scale_min'] ?? 1;
+
+            if ($criteria['type'] === 'benefit') {
+                $normalized = $scaleMax > 0 ? ($criteria['avgScore'] / $scaleMax) : 0;
             } else {
-                $normalized = $avgScore > 0 ? ($scaleMin / $avgScore) : 0;
+                $normalized = $criteria['avgScore'] > 0 ? ($scaleMin / $criteria['avgScore']) : 0;
             }
 
             $normalized = max(0, min(1, $normalized));
@@ -96,7 +116,8 @@ class SAWRespondentService
      * @param  \Illuminate\Support\Collection|\Illuminate\Pagination\LengthAwarePaginator  $surveys
      * @return array  keyed by survey->id => ['score', 'has_saw', 'interpretation']
      */
-    public function calculateForSurveys($surveys): array
+
+    public function calculateForSurveys($surveys, ?int $periodId = null): array
     {
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
@@ -122,10 +143,14 @@ class SAWRespondentService
         $criteriaGroups = $sawQuestions->groupBy('criteria_name');
 
         // 1 query untuk semua jawaban SAW semua survey di halaman ini
-        $allResponses = SurveyResponse::whereIn('survey_id', $surveyIds)
-            ->whereIn('question_id', $questionIds)
-            ->get()
-            ->groupBy('survey_id');
+        $allResponsesQuery = SurveyResponse::whereIn('survey_id', $surveyIds)
+            ->whereIn('question_id', $questionIds);
+
+        if ($periodId) {
+            $allResponsesQuery->where('period_id', $periodId);
+        }
+
+        $allResponses = $allResponsesQuery->get()->groupBy('survey_id');
 
         $results = [];
 
@@ -137,37 +162,59 @@ class SAWRespondentService
                 continue;
             }
 
-            $totalVi = 0;
+            // STEP 1: kumpulkan kriteria yang benar-benar dijawab beserta skornya
+            $answeredCriteria = [];
 
             foreach ($criteriaGroups as $criteriaName => $questions) {
-                $firstQuestion    = $questions->first();
-                $criteriaWeight   = $firstQuestion->criteria_weight ?? 0;
-                $weightNormalized = $criteriaWeight / $totalWeight;
+                $firstQuestion  = $questions->first();
+                $criteriaWeight = $firstQuestion->criteria_weight ?? 0;
 
                 $scores = [];
                 foreach ($questions as $question) {
-                    $response = $surveyResponses->get($question->id);
+                    $response = $surveyResponses->get((string) $question->id);
                     if ($response) {
                         $scores[] = (float) $response->answer;
                     }
                 }
 
                 if (empty($scores)) {
-                    continue;
+                    continue; // skip kriteria yang tidak dijawab
                 }
 
-                $avgScore = array_sum($scores) / count($scores);
+                $answeredCriteria[] = [
+                    'weight'    => $criteriaWeight,
+                    'avgScore'  => array_sum($scores) / count($scores),
+                    'settings'  => $firstQuestion->settings ?? [],
+                    'type'      => $firstQuestion->criteria_type ?? 'benefit',
+                ];
+            }
 
-                $settings = $firstQuestion->settings ?? [];
-                $scaleMax = $settings['scale_max'] ?? 5;
-                $scaleMin = $settings['scale_min'] ?? 1;
+            if (empty($answeredCriteria)) {
+                $results[$survey->id] = ['score' => 0, 'has_saw' => false, 'interpretation' => '-'];
+                continue;
+            }
 
-                $criteriaType = $firstQuestion->criteria_type ?? 'benefit';
+            // STEP 2: totalWeight hanya dari kriteria yang dijawab
+            $answeredTotalWeight = array_sum(array_column($answeredCriteria, 'weight'));
 
-                if ($criteriaType === 'benefit') {
-                    $normalized = $scaleMax > 0 ? ($avgScore / $scaleMax) : 0;
+            if ($answeredTotalWeight == 0) {
+                $results[$survey->id] = ['score' => 0, 'has_saw' => false, 'interpretation' => '-'];
+                continue;
+            }
+
+            // STEP 3: hitung Vi dengan bobot ternormalisasi dari kriteria yang dijawab
+            $totalVi = 0;
+
+            foreach ($answeredCriteria as $criteria) {
+                $weightNormalized = $criteria['weight'] / $answeredTotalWeight;
+
+                $scaleMax = $criteria['settings']['scale_max'] ?? 5;
+                $scaleMin = $criteria['settings']['scale_min'] ?? 1;
+
+                if ($criteria['type'] === 'benefit') {
+                    $normalized = $scaleMax > 0 ? ($criteria['avgScore'] / $scaleMax) : 0;
                 } else {
-                    $normalized = $avgScore > 0 ? ($scaleMin / $avgScore) : 0;
+                    $normalized = $criteria['avgScore'] > 0 ? ($scaleMin / $criteria['avgScore']) : 0;
                 }
 
                 $normalized = max(0, min(1, $normalized));

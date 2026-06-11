@@ -80,12 +80,6 @@
         color: #666;
     }
 
-    .form-row {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 15px;
-    }
-
     .form-group {
         margin-bottom: 20px;
     }
@@ -162,7 +156,6 @@
     }
 
     @media(max-width:768px){
-        .form-row,
         .info-grid{
             grid-template-columns:1fr;
         }
@@ -238,27 +231,7 @@
                 Informasi Periode:
             </h4>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="period_name" class="form-label">
-                        Nama Periode<span class="required">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="period_name" 
-                        name="period_name" 
-                        class="form-input" 
-                        value="{{ old('period_name') }}" 
-                        required
-                        maxlength="255"
-                        placeholder="Contoh: Semester 1 Tahun 2025"
-                    >
-                    <div class="form-help">
-                        Nama untuk mengidentifikasi periode pengumpulan data
-                    </div>
-                </div>
-
-                <div class="form-group">
+            .<div class="form-group">
                     <label for="year" class="form-label">
                         Tahun<span class="required">*</span>
                     </label>
@@ -274,10 +247,9 @@
                         placeholder="{{ date('Y') }}"
                     >
                     <div class="form-help">
-                        Tahun periode
+                        Tahun periode survei
                     </div>
-                </div>
-            </div>
+                .</div>
 
             <div class="form-group">
                 <label for="description" class="form-label">
@@ -323,10 +295,9 @@
 
     // Konfirmasi sebelum submit
     document.getElementById('lockForm').addEventListener('submit', function(e) {
-        const periodName = document.getElementById('period_name').value;
         const year = document.getElementById('year').value;
         
-        if (!confirm(`KONFIRMASI KUNCI SISTEM\n\nAnda akan mengunci sistem untuk periode:\n"${periodName}" - Tahun ${year}\n\nSetelah dikunci, pertanyaan tidak dapat diubah.\nLanjutkan?`)) {
+        if (!confirm(`KONFIRMASI KUNCI SISTEM\n\nAnda akan mengunci sistem untuk:\nPeriode Tahun ${year}\n\nSetelah dikunci, pertanyaan tidak dapat diubah.\nLanjutkan?`)) {
             e.preventDefault();
         }
     });

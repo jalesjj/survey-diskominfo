@@ -14,11 +14,11 @@
         <form action="{{ route('admin.jawaban') }}" method="GET" id="periodFilterForm">
             <input type="hidden" name="tab" value="individual">
             <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
-                <option value="">📅 Semua Periode</option>
+                <option value="">Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}" 
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
-                        {{ $period->period_name }} ({{ $period->year }})
+                        {{ $period->year }}
                         @if($period->is_active) ⭐ @endif
                     </option>
                 @endforeach
@@ -645,20 +645,7 @@
     .saw-badge.kurang       { background: #ffedd5; color: #9a3412; }
     .saw-badge.sangat-kurang{ background: #fee2e2; color: #991b1b; }
     .saw-badge.no-saw       { background: #f1f5f9; color: #94a3b8; }
-    
-    /* Tambahkan di dalam blok <style> yang sudah ada */
-.respondent-table-scroll {
-    max-height: 305px;  /* tinggi sekitar 5 baris (1 baris ~56px + header ~49px) */
-    overflow-y: auto;
-}
-
-/* Supaya header tetap terlihat saat scroll */
-.respondent-saw-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #f8f9fa;
-}
+    --}}
 </style>
 @endpush
 
@@ -691,11 +678,8 @@
         <a href="{{ route('admin.questions.index') }}" class="btn btn-primary">
             <i class="fas fa-cogs"></i> Kelola Pertanyaan
         </a>
-        <a href="{{ route('admin.export') }}" class="btn btn-success">
+        <a href="{{ route('admin.export', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}" class="btn btn-success">
             <i class="fas fa-download"></i> Export Excel
-        </a>
-        <a href="{{ route('admin.hasil-survey.export-pdf') }}" class="btn btn-danger">
-            <i class="fas fa-file-pdf"></i> Export PDF
         </a>
     </div>
 
@@ -805,16 +789,6 @@
                     <div class="summary-item">
                         <div class="summary-value">{{ $survey->responses->whereNotNull('answer')->where('answer', '!=', '')->count() }}</div>
                         <div class="summary-title">Jawaban Terisi</div>
-                    </div>
-                    <div class="summary-item">
-                        @php
-                            // ✅ FIX: Hitung kelengkapan berdasarkan total jawaban survey ini
-                            $totalJawaban = $survey->responses->count();
-                            $jawabanTerisi = $survey->responses->whereNotNull('answer')->where('answer', '!=', '')->count();
-                            $kelengkapan = $totalJawaban > 0 ? ($jawabanTerisi / $totalJawaban) * 100 : 0;
-                        @endphp
-                        <div class="summary-value">{{ number_format($kelengkapan, 1) }}%</div>
-                        <div class="summary-title">Kelengkapan</div>
                     </div>
                 </div>
 
