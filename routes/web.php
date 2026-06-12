@@ -12,6 +12,7 @@ use App\Http\Controllers\FooterLinkController;
 use App\Http\Controllers\ContactInfoController;
 use App\Http\Controllers\SurveyPeriodController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExportLaporanController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -66,7 +67,9 @@ Route::prefix('admin/questions')->name('admin.questions.')->group(function () {
 // HASIL SURVEY ROUTES
 Route::get('/admin/hasil-survey', [SurveyResultController::class, 'dashboard'])->name('admin.hasil-survey');
 Route::get('/admin/hasil-survey/export-pdf', [SurveyResultController::class, 'exportPDF'])->name('admin.hasil-survey.export-pdf');
-
+Route::get('/admin/hasil-survey/export-laporan', [ExportLaporanController::class, 'exportLaporan'])->name('admin.hasil-survey.export-laporan');
+Route::get('/admin/hasil-survey/export-laporan-excel', [ExportLaporanController::class, 'exportLaporanExcel'])->name('admin.hasil-survey.export-laporan-excel');
+Route::get('/admin/hasil-survey/export-pdf-saw-respondent', [SurveyResultController::class, 'exportPDFSAWRespondent'])->name('admin.hasil-survey.export-pdf-saw-respondent');
 
 // Admin User Management Routes
 Route::prefix('admin/users')->name('admin.users.')->group(function () {

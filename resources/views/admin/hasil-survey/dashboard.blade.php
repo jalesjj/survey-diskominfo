@@ -667,7 +667,31 @@
 @endpush
 
 @section('content')
-<div class="page-container">
+    <div class="page-container">
+ 
+        {{-- TOMBOL EXPORT LAPORAN KOMINFO --}}
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:16px;">
+            <a href="{{ route('admin.hasil-survey.export-laporan-excel', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}"
+               style="display:inline-flex; align-items:center; gap:7px; padding:8px 16px;
+                      background:#217346; color:white; border-radius:7px;
+                      text-decoration:none; font-size:13px; font-weight:600;
+                      transition:background 0.2s;"
+               onmouseover="this.style.background='#1a5c38'"
+               onmouseout="this.style.background='#217346'"
+               title="Export Laporan Excel untuk Kominfo">
+                <i class="fas fa-file-excel"></i> Export Bahan Laporan Kominfo
+            </a>
+            {{-- <a href="{{ route('admin.hasil-survey.export-laporan', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}"
+               style="display:inline-flex; align-items:center; gap:7px; padding:8px 16px;
+                      background:#e74c3c; color:white; border-radius:7px;
+                      text-decoration:none; font-size:13px; font-weight:600;
+                      transition:background 0.2s;"
+               onmouseover="this.style.background='#c0392b'"
+               onmouseout="this.style.background='#e74c3c'"
+               title="Export Laporan PDF untuk Kominfo">
+                <i class="fas fa-file-pdf"></i> Export Laporan Kominfo
+            </a> --}}
+        </div>
     {{-- INFO BAR PERIODE - SATU BARIS (info di kiri, dropdown di kanan) --}}
     @if(isset($allPeriods) && $allPeriods->count() > 0)
     <div style="background: white; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -741,13 +765,22 @@
         <div class="table-container">
             <div class="table-title" style="display:flex; align-items:center; justify-content:space-between;">
                 <h2>Hasil Perhitungan SAW</h2>
-                <a href="{{ route('admin.hasil-survey.export-pdf', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}"
-                style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:#e74c3c; color:white; border-radius:6px; text-decoration:none; transition:background 0.2s;"
-                onmouseover="this.style.background='#c0392b'"
-                onmouseout="this.style.background='#e74c3c'"
-                title="Export PDF">
-                    <i class="fas fa-file-pdf"></i>
-                </a>
+                <div style="display:inline-flex; align-items:center; gap:8px;">
+                    <button onclick="downloadCriteriaChartSAW()"
+                        style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:#2563EB; color:white; border:none; border-radius:6px; cursor:pointer; transition:background 0.2s;"
+                        onmouseover="this.style.background='#1d4ed8'"
+                        onmouseout="this.style.background='#2563EB'"
+                        title="Unduh Chart PNG">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    {{-- <a href="{{ route('admin.hasil-survey.export-pdf', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}"
+                    style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:#e74c3c; color:white; border-radius:6px; text-decoration:none; transition:background 0.2s;"
+                    onmouseover="this.style.background='#c0392b'"
+                    onmouseout="this.style.background='#e74c3c'"
+                    title="Export PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </a> --}}
+                </div>
             </div>
 
             <table class="simple-table">
@@ -834,21 +867,29 @@
         @if($respondentList->count() > 0)
         <div class="respondent-table-container">
             <div class="table-title">
-                <div>
-                    <h2><i class="fas fa-users" style="color:#5a9b9e; margin-right:8px;"></i>Hasil SAW Per Responden</h2>
-                    
-                    <p id="respondent-sort-label">Diurutkan dari nilai preferensi tertinggi · {{ $respondentList->count() }} responden</p>
-                </div>
-                
-                <div>
-                    
-                    <select class="sort-select" id="respondent-sort" onchange="sortRespondentTable(this.value)">
-                        <option value="terbaik">Terbaik</option>
-                        <option value="terjelek">Terjelek</option>
-                        <option value="terbaru">Terbaru</option>
-                    </select>
-                </div>
-            </div>
+    <div>
+        <h2><i class="fas fa-users" style="color:#5a9b9e; margin-right:8px;"></i>Hasil SAW Per Responden</h2>
+        <p id="respondent-sort-label">Diurutkan dari nilai preferensi tertinggi · {{ $respondentList->count() }} responden</p>
+    </div>
+ 
+    <div style="display:inline-flex; align-items:center; gap:8px;">
+ 
+        {{-- TOMBOL BARU: Export PDF SAW Per Responden --}}
+        <a href="{{ route('admin.hasil-survey.export-pdf-saw-respondent', isset($selectedPeriod) && $selectedPeriod ? ['period_id' => $selectedPeriod->id] : []) }}"
+           style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:#dc2626; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; text-decoration:none; transition:background 0.2s;"
+           onmouseover="this.style.background='#b91c1c'"
+           onmouseout="this.style.background='#dc2626'"
+           title="Export PDF SAW Per Responden">
+            <i class="fas fa-file-pdf"></i> PDF
+        </a>
+ 
+        <select class="sort-select" id="respondent-sort" onchange="sortRespondentTable(this.value)">
+            <option value="terbaik">Terbaik</option>
+            <option value="terjelek">Terjelek</option>
+            <option value="terbaru">Terbaru</option>
+        </select>
+    </div>
+</div>
  
             <div class="respondent-table-scroll">
                 <table class="respondent-saw-table">
@@ -1161,23 +1202,133 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Dashboard SAW loaded');
     });
-
+ 
+    // ============================================================
+    // DOWNLOAD CHART KRITERIA SEBAGAI PNG
+    // ============================================================
+    function downloadCriteriaChartSAW() {
+        @if(isset($criteriaResults) && $criteriaResults->count() > 0)
+ 
+        const rawData = @json($criteriaResults->map(fn($r) => [
+            'criteria' => $r['criteria'],
+            'normalized' => $r['normalized'],
+        ])->values());
+ 
+        // Urutkan terbesar ke terkecil
+        const data = [...rawData].sort((a, b) => b.normalized - a.normalized);
+        const values = data.map(d => d.normalized);
+ 
+        // Sumbu X: mulai dari min, akhir di max, step 0.1
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const axisMin = Math.floor(minVal * 10) / 10;
+        const axisMax = Math.min(1.0, Math.ceil(maxVal * 10) / 10);
+ 
+        // Judul: cukup pakai year saja agar tidak double
+        const periodeLabel = '{{ isset($selectedPeriod) && $selectedPeriod ? $selectedPeriod->year : "Semua Periode" }}';
+        const periodeName  = '{{ isset($selectedPeriod) && $selectedPeriod ? $selectedPeriod->period_name : "" }}';
+ 
+        const w = 720;
+        const h = Math.max(260, data.length * 32 + 120);
+ 
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width  = w;
+        offCanvas.height = h;
+        offCanvas.style.display = 'none';
+        document.body.appendChild(offCanvas);
+ 
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.fillStyle = '#ffffff';
+        offCtx.fillRect(0, 0, w, h);
+ 
+        const chart = new Chart(offCtx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.criteria),
+                datasets: [{
+                    data: values,
+                    backgroundColor: '#2563EB',
+                    borderColor: '#2563EB',
+                    borderWidth: 0,
+                    borderRadius: 2,
+                    barThickness: 14,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                animation: false,
+                responsive: false,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Grafik Nilai Per Kriteria — ' + periodeLabel,
+                        font: { size: 13, weight: 'bold' },
+                        color: '#1e293b',
+                        padding: { top: 10, bottom: 14 }
+                    }
+                },
+                scales: {
+                    x: {
+                        min: axisMin,
+                        max: axisMax,
+                        position: 'bottom',
+                        grid: { color: 'rgba(0,0,0,0.07)' },
+                        ticks: {
+                            font: { size: 12 },
+                            color: '#444',
+                            padding: 6,
+                            stepSize: 0.1,
+                            callback: function(v) {
+                                // Hanya tampilkan angka yang merupakan kelipatan 0.1 persis
+                                const rounded = Math.round(v * 10) / 10;
+                                if (Math.abs(v - rounded) < 0.001) {
+                                    return rounded.toFixed(1);
+                                }
+                                return null;
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 }, color: '#334155', padding: 8 }
+                    }
+                },
+                layout: { padding: { top: 0, right: 50, bottom: 20, left: 10 } }
+            }
+        });
+ 
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.download = 'grafik_kriteria_' + periodeLabel + '.png';
+            link.href = offCanvas.toDataURL('image/png');
+            link.click();
+ 
+            chart.destroy();
+            document.body.removeChild(offCanvas);
+        }, 400);
+ 
+        @else
+        alert('Data kriteria belum tersedia untuk periode ini.');
+        @endif
+    }
     // Generate functions for each modal
     @foreach($criteriaResults as $index => $result)
     function showDetail{{ $index }}() {
         document.getElementById('modal{{ $index }}').classList.add('active');
         document.body.style.overflow = 'hidden';
     }
-
+ 
     function closeModal{{ $index }}() {
         document.getElementById('modal{{ $index }}').classList.remove('active');
         document.body.style.overflow = 'auto';
     }
-
+ 
     // Close modal when clicking outside
     document.getElementById('modal{{ $index }}').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -1185,7 +1336,7 @@
         }
     });
     @endforeach
-
+ 
     // Close modal on ESC key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
@@ -1203,7 +1354,7 @@
             @endif
         }
     });
-
+ 
     // Modal per responden
     @if(isset($respondentList))
     @foreach($respondentList as $i => $resp)
@@ -1220,29 +1371,27 @@
     });
     @endforeach
     @endif
-
+ 
     // ============================================================
     // SORT TABEL RESPONDEN
     // ============================================================
     function sortRespondentTable(mode) {
         const tbody = document.getElementById('respondent-tbody');
         if (!tbody) return;
-
+ 
         const rows = Array.from(tbody.querySelectorAll('tr'));
         const label = document.getElementById('respondent-sort-label');
-
+ 
         rows.sort(function(a, b) {
             if (mode === 'terbaik') {
                 return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
             } else if (mode === 'terjelek') {
                 return parseFloat(a.dataset.score) - parseFloat(b.dataset.score);
             } else {
-                // terbaru: survey_id lebih besar = lebih baru
                 return parseInt(b.dataset.id) - parseInt(a.dataset.id);
             }
         });
-
-        // Update label subtitle
+ 
         const count = rows.length;
         if (mode === 'terbaik') {
             label.textContent = 'Diurutkan dari nilai preferensi tertinggi · ' + count + ' responden';
@@ -1251,8 +1400,7 @@
         } else {
             label.textContent = 'Diurutkan dari responden terbaru · ' + count + ' responden';
         }
-
-        // Re-render rows + update nomor urut
+ 
         rows.forEach(function(row, i) {
             const rankBadge = row.querySelector('.rank-badge');
             if (rankBadge) {

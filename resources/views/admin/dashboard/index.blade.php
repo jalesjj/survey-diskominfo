@@ -1,17 +1,17 @@
 {{-- resources/views/admin/dashboard/index.blade.php --}}
 @extends('layouts.admin')
-
+ 
 @section('title', 'Dashboard - Admin Survei')
 @section('active-dashboard', 'active')
 @section('page-title', 'Dashboard')
 @section('page-subtitle', 'Ringkasan Data Survey Periode Aktif')
-
+ 
 @section('breadcrumb')
 <div class="breadcrumb">
     <span>Dashboard</span>
 </div>
 @endsection
-
+ 
 @section('header-actions')
 <div class="header-actions">
     {{-- DROPDOWN FILTER PERIODE --}}
@@ -19,7 +19,7 @@
     <div class="period-filter-container">
         <form action="{{ route('admin.dashboard.new') }}" method="GET" id="periodFilterForm">
             <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
-                <option value="">Periode</option>
+                <option value="">📅 Semua Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}" 
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
@@ -35,7 +35,7 @@
     <span class="admin-welcome">Selamat datang, {{ session('admin_name') }}</span>
 </div>
 @endsection
-
+ 
 @push('styles')
 <style>
     /* Header Actions */
@@ -45,11 +45,11 @@
         gap: 20px;
         margin-bottom: 20px;
     }
-
+ 
     .period-filter-container {
         margin-right: auto;
     }
-
+ 
     .period-select {
         padding: 8px 35px 8px 15px;
         border: 2px solid #5a9b9e;
@@ -66,31 +66,31 @@
         background-position: right 12px center;
         min-width: 250px;
     }
-
+ 
     .period-select:hover {
         border-color: #4a8b8e;
         box-shadow: 0 2px 8px rgba(90, 155, 158, 0.2);
     }
-
+ 
     .period-select:focus {
         outline: none;
         border-color: #5a9b9e;
         box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
     }
-
+ 
     .admin-welcome {
         white-space: nowrap;
         font-size: 14px;
         color: #64748b;
     }
-
+ 
     /* Dashboard Container */
     .dashboard-container {
         max-width: 1400px;
         margin: 0 auto;
         padding: 20px;
     }
-
+ 
     /* Stats Cards Grid - 3 Kolom */
     .dashboard-stats {
         display: grid;
@@ -98,7 +98,7 @@
         gap: 20px;
         margin-bottom: 30px;
     }
-
+ 
     /* Card Styling */
     .stat-card {
         background: white;
@@ -108,27 +108,16 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         border-left: 4px solid;
     }
-
+ 
     .stat-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     }
-
-    /* Card 1 - Total Nilai Preferensi */
-    .stat-card.card-nilai {
-        border-left-color: #5a9b9e;
-    }
-
-    /* Card 2 - Kriteria Aktif */
-    .stat-card.card-kriteria {
-        border-left-color: #3498db;
-    }
-
-    /* Card 3 - Total Responden */
-    .stat-card.card-responden {
-        border-left-color: #2ecc71;
-    }
-
+ 
+    .stat-card.card-nilai    { border-left-color: #5a9b9e; }
+    .stat-card.card-kriteria { border-left-color: #3498db; }
+    .stat-card.card-responden{ border-left-color: #2ecc71; }
+ 
     .stat-label {
         font-size: 13px;
         font-weight: 600;
@@ -137,7 +126,7 @@
         color: #64748b;
         margin-bottom: 12px;
     }
-
+ 
     .stat-value {
         font-size: 42px;
         font-weight: 700;
@@ -145,13 +134,13 @@
         margin-bottom: 8px;
         font-family: 'Segoe UI', system-ui, sans-serif;
     }
-
+ 
     .stat-description {
         font-size: 14px;
         color: #94a3b8;
         margin-top: 8px;
     }
-
+ 
     /* Badge Keterangan */
     .badge-keterangan {
         display: inline-block;
@@ -161,37 +150,14 @@
         font-weight: 600;
         margin-top: 10px;
     }
-
-    .badge-excellent {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-    }
-
-    .badge-sangat-baik {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-    }
-
-    .badge-baik {
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        color: white;
-    }
-
-    .badge-cukup {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        color: white;
-    }
-
-    .badge-perlu-perbaikan {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        color: white;
-    }
-
-    .badge-tidak-ada-data {
-        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-        color: white;
-    }
-
+ 
+    .badge-excellent        { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+    .badge-sangat-baik      { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+    .badge-baik             { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
+    .badge-cukup            { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+    .badge-perlu-perbaikan  { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+    .badge-tidak-ada-data   { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); color: white; }
+ 
     /* Chart Container */
     .chart-container {
         background: white;
@@ -200,7 +166,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         margin-bottom: 30px;
     }
-
+ 
     .chart-header {
         margin-bottom: 20px;
         padding-bottom: 15px;
@@ -211,63 +177,45 @@
         flex-wrap: wrap;
         gap: 10px;
     }
-
+ 
     .chart-header-left h3 {
         font-size: 18px;
         font-weight: 600;
         color: #2c3e50;
         margin-bottom: 6px;
     }
-
+ 
     .chart-header-left h3 i {
         color: #5a9b9e;
         margin-right: 8px;
     }
-
+ 
     .chart-header-left p {
         font-size: 13px;
         color: #64748b;
         margin: 0;
     }
-
+ 
     .chart-body {
         position: relative;
         max-height: 420px;
         overflow-y: auto;
         padding: 10px 0;
-        /* scrollbar styling */
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 #f1f5f9;
     }
-
-    .chart-body::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .chart-body::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 3px;
-    }
-
-    .chart-body::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-    }
-
-    .chart-body::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-
-    /* wrapper di dalam chart-body yang punya tinggi dinamis */
+ 
+    .chart-body::-webkit-scrollbar { width: 6px; height: 6px; }
+    .chart-body::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+    .chart-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .chart-body::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+ 
     .chart-inner {
         position: relative;
         min-height: 300px;
     }
-
-    /* =========================================
-       BARIS KE-3: PERBANDINGAN ANTAR PERIODE
-    ========================================= */
+ 
+    /* Perbandingan Antar Periode */
     .comparison-container {
         background: white;
         border-radius: 12px;
@@ -275,7 +223,7 @@
         margin-bottom: 30px;
         overflow: hidden;
     }
-
+ 
     .comparison-header {
         padding: 20px 25px 15px;
         border-bottom: 2px solid #f1f5f9;
@@ -285,32 +233,31 @@
         flex-wrap: wrap;
         gap: 12px;
     }
-
+ 
     .comparison-header-left h3 {
         font-size: 18px;
         font-weight: 600;
         color: #2c3e50;
         margin-bottom: 4px;
     }
-
+ 
     .comparison-header-left h3 i {
         color: #5a9b9e;
         margin-right: 8px;
     }
-
+ 
     .comparison-header-left p {
         font-size: 13px;
         color: #64748b;
         margin: 0;
     }
-
-    /* Toggle tombol Tabel / Grafik */
+ 
     .view-toggle {
         display: flex;
         gap: 8px;
         align-items: center;
     }
-
+ 
     .toggle-btn {
         padding: 7px 16px;
         border-radius: 8px;
@@ -325,52 +272,29 @@
         align-items: center;
         gap: 6px;
     }
-
-    .toggle-btn:hover {
-        border-color: #5a9b9e;
-        color: #5a9b9e;
-    }
-
-    .toggle-btn.active {
-        background: #5a9b9e;
-        border-color: #5a9b9e;
-        color: white;
-    }
-
-    /* Tabel scrollable */
+ 
+    .toggle-btn:hover { border-color: #5a9b9e; color: #5a9b9e; }
+    .toggle-btn.active { background: #5a9b9e; border-color: #5a9b9e; color: white; }
+ 
     .comparison-table-wrapper {
         max-height: 320px;
         overflow-y: auto;
         overflow-x: auto;
         padding: 0 25px 20px;
     }
-
-    .comparison-table-wrapper::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .comparison-table-wrapper::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 4px;
-    }
-
-    .comparison-table-wrapper::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-    }
-
-    .comparison-table-wrapper::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-
+ 
+    .comparison-table-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+    .comparison-table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .comparison-table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .comparison-table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+ 
     .comparison-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
         margin-top: 15px;
     }
-
+ 
     .comparison-table thead th {
         position: sticky;
         top: 0;
@@ -386,19 +310,11 @@
         white-space: nowrap;
         z-index: 1;
     }
-
-    .comparison-table tbody tr {
-        transition: background 0.15s ease;
-    }
-
-    .comparison-table tbody tr:hover {
-        background: #f8fafc;
-    }
-
-    .comparison-table tbody tr.active-period {
-        background: #f0fdf4;
-    }
-
+ 
+    .comparison-table tbody tr { transition: background 0.15s ease; }
+    .comparison-table tbody tr:hover { background: #f8fafc; }
+    .comparison-table tbody tr.active-period { background: #f0fdf4; }
+ 
     .comparison-table tbody td {
         padding: 12px 16px;
         border-bottom: 1px solid #f1f5f9;
@@ -406,7 +322,7 @@
         vertical-align: middle;
         white-space: nowrap;
     }
-
+ 
     .period-badge {
         display: inline-flex;
         align-items: center;
@@ -414,7 +330,7 @@
         font-weight: 600;
         color: #1e293b;
     }
-
+ 
     .active-dot {
         width: 8px;
         height: 8px;
@@ -423,8 +339,7 @@
         display: inline-block;
         flex-shrink: 0;
     }
-
-    /* Badge predikat di tabel */
+ 
     .predikat-badge {
         display: inline-block;
         padding: 4px 12px;
@@ -432,25 +347,24 @@
         font-size: 12px;
         font-weight: 600;
     }
-
+ 
     .predikat-excellent       { background: #d1fae5; color: #065f46; }
     .predikat-sangat-baik     { background: #dbeafe; color: #1e40af; }
     .predikat-baik            { background: #ede9fe; color: #5b21b6; }
     .predikat-cukup           { background: #fef3c7; color: #92400e; }
     .predikat-perlu-perbaikan { background: #fee2e2; color: #991b1b; }
     .predikat-belum-ada-data  { background: #f1f5f9; color: #64748b; }
-
-    /* Grafik roller coaster */
+ 
     .comparison-chart-wrapper {
         padding: 15px 25px 20px;
-        display: none; /* hidden by default, shown via JS */
+        display: none;
     }
-
+ 
     .comparison-chart-body {
         position: relative;
         height: 300px;
     }
-
+ 
     /* Info Box */
     .info-box {
         background: white;
@@ -459,21 +373,10 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         margin-bottom: 30px;
     }
-
-    .info-box h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 15px;
-    }
-
-    .info-box p {
-        font-size: 14px;
-        color: #64748b;
-        line-height: 1.6;
-        margin: 0;
-    }
-
+ 
+    .info-box h3 { font-size: 18px; font-weight: 600; color: #2c3e50; margin-bottom: 15px; }
+    .info-box p  { font-size: 14px; color: #64748b; line-height: 1.6; margin: 0; }
+ 
     /* Periode Info */
     .periode-info {
         background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -485,81 +388,52 @@
         align-items: center;
         gap: 12px;
     }
+ 
+    .periode-info i { font-size: 24px; color: #0284c7; }
+    .periode-info-text { flex: 1; }
+    .periode-info-text strong { font-size: 16px; color: #0c4a6e; display: block; margin-bottom: 4px; }
+    .periode-info-text span   { font-size: 13px; color: #0369a1; }
 
-    .periode-info i {
-        font-size: 24px;
-        color: #0284c7;
-    }
-
-    .periode-info-text {
-        flex: 1;
-    }
-
-    .periode-info-text strong {
-        font-size: 16px;
-        color: #0c4a6e;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    .periode-info-text span {
+    /* Tombol unduh PNG */
+    .btn-unduh-png {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: #2563EB;
+        color: white;
+        border: none;
+        border-radius: 7px;
         font-size: 13px;
-        color: #0369a1;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
     }
-
+    .btn-unduh-png:hover { background: #1d4ed8; }
+ 
     /* Responsive */
     @media (max-width: 992px) {
-        .dashboard-stats {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .chart-body {
-            max-height: 380px;
-        }
+        .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
+        .chart-body { max-height: 380px; }
     }
-
+ 
     @media (max-width: 768px) {
-        .header-actions {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .period-filter-container {
-            width: 100%;
-            margin-right: 0;
-        }
-
-        .period-select {
-            width: 100%;
-            min-width: auto;
-        }
-
-        .dashboard-stats {
-            grid-template-columns: 1fr;
-        }
-
-        .stat-value {
-            font-size: 36px;
-        }
-
-        .dashboard-container {
-            padding: 15px;
-        }
-
-        .chart-body {
-            max-height: 320px;
-        }
-
-        .chart-container {
-            padding: 20px 15px;
-        }
+        .header-actions { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .period-filter-container { width: 100%; margin-right: 0; }
+        .period-select { width: 100%; min-width: auto; }
+        .dashboard-stats { grid-template-columns: 1fr; }
+        .stat-value { font-size: 36px; }
+        .dashboard-container { padding: 15px; }
+        .chart-body { max-height: 320px; }
+        .chart-container { padding: 20px 15px; }
     }
 </style>
 @endpush
-
+ 
 @section('content')
 <div class="dashboard-container">
+
     {{-- INFO PERIODE AKTIF --}}
     @if(isset($selectedPeriod) && $selectedPeriod)
     <div class="periode-info">
@@ -574,17 +448,12 @@
         </div>
     </div>
     @endif
-
+ 
     {{-- 3 CARD STATISTIK UTAMA --}}
     <div class="dashboard-stats">
-        {{-- CARD 1: Total Nilai Preferensi --}}
         <div class="stat-card card-nilai">
-            <div class="stat-label">
-                <i class="fas fa-chart-line"></i> Total Nilai Semua Kriteria
-            </div>
-            <div class="stat-value">
-                {{ number_format($totalNilaiPreferensi, 4) }}
-            </div>
+            <div class="stat-label"><i class="fas fa-chart-line"></i> Total Nilai Semua Kriteria</div>
+            <div class="stat-value">{{ number_format($totalNilaiPreferensi, 4) }}</div>
             <div class="badge-keterangan badge-{{ strtolower(str_replace(' ', '-', $keteranganNilai)) }}">
                 {{ $keteranganNilai }}
             </div>
@@ -592,34 +461,20 @@
                 Dari periode {{ $selectedPeriod ? $selectedPeriod->period_name : 'Semua Periode' }}
             </div>
         </div>
-
-        {{-- CARD 2: Jumlah Kriteria Aktif --}}
+ 
         <div class="stat-card card-kriteria">
-            <div class="stat-label">
-                <i class="fas fa-list-check"></i> Kriteria Aktif
-            </div>
-            <div class="stat-value">
-                {{ $jumlahKriteriaAktif }}
-            </div>
-            <div class="stat-description">
-                Kriteria dengan SAW aktif
-            </div>
+            <div class="stat-label"><i class="fas fa-list-check"></i> Kriteria Aktif</div>
+            <div class="stat-value">{{ $jumlahKriteriaAktif }}</div>
+            <div class="stat-description">Kriteria dengan SAW aktif</div>
         </div>
-
-        {{-- CARD 3: Total Responden --}}
+ 
         <div class="stat-card card-responden">
-            <div class="stat-label">
-                <i class="fas fa-users"></i> Total Responden
-            </div>
-            <div class="stat-value">
-                {{ number_format($totalResponden) }}
-            </div>
-            <div class="stat-description">
-                Responden periode ini
-            </div>
+            <div class="stat-label"><i class="fas fa-users"></i> Total Responden</div>
+            <div class="stat-value">{{ number_format($totalResponden) }}</div>
+            <div class="stat-description">Responden periode ini</div>
         </div>
     </div>
-
+ 
     {{-- GRAFIK BAR CHART PER KRITERIA --}}
     @if($jumlahKriteriaAktif > 0)
     <div class="chart-container">
@@ -628,6 +483,10 @@
                 <h3><i class="fas fa-chart-bar"></i> Grafik Nilai per Kriteria</h3>
                 <p>Diurutkan dari nilai tertinggi (terbaik) hingga terendah (terburuk)</p>
             </div>
+            {{-- TOMBOL UNDUH PNG - chart baru khusus download (biru, tipis, urut terbesar) --}}
+            <button class="btn-unduh-png" onclick="downloadCriteriaChart()">
+                <i class="fas fa-download"></i> Unduh PNG
+            </button>
         </div>
         <div class="chart-body">
             <div class="chart-inner" id="criteriaChartInner">
@@ -636,7 +495,7 @@
         </div>
     </div>
     @endif
-
+ 
     {{-- BARIS KE-3: PERBANDINGAN ANTAR PERIODE --}}
     @if(isset($periodeComparison) && $periodeComparison->count() > 0)
     <div class="comparison-container">
@@ -645,16 +504,22 @@
                 <h3><i class="fas fa-exchange-alt"></i> Perbandingan Antar Periode</h3>
                 <p>Ringkasan nilai SAW seluruh periode survey · Jumlah kriteria bisa berbeda tiap periode</p>
             </div>
-            <div class="view-toggle">
-                <button class="toggle-btn active" id="btnTable" onclick="showView('table')">
-                    <i class="fas fa-table"></i> Tabel
+            <div style="display:flex; align-items:center; gap:10px;">
+                {{-- TOMBOL UNDUH PNG - chart SKM historis biru, max 8 periode --}}
+                <button class="btn-unduh-png" onclick="downloadSKMChart()">
+                    <i class="fas fa-download"></i> Unduh PNG
                 </button>
-                <button class="toggle-btn" id="btnChart" onclick="showView('chart')">
-                    <i class="fas fa-chart-line"></i> Grafik
-                </button>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" id="btnTable" onclick="showView('table')">
+                        <i class="fas fa-table"></i> Tabel
+                    </button>
+                    <button class="toggle-btn" id="btnChart" onclick="showView('chart')">
+                        <i class="fas fa-chart-line"></i> Grafik
+                    </button>
+                </div>
             </div>
         </div>
-
+ 
         {{-- TABEL --}}
         <div id="viewTable" class="comparison-table-wrapper">
             <table class="comparison-table">
@@ -686,12 +551,8 @@
                             @endif
                         </td>
                         <td>
-                            @php
-                                $slug = strtolower(str_replace(' ', '-', $p['predikat']));
-                            @endphp
-                            <span class="predikat-badge predikat-{{ $slug }}">
-                                {{ $p['predikat'] }}
-                            </span>
+                            @php $slug = strtolower(str_replace(' ', '-', $p['predikat'])); @endphp
+                            <span class="predikat-badge predikat-{{ $slug }}">{{ $p['predikat'] }}</span>
                         </td>
                         <td>
                             @if($p['jumlah_kriteria'] > 0)
@@ -706,8 +567,8 @@
                 </tbody>
             </table>
         </div>
-
-        {{-- GRAFIK ROLLER COASTER (line chart) --}}
+ 
+        {{-- GRAFIK LINE CHART --}}
         <div id="viewChart" class="comparison-chart-wrapper">
             <div class="comparison-chart-body">
                 <canvas id="periodeChart"></canvas>
@@ -715,7 +576,7 @@
         </div>
     </div>
     @endif
-
+ 
     {{-- INFO BOX --}}
     <div class="info-box">
         <h3><i class="fas fa-info-circle"></i> Informasi Dashboard</h3>
@@ -730,47 +591,45 @@
     </div>
 </div>
 @endsection
-
+ 
 @push('scripts')
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
+ 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-
+ 
         // ============================================================
         // FUNGSI WARNA BERDASARKAN INTERPRETASI
         // ============================================================
         function getColorByInterpretation(interpretation) {
             const colorMap = {
-                'Excellent':        '#10b981',
-                'Sangat Baik':      '#3b82f6',
-                'Baik':             '#8b5cf6',
-                'Cukup':            '#f59e0b',
-                'Kurang':            '#f97316',
-                'Perlu Perbaikan':  '#ef4444',
-                'Tidak Ada Data':   '#94a3b8'
+                'Excellent':       '#10b981',
+                'Sangat Baik':     '#3b82f6',
+                'Baik':            '#8b5cf6',
+                'Cukup':           '#f59e0b',
+                'Kurang':          '#f97316',
+                'Perlu Perbaikan': '#ef4444',
+                'Tidak Ada Data':  '#94a3b8'
             };
             return colorMap[interpretation] || '#94a3b8';
         }
-
+ 
         // ============================================================
-        // BARIS KE-2: GRAFIK BAR CHART PER KRITERIA
-        // Sudah diurutkan dari controller (terbaik → terburuk)
+        // GRAFIK BAR CHART PER KRITERIA (tampilan dashboard — tidak berubah)
         // ============================================================
         @if($jumlahKriteriaAktif > 0 && isset($criteriaChartData))
         const criteriaData = @json($criteriaChartData);
-
+ 
         const labels = criteriaData.map(item => item.criteria);
         const values = criteriaData.map(item => item.normalized_score);
         const colors = criteriaData.map(item => getColorByInterpretation(item.interpretation));
-
-        // Tinggi dinamis: 52px per bar + padding
-        const barHeight = 52;
+ 
+        const barHeight   = 52;
         const chartHeight = Math.max(300, criteriaData.length * barHeight + 60);
         const inner = document.getElementById('criteriaChartInner');
         if (inner) inner.style.height = chartHeight + 'px';
-
+ 
         const ctx = document.getElementById('criteriaChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
@@ -812,10 +671,7 @@
                         beginAtZero: true,
                         max: 1.0,
                         grid: { color: 'rgba(0,0,0,0.04)' },
-                        ticks: {
-                            font: { size: 11 },
-                            callback: v => v.toFixed(2)
-                        }
+                        ticks: { font: { size: 11 }, callback: v => v.toFixed(2) }
                     },
                     y: {
                         grid: { display: false },
@@ -826,31 +682,30 @@
             }
         });
         @endif
-
+ 
         // ============================================================
-        // BARIS KE-3: GRAFIK ROLLER COASTER (LINE CHART) ANTAR PERIODE
+        // GRAFIK LINE CHART ANTAR PERIODE (tampilan dashboard — tidak berubah)
         // ============================================================
         @if(isset($periodeChartData) && count($periodeChartData) > 0)
         const periodeData = @json($periodeChartData);
-
-        // Warna titik berdasarkan predikat
+ 
         function getPointColor(predikat) {
             const map = {
-                'Excellent':        '#10b981',
-                'Sangat Baik':      '#3b82f6',
-                'Baik':             '#8b5cf6',
-                'Cukup':            '#f59e0b',
-                'Kurang':            '#f97316',
-                'Perlu Perbaikan':  '#ef4444',
+                'Excellent':       '#10b981',
+                'Sangat Baik':     '#3b82f6',
+                'Baik':            '#8b5cf6',
+                'Cukup':           '#f59e0b',
+                'Kurang':          '#f97316',
+                'Perlu Perbaikan': '#ef4444',
             };
             return map[predikat] || '#94a3b8';
         }
-
+ 
         const periodeLabels = periodeData.map(p => p.period_name + '\n(' + p.year + ')');
         const periodeValues = periodeData.map(p => parseFloat(p.total_vi).toFixed(4));
-        const pointColors  = periodeData.map(p => getPointColor(p.predikat));
-        const pointSizes   = periodeData.map(p => p.is_active ? 10 : 6);
-
+        const pointColors   = periodeData.map(p => getPointColor(p.predikat));
+        const pointSizes    = periodeData.map(p => p.is_active ? 10 : 6);
+ 
         const ctxPeriode = document.getElementById('periodeChart').getContext('2d');
         new Chart(ctxPeriode, {
             type: 'line',
@@ -861,11 +716,8 @@
                     data: periodeValues,
                     borderColor: '#5a9b9e',
                     borderWidth: 2.5,
-                    tension: 0.4,             // membuat garis melengkung (roller coaster)
-                    fill: {
-                        target: 'origin',
-                        above: 'rgba(90,155,158,0.08)'
-                    },
+                    tension: 0.4,
+                    fill: { target: 'origin', above: 'rgba(90,155,158,0.08)' },
                     pointBackgroundColor: pointColors,
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
@@ -906,17 +758,217 @@
                     y: {
                         beginAtZero: false,
                         grid: { color: 'rgba(0,0,0,0.05)' },
-                        ticks: {
-                            font: { size: 11 },
-                            callback: v => parseFloat(v).toFixed(3)
-                        }
+                        ticks: { font: { size: 11 }, callback: v => parseFloat(v).toFixed(3) }
                     }
                 }
             }
         });
         @endif
-
+ 
     }); // end DOMContentLoaded
+
+
+    // ============================================================
+    // DOWNLOAD GRAFIK KRITERIA SEBAGAI PNG
+    // Semua biru, bar tipis, urut terbesar ke terkecil
+    // Sumbu X mulai dari nilai minimum (bukan 0) — seperti Excel
+    // ============================================================
+    function downloadCriteriaChart() {
+        @if($jumlahKriteriaAktif > 0 && isset($criteriaChartData))
+        const rawData = @json($criteriaChartData);
+
+        // Urutkan terbesar ke terkecil
+        const data = [...rawData].sort((a, b) => b.normalized_score - a.normalized_score);
+        const values = data.map(d => d.normalized_score);
+
+        // Hitung min/max untuk sumbu X — mirip Excel (tidak mulai dari 0)
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const axisMin = Math.floor(minVal * 10) / 10;        // misal 0.7
+        const axisMax = Math.min(1.0, Math.ceil(maxVal * 10) / 10); // misal 1.0
+
+        const w = 720;
+        const h = Math.max(260, data.length * 32 + 120); // tambah 120px untuk judul + sumbu X bawah
+
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width  = w;
+        offCanvas.height = h;
+        offCanvas.style.display = 'none';
+        document.body.appendChild(offCanvas);
+
+        // Background putih dulu sebelum chart
+        const preCtx = offCanvas.getContext('2d');
+        preCtx.fillStyle = '#ffffff';
+        preCtx.fillRect(0, 0, w, h);
+
+        const chart = new Chart(preCtx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.criteria),
+                datasets: [{
+                    data: values,
+                    backgroundColor: '#2563EB',
+                    borderColor: '#2563EB',
+                    borderWidth: 0,
+                    borderRadius: 2,
+                    barThickness: 14,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                animation: false,
+                responsive: false,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Grafik Nilai Per Kriteria',
+                        font: { size: 14, weight: 'bold' },
+                        color: '#1e293b',
+                        padding: { top: 10, bottom: 14 }
+                    }
+                },
+                scales: {
+                    x: {
+                        min: axisMin,
+                        max: axisMax,
+                        position: 'bottom',
+                        grid: { color: 'rgba(0,0,0,0.07)' },
+                        ticks: {
+                            font: { size: 12 },
+                            color: '#444',
+                            padding: 6,
+                            stepSize: 0.1,
+                            callback: function(v) {
+                                const rounded = Math.round(v * 10) / 10;
+                                if (Math.abs(v - rounded) < 0.001) {
+                                    return rounded.toFixed(1);
+                                }
+                                return null;
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 }, color: '#334155', padding: 8 }
+                    }
+                },
+                layout: { padding: { top: 0, right: 50, bottom: 20, left: 10 } }
+            }
+        });
+
+        setTimeout(() => {
+            // Ambil langsung dari offCanvas yang sudah berisi chart + background putih
+            const link = document.createElement('a');
+            link.download = 'grafik_nilai_kriteria.png';
+            link.href = offCanvas.toDataURL('image/png');
+            link.click();
+
+            chart.destroy();
+            document.body.removeChild(offCanvas);
+        }, 400);
+        @else
+        alert('Data kriteria belum tersedia.');
+        @endif
+    }
+
+
+    // ============================================================
+    // DOWNLOAD GRAFIK SKM HISTORIS SEBAGAI PNG
+    // Biru, max 8 periode terakhir, ada judul dan label sumbu X
+    // ============================================================
+    function downloadSKMChart() {
+        @if(isset($periodeChartData) && count($periodeChartData) > 0)
+        let rawPeriode = @json($periodeChartData);
+
+        // Ambil max 8 periode terakhir
+        if (rawPeriode.length > 8) rawPeriode = rawPeriode.slice(-8);
+
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width  = 720;
+        offCanvas.height = 400; // lebih tinggi agar label X bawah tidak terpotong
+        offCanvas.style.display = 'none';
+        document.body.appendChild(offCanvas);
+
+        // Background putih sebelum chart
+        const preCtxS = offCanvas.getContext('2d');
+        preCtxS.fillStyle = '#ffffff';
+        preCtxS.fillRect(0, 0, 720, 400);
+
+        const chart = new Chart(preCtxS, {
+            type: 'line',
+            data: {
+                labels: rawPeriode.map(p => String(p.year)),
+                datasets: [{
+                    label: 'Total Nilai SKM',
+                    data: rawPeriode.map(p => parseFloat(p.total_vi)),
+                    borderColor: '#2563EB',
+                    borderWidth: 2.5,
+                    tension: 0.4,
+                    fill: { target: 'origin', above: 'rgba(37,99,235,0.08)' },
+                    pointBackgroundColor: '#2563EB',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { font: { size: 12 }, color: '#334155' }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Grafik Nilai SKM Historis',
+                        font: { size: 14, weight: 'bold' },
+                        color: '#1e293b',
+                        padding: { top: 10, bottom: 8 }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: {
+                            font: { size: 11 },
+                            color: '#334155',
+                            maxRotation: 30,
+                            padding: 6,
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: {
+                            font: { size: 11 },
+                            color: '#555',
+                            padding: 6,
+                            callback: v => parseFloat(v).toFixed(3)
+                        }
+                    }
+                },
+                layout: { padding: { top: 0, right: 30, bottom: 20, left: 10 } }
+            }
+        });
+
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.download = 'grafik_skm_historis.png';
+            link.href = offCanvas.toDataURL('image/png');
+            link.click();
+
+            chart.destroy();
+            document.body.removeChild(offCanvas);
+        }, 400);
+        @else
+        alert('Data perbandingan periode belum tersedia.');
+        @endif
+    }
+
 
     // ============================================================
     // TOGGLE TABEL / GRAFIK
@@ -926,7 +978,7 @@
         const chartEl = document.getElementById('viewChart');
         const btnTable = document.getElementById('btnTable');
         const btnChart = document.getElementById('btnChart');
-
+ 
         if (view === 'table') {
             tableEl.style.display = 'block';
             chartEl.style.display = 'none';
