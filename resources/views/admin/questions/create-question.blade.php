@@ -19,7 +19,6 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-    /* Form Styles */
     .form-container {
         background: white;
         border-radius: 12px;
@@ -77,6 +76,11 @@
         outline: none;
         border-color: #5a9b9e;
         box-shadow: 0 0 0 3px rgba(90, 155, 158, 0.1);
+    }
+
+    .form-input[readonly] {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
     }
 
     .form-textarea {
@@ -175,9 +179,7 @@
         font-size: 12px;
     }
 
-    .remove-option:hover {
-        background: #c82333;
-    }
+    .remove-option:hover { background: #c82333; }
 
     .add-option {
         background: #28a745;
@@ -190,9 +192,7 @@
         margin-top: 10px;
     }
 
-    .add-option:hover {
-        background: #218838;
-    }
+    .add-option:hover { background: #218838; }
 
     /* Scale Settings */
     .scale-settings {
@@ -255,13 +255,8 @@
         transition: 0.4s;
     }
 
-    input:checked + .toggle-slider {
-        background-color: #5a9b9e;
-    }
-
-    input:checked + .toggle-slider:before {
-        transform: translateX(25px);
-    }
+    input:checked + .toggle-slider { background-color: #5a9b9e; }
+    input:checked + .toggle-slider:before { transform: translateX(25px); }
 
     .toggle-text {
         font-weight: 600;
@@ -285,9 +280,7 @@
         display: none;
     }
 
-    .saw-fields.show {
-        display: block;
-    }
+    .saw-fields.show { display: block; }
 
     .criteria-row {
         display: grid;
@@ -296,17 +289,14 @@
         margin-top: 15px;
     }
 
-    .new-criteria-fields {
-        background: #fff3cd;
-        border: 2px solid #ffeaa7;
-        border-radius: 8px;
-        padding: 15px;
-        margin-top: 15px;
-        display: none;
-    }
-
-    .new-criteria-fields.show {
-        display: block;
+    .saw-info-box {
+        background: #fff8e1;
+        border: 1px solid #ffe082;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-size: 13px;
+        color: #7a6000;
+        margin-bottom: 15px;
     }
 
     /* Buttons */
@@ -333,25 +323,10 @@
         font-size: 14px;
     }
 
-    .btn-primary {
-        background: #5a9b9e;
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: #4a8b8e;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(90, 155, 158, 0.3);
-    }
-
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-    }
-
-    .btn-secondary:hover {
-        background: #5a6268;
-    }
+    .btn-primary { background: #5a9b9e; color: white; }
+    .btn-primary:hover { background: #4a8b8e; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90, 155, 158, 0.3); }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
 
     /* Checkbox */
     .checkbox-container {
@@ -384,27 +359,11 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-        .form-container {
-            margin: 20px;
-        }
-
-        .form-body {
-            padding: 20px;
-        }
-
-        .question-type-cards {
-            grid-template-columns: 1fr;
-        }
-
-        .scale-settings,
-        .scale-labels,
-        .criteria-row {
-            grid-template-columns: 1fr;
-        }
-
-        .form-buttons {
-            flex-direction: column;
-        }
+        .form-container { margin: 20px; }
+        .form-body { padding: 20px; }
+        .question-type-cards { grid-template-columns: 1fr; }
+        .scale-settings, .scale-labels, .criteria-row { grid-template-columns: 1fr; }
+        .form-buttons { flex-direction: column; }
     }
 </style>
 @endpush
@@ -420,7 +379,7 @@
         <div class="form-body">
             <form id="questionForm" action="{{ route('admin.questions.store-question', $section->id) }}" method="POST">
                 @csrf
-                
+
                 <!-- Section Info -->
                 <div class="form-group">
                     <label class="form-label">Bagian Survei</label>
@@ -435,7 +394,9 @@
                 <!-- Question Text -->
                 <div class="form-group">
                     <label class="form-label" for="question_text">Teks Pertanyaan *</label>
-                    <textarea id="question_text" name="question_text" class="form-input form-textarea" placeholder="Masukkan pertanyaan yang akan ditanyakan kepada responden..." required>{{ old('question_text') }}</textarea>
+                    <textarea id="question_text" name="question_text" class="form-input form-textarea"
+                              placeholder="Masukkan pertanyaan yang akan ditanyakan kepada responden..."
+                              required>{{ old('question_text') }}</textarea>
                     @error('question_text')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -444,7 +405,8 @@
                 <!-- Question Description -->
                 <div class="form-group">
                     <label class="form-label" for="question_description">Deskripsi/Bantuan (Opsional)</label>
-                    <textarea id="question_description" name="question_description" class="form-input" rows="3" placeholder="Tambahkan deskripsi atau petunjuk untuk membantu responden memahami pertanyaan...">{{ old('question_description') }}</textarea>
+                    <textarea id="question_description" name="question_description" class="form-input" rows="3"
+                              placeholder="Tambahkan deskripsi atau petunjuk untuk membantu responden memahami pertanyaan...">{{ old('question_description') }}</textarea>
                     @error('question_description')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -455,43 +417,50 @@
                     <label class="form-label">Jenis Pertanyaan *</label>
                     <div class="question-type-cards">
                         <label class="type-card" for="type_short_text">
-                            <input type="radio" id="type_short_text" name="question_type" value="short_text" {{ old('question_type') == 'short_text' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_short_text" name="question_type" value="short_text"
+                                   {{ old('question_type') == 'short_text' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="fas fa-align-left"></i> Jawaban Singkat</div>
                             <div class="type-description">Responden dapat memberikan jawaban singkat dalam satu baris</div>
                         </label>
 
                         <label class="type-card" for="type_long_text">
-                            <input type="radio" id="type_long_text" name="question_type" value="long_text" {{ old('question_type') == 'long_text' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_long_text" name="question_type" value="long_text"
+                                   {{ old('question_type') == 'long_text' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="fas fa-paragraph"></i> Paragraf</div>
                             <div class="type-description">Responden dapat memberikan jawaban panjang dalam beberapa baris</div>
                         </label>
 
                         <label class="type-card" for="type_multiple_choice">
-                            <input type="radio" id="type_multiple_choice" name="question_type" value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_multiple_choice" name="question_type" value="multiple_choice"
+                                   {{ old('question_type') == 'multiple_choice' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="far fa-circle"></i> Pilihan Ganda</div>
                             <div class="type-description">Responden memilih satu jawaban dari beberapa pilihan</div>
                         </label>
 
                         <label class="type-card" for="type_checkbox">
-                            <input type="radio" id="type_checkbox" name="question_type" value="checkbox" {{ old('question_type') == 'checkbox' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_checkbox" name="question_type" value="checkbox"
+                                   {{ old('question_type') == 'checkbox' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="far fa-check-square"></i> Kotak Centang</div>
                             <div class="type-description">Responden dapat memilih beberapa jawaban sekaligus</div>
                         </label>
 
                         <label class="type-card" for="type_dropdown">
-                            <input type="radio" id="type_dropdown" name="question_type" value="dropdown" {{ old('question_type') == 'dropdown' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_dropdown" name="question_type" value="dropdown"
+                                   {{ old('question_type') == 'dropdown' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="fas fa-caret-square-down"></i> Drop-down</div>
                             <div class="type-description">Responden memilih satu jawaban dari daftar dropdown</div>
                         </label>
 
                         <label class="type-card" for="type_file_upload">
-                            <input type="radio" id="type_file_upload" name="question_type" value="file_upload" {{ old('question_type') == 'file_upload' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_file_upload" name="question_type" value="file_upload"
+                                   {{ old('question_type') == 'file_upload' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="fas fa-paperclip"></i> Upload File</div>
                             <div class="type-description">Responden dapat mengunggah dokumen atau gambar</div>
                         </label>
 
                         <label class="type-card" for="type_linear_scale">
-                            <input type="radio" id="type_linear_scale" name="question_type" value="linear_scale" {{ old('question_type') == 'linear_scale' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
+                            <input type="radio" id="type_linear_scale" name="question_type" value="linear_scale"
+                                   {{ old('question_type') == 'linear_scale' ? 'checked' : '' }} onchange="toggleQuestionOptions()">
                             <div class="type-title"><i class="fas fa-chart-line"></i> Skala Linier</div>
                             <div class="type-description">Responden memberikan penilaian dengan skala angka</div>
                         </label>
@@ -508,7 +477,8 @@
                         @if(old('options'))
                             @foreach(old('options') as $index => $option)
                                 <div class="option-item">
-                                    <input type="text" name="options[]" class="option-input" value="{{ $option }}" placeholder="Opsi {{ $index + 1 }}">
+                                    <input type="text" name="options[]" class="option-input"
+                                           value="{{ $option }}" placeholder="Opsi {{ $index + 1 }}">
                                     <button type="button" class="remove-option" onclick="removeOption(this)">Hapus</button>
                                 </div>
                             @endforeach
@@ -529,7 +499,7 @@
                 <!-- Scale Settings for Linear Scale -->
                 <div id="scaleContainer" class="scale-container">
                     <label class="form-label">Pengaturan Skala</label>
-                    
+
                     <div class="scale-settings">
                         <div>
                             <label class="form-label" for="scale_min">Nilai Minimum</label>
@@ -552,18 +522,21 @@
                     <div class="scale-labels">
                         <div>
                             <label class="form-label" for="scale_min_label">Label Minimum (Opsional)</label>
-                            <input type="text" id="scale_min_label" name="scale_min_label" class="form-input" placeholder="contoh: Sangat Tidak Setuju" value="{{ old('scale_min_label') }}">
+                            <input type="text" id="scale_min_label" name="scale_min_label" class="form-input"
+                                   placeholder="contoh: Sangat Tidak Setuju" value="{{ old('scale_min_label') }}">
                         </div>
                         <div>
                             <label class="form-label" for="scale_max_label">Label Maksimum (Opsional)</label>
-                            <input type="text" id="scale_max_label" name="scale_max_label" class="form-input" placeholder="contoh: Sangat Setuju" value="{{ old('scale_max_label') }}">
+                            <input type="text" id="scale_max_label" name="scale_max_label" class="form-input"
+                                   placeholder="contoh: Sangat Setuju" value="{{ old('scale_max_label') }}">
                         </div>
                     </div>
 
                     <!-- SAW Toggle -->
                     <div class="saw-toggle-container">
                         <label class="toggle-switch" for="enable_saw">
-                            <input type="checkbox" id="enable_saw" name="enable_saw" value="1" {{ old('enable_saw') ? 'checked' : '' }} onchange="toggleSAW()">
+                            <input type="checkbox" id="enable_saw" name="enable_saw" value="1"
+                                   {{ old('enable_saw') ? 'checked' : '' }} onchange="toggleSAW()">
                             <div class="toggle-slider"></div>
                             <span class="toggle-text">Aktifkan Perhitungan SAW (Simple Additive Weighting)</span>
                         </label>
@@ -571,76 +544,57 @@
                     </div>
 
                     <!-- SAW Fields -->
-                    <div id="sawFields" class="saw-fields">
+                    <div id="sawFields" class="saw-fields {{ old('enable_saw') ? 'show' : '' }}">
+
+                        @if($criterias->isEmpty())
+                            <div class="saw-info-box">
+                                <i class="fas fa-info-circle"></i>
+                                Belum ada kriteria. <a href="{{ route('admin.criterias.create') }}" target="_blank">Buat kriteria baru</a> terlebih dahulu, lalu kembali ke halaman ini.
+                            </div>
+                        @else
+                            <div class="saw-info-box">
+                                <i class="fas fa-info-circle"></i>
+                                Kriteria dikelola di halaman <a href="{{ route('admin.criterias.index') }}" target="_blank">Manajemen Kriteria SAW</a>.
+                            </div>
+                        @endif
+
                         <div class="form-group">
-                            <label class="form-label" for="criteria_selection">Kriteria *</label>
-                            <select id="criteria_selection" name="criteria_selection" class="form-input" onchange="handleCriteriaChange()">
+                            <label class="form-label" for="criteria_id">Kriteria *</label>
+                            <select id="criteria_id" name="criteria_id" class="form-input" onchange="handleCriteriaChange()">
                                 <option value="">-- Pilih Kriteria --</option>
-                                <option value="new" {{ old('criteria_selection') == 'new' ? 'selected' : '' }}>+ Buat Kriteria Baru</option>
-                                @php
-                                    $existingCriteria = \App\Models\SurveyQuestion::where('question_type', 'linear_scale')
-                                        ->whereNotNull('criteria_name')
-                                        ->select('criteria_name', 'criteria_weight', 'criteria_type')
-                                        ->distinct()
-                                        ->get();
-                                @endphp
-                                @foreach($existingCriteria as $criteria)
-                                    <option value="{{ $criteria->criteria_name }}" 
-                                            data-weight="{{ $criteria->criteria_weight }}" 
-                                            data-type="{{ $criteria->criteria_type }}"
-                                            {{ old('criteria_selection') == $criteria->criteria_name ? 'selected' : '' }}>
-                                        {{ $criteria->criteria_name }} (Bobot: {{ $criteria->criteria_weight }}, {{ ucfirst($criteria->criteria_type) }})
+                                @foreach($criterias as $c)
+                                    <option value="{{ $c->id }}"
+                                            data-weight="{{ $c->criteria_weight }}"
+                                            data-type="{{ $c->criteria_type }}"
+                                            {{ old('criteria_id') == $c->id ? 'selected' : '' }}>
+                                        {{ $c->criteria_name }} (Bobot: {{ $c->criteria_weight }}, {{ ucfirst($c->criteria_type) }})
                                     </option>
                                 @endforeach
                             </select>
-                            @error('criteria_selection')
+                            @error('criteria_id')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- New Criteria Fields -->
-                        <div id="newCriteriaFields" class="new-criteria-fields">
-                            <div class="form-group">
-                                <label class="form-label" for="criteria_name">Nama Kriteria Baru *</label>
-                                <input type="text" id="criteria_name" name="criteria_name" class="form-input" placeholder="Contoh: Afektif, Kognitif, Psikomotorik" value="{{ old('criteria_name') }}">
-                                @error('criteria_name')
-                                    <div class="error-message">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <!-- Criteria Weight & Type -->
-                        <div class="criteria-row">
+                        <!-- Info bobot & tipe otomatis readonly -->
+                        <div class="criteria-row" id="criteriaInfoRow" style="display:none;">
                             <div>
-                                <label class="form-label" for="criteria_weight">Bobot Kriteria *</label>
-                                <input type="number" id="criteria_weight" name="criteria_weight" class="form-input" 
-                                       min="0.1" max="10" step="0.1" placeholder="Contoh: 0.3 atau 3" value="{{ old('criteria_weight') }}">
-                                <p class="form-help">Bobot akan dinormalisasi otomatis oleh sistem</p>
-                                @error('criteria_weight')
-                                    <div class="error-message">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label">Bobot</label>
+                                <input type="text" id="criteria_weight_display" class="form-input" readonly>
                             </div>
                             <div>
-                                <label class="form-label" for="criteria_type_display">Tipe Kriteria *</label>
-                                <select id="criteria_type_display" class="form-input">
-                                    <option value="">-- Pilih Tipe --</option>
-                                    <option value="benefit" {{ old('criteria_type') == 'benefit' ? 'selected' : '' }}>Benefit (Semakin tinggi semakin baik)</option>
-                                    <option value="cost" {{ old('criteria_type') == 'cost' ? 'selected' : '' }}>Cost (Semakin rendah semakin baik)</option>
-                                </select>
-                                @error('criteria_type')
-                                    <div class="error-message">{{ $message }}</div>
-                                @enderror
-                                
-                                <!-- Hidden field yang sebenarnya dikirim ke server - SOLUSI UNTUK MASALAH DISABLED FIELD -->
-                                <input type="hidden" id="criteria_type" name="criteria_type" value="{{ old('criteria_type') }}">
+                                <label class="form-label">Tipe</label>
+                                <input type="text" id="criteria_type_display" class="form-input" readonly>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Required Checkbox -->
                 <div class="checkbox-container">
-                    <input type="checkbox" id="is_required" name="is_required" class="checkbox-input" value="1" {{ old('is_required') ? 'checked' : '' }}>
+                    <input type="checkbox" id="is_required" name="is_required" class="checkbox-input"
+                           value="1" {{ old('is_required') ? 'checked' : '' }}>
                     <label for="is_required" class="checkbox-label">Wajib diisi</label>
                 </div>
 
@@ -663,72 +617,43 @@
 <script>
     let optionCounter = 2;
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         toggleQuestionOptions();
         updateTypeCardSelection();
-        handleCriteriaChange();
-        
-        // Tambahkan event listener untuk sync criteria_type_display ke hidden field
-        const criteriaTypeDisplay = document.getElementById('criteria_type_display');
-        const criteriaTypeHidden = document.getElementById('criteria_type');
-        
-        if (criteriaTypeDisplay && criteriaTypeHidden) {
-            // Sync setiap kali nilai display berubah
-            criteriaTypeDisplay.addEventListener('change', function() {
-                criteriaTypeHidden.value = this.value;
-                console.log('criteria_type synced:', this.value);
-            });
-            
-            // Sync saat inisialisasi jika ada nilai
-            if (criteriaTypeDisplay.value) {
-                criteriaTypeHidden.value = criteriaTypeDisplay.value;
-                console.log('Initial criteria_type synced:', criteriaTypeDisplay.value);
-            }
-        }
+        handleCriteriaChange(); // init tampilan info bobot/tipe jika old value ada
     });
 
-    // Toggle question options based on type
+    // Toggle tampilan container sesuai tipe pertanyaan
     function toggleQuestionOptions() {
         const selectedType = document.querySelector('input[name="question_type"]:checked');
         const optionsContainer = document.getElementById('optionsContainer');
-        const scaleContainer = document.getElementById('scaleContainer');
-        
-        // Hide all containers
+        const scaleContainer   = document.getElementById('scaleContainer');
+
         if (optionsContainer) optionsContainer.classList.remove('show');
-        if (scaleContainer) scaleContainer.classList.remove('show');
-        
+        if (scaleContainer)   scaleContainer.classList.remove('show');
+
         if (selectedType) {
-            const type = selectedType.value;
-            
-            if (['multiple_choice', 'checkbox', 'dropdown'].includes(type)) {
+            if (['multiple_choice', 'checkbox', 'dropdown'].includes(selectedType.value)) {
                 if (optionsContainer) optionsContainer.classList.add('show');
-            } else if (type === 'linear_scale') {
+            } else if (selectedType.value === 'linear_scale') {
                 if (scaleContainer) scaleContainer.classList.add('show');
             }
         }
-        
+
         updateTypeCardSelection();
     }
 
-    // Update visual selection for type cards
     function updateTypeCardSelection() {
-        const cards = document.querySelectorAll('.type-card');
-        cards.forEach(card => {
+        document.querySelectorAll('.type-card').forEach(card => {
             const radio = card.querySelector('input[type="radio"]');
-            if (radio && radio.checked) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
+            card.classList.toggle('selected', radio && radio.checked);
         });
     }
 
-    // Add option
     function addOption() {
         optionCounter++;
         const optionsList = document.getElementById('optionsList');
-        const newOption = document.createElement('div');
+        const newOption   = document.createElement('div');
         newOption.className = 'option-item';
         newOption.innerHTML = `
             <input type="text" name="options[]" class="option-input" placeholder="Opsi ${optionCounter}">
@@ -737,7 +662,6 @@
         optionsList.appendChild(newOption);
     }
 
-    // Remove option
     function removeOption(button) {
         const optionsList = document.getElementById('optionsList');
         if (optionsList.children.length > 2) {
@@ -747,171 +671,84 @@
         }
     }
 
-    // Toggle SAW
+    // Toggle SAW fields
     function toggleSAW() {
         const enableSaw = document.getElementById('enable_saw');
         const sawFields = document.getElementById('sawFields');
-        
-        if (enableSaw && sawFields) {
-            if (enableSaw.checked) {
-                sawFields.classList.add('show');
-            } else {
-                sawFields.classList.remove('show');
-                
-                // Clear SAW form values
-                const criteriaSelection = document.getElementById('criteria_selection');
-                const criteriaWeight = document.getElementById('criteria_weight');
-                const criteriaTypeDisplay = document.getElementById('criteria_type_display');
-                const criteriaTypeHidden = document.getElementById('criteria_type');
-                
-                if (criteriaSelection) criteriaSelection.value = '';
-                if (criteriaWeight) criteriaWeight.value = '';
-                if (criteriaTypeDisplay) criteriaTypeDisplay.value = '';
-                if (criteriaTypeHidden) criteriaTypeHidden.value = '';
-                
-                handleCriteriaChange();
-            }
+
+        if (!enableSaw || !sawFields) return;
+
+        if (enableSaw.checked) {
+            sawFields.classList.add('show');
+        } else {
+            sawFields.classList.remove('show');
+            // Reset pilihan kriteria
+            const criteriaSelect = document.getElementById('criteria_id');
+            if (criteriaSelect) criteriaSelect.value = '';
+            handleCriteriaChange();
         }
     }
 
-    // Handle criteria selection change
+    // Tampilkan info bobot & tipe saat kriteria dipilih
     function handleCriteriaChange() {
-        const criteriaSelection = document.getElementById('criteria_selection');
-        const newCriteriaFields = document.getElementById('newCriteriaFields');
-        const criteriaWeightInput = document.getElementById('criteria_weight');
-        const criteriaTypeDisplay = document.getElementById('criteria_type_display');
-        const criteriaTypeHidden = document.getElementById('criteria_type'); // Field yang sebenarnya dikirim
-        
-        if (criteriaSelection && newCriteriaFields && criteriaWeightInput && criteriaTypeDisplay && criteriaTypeHidden) {
-            if (criteriaSelection.value === 'new') {
-                // Show new criteria fields
-                newCriteriaFields.classList.add('show');
-                const criteriaName = document.getElementById('criteria_name');
-                if (criteriaName) criteriaName.setAttribute('required', 'required');
-                
-                // Enable weight and type inputs
-                criteriaWeightInput.removeAttribute('readonly');
-                criteriaTypeDisplay.removeAttribute('disabled');
-                
-                // Clear values
-                criteriaWeightInput.value = '';
-                criteriaTypeDisplay.value = '';
-                criteriaTypeHidden.value = '';
-            } else if (criteriaSelection.value && criteriaSelection.value !== '') {
-                // Hide new criteria fields
-                newCriteriaFields.classList.remove('show');
-                const criteriaName = document.getElementById('criteria_name');
-                if (criteriaName) criteriaName.removeAttribute('required');
-                
-                // Auto-fill from selected option
-                const selectedOption = criteriaSelection.options[criteriaSelection.selectedIndex];
-                const weight = selectedOption.getAttribute('data-weight');
-                const type = selectedOption.getAttribute('data-type');
-                
-                if (weight && type) {
-                    criteriaWeightInput.value = weight;
-                    criteriaTypeDisplay.value = type;
-                    
-                    // CRITICAL: Update hidden field yang sebenarnya akan dikirim ke server
-                    criteriaTypeHidden.value = type;
-                    
-                    // Make them readonly to prevent changes
-                    criteriaWeightInput.setAttribute('readonly', 'readonly');
-                    criteriaTypeDisplay.setAttribute('disabled', 'disabled');
-                    
-                    // WORKAROUND: Karena field disabled, pastikan sekali lagi hidden field terisi
-                    setTimeout(function() {
-                        criteriaTypeHidden.value = type;
-                    }, 100);
-                }
-            } else {
-                // Hide new criteria fields and clear everything
-                newCriteriaFields.classList.remove('show');
-                const criteriaName = document.getElementById('criteria_name');
-                if (criteriaName) criteriaName.removeAttribute('required');
-                
-                criteriaWeightInput.removeAttribute('readonly');
-                criteriaTypeDisplay.removeAttribute('disabled');
-                criteriaWeightInput.value = '';
-                criteriaTypeDisplay.value = '';
-                criteriaTypeHidden.value = '';
-            }
+        const select        = document.getElementById('criteria_id');
+        const infoRow       = document.getElementById('criteriaInfoRow');
+        const weightDisplay = document.getElementById('criteria_weight_display');
+        const typeDisplay   = document.getElementById('criteria_type_display');
+
+        if (select && select.value) {
+            const opt    = select.options[select.selectedIndex];
+            const weight = opt.getAttribute('data-weight');
+            const type   = opt.getAttribute('data-type');
+
+            if (weightDisplay) weightDisplay.value = weight;
+            if (typeDisplay)   typeDisplay.value   = type === 'benefit'
+                ? 'Benefit (semakin tinggi semakin baik)'
+                : 'Cost (semakin rendah semakin baik)';
+            if (infoRow) infoRow.style.display = 'grid';
+        } else {
+            if (infoRow) infoRow.style.display = 'none';
         }
     }
 
-    // Form validation
+    // Form validation sebelum submit
     document.getElementById('questionForm').addEventListener('submit', function(e) {
-        // SYNC criteria_type sebelum validasi
-        const criteriaTypeDisplay = document.getElementById('criteria_type_display');
-        const criteriaTypeHidden = document.getElementById('criteria_type');
-        
-        if (criteriaTypeDisplay && criteriaTypeHidden) {
-            criteriaTypeHidden.value = criteriaTypeDisplay.value;
-            console.log('Form submit - Syncing criteria_type:', criteriaTypeDisplay.value);
-        }
-        
         const selectedType = document.querySelector('input[name="question_type"]:checked');
-        
+
         if (!selectedType) {
             e.preventDefault();
             alert('Silakan pilih jenis pertanyaan.');
             return;
         }
 
-        // Validate options for multiple choice, checkbox, dropdown
         if (['multiple_choice', 'checkbox', 'dropdown'].includes(selectedType.value)) {
-            const options = document.querySelectorAll('.option-input');
-            const filledOptions = Array.from(options).filter(input => input.value.trim());
-            
-            if (filledOptions.length < 2) {
+            const optionsContainer = document.getElementById('optionsContainer');
+            const options = optionsContainer
+                ? optionsContainer.querySelectorAll('.option-input')
+                : document.querySelectorAll('.option-input');
+            const filled = Array.from(options).filter(i => i.value.trim());
+            if (filled.length < 2) {
                 e.preventDefault();
                 alert('Pertanyaan pilihan harus memiliki minimal 2 opsi jawaban.');
                 return;
             }
         }
 
-        // Validate scale for linear_scale
         if (selectedType.value === 'linear_scale') {
             const scaleMin = parseInt(document.getElementById('scale_min').value);
             const scaleMax = parseInt(document.getElementById('scale_max').value);
-            
             if (scaleMin >= scaleMax) {
                 e.preventDefault();
                 alert('Nilai maksimum harus lebih besar dari nilai minimum.');
                 return;
             }
 
-            // Validate SAW fields if enabled
             const enableSaw = document.getElementById('enable_saw');
             if (enableSaw && enableSaw.checked) {
-                const criteriaSelection = document.getElementById('criteria_selection').value;
-                const criteriaWeight = document.getElementById('criteria_weight').value;
-                const criteriaType = document.getElementById('criteria_type').value;
-
-                if (!criteriaSelection) {
+                const criteriaId = document.getElementById('criteria_id').value;
+                if (!criteriaId) {
                     e.preventDefault();
-                    alert('Silakan pilih kriteria atau buat kriteria baru.');
-                    return;
-                }
-
-                if (criteriaSelection === 'new') {
-                    const criteriaName = document.getElementById('criteria_name').value;
-                    if (!criteriaName.trim()) {
-                        e.preventDefault();
-                        alert('Nama kriteria baru wajib diisi.');
-                        return;
-                    }
-                }
-
-                if (!criteriaWeight || parseFloat(criteriaWeight) <= 0) {
-                    e.preventDefault();
-                    alert('Bobot kriteria harus diisi dengan nilai positif.');
-                    return;
-                }
-
-                if (!criteriaType) {
-                    e.preventDefault();
-                    alert('Tipe kriteria wajib dipilih.');
+                    alert('Silakan pilih kriteria untuk perhitungan SAW.');
                     return;
                 }
             }

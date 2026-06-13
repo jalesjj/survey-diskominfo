@@ -423,6 +423,11 @@
                     <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
                     <span class="menu-text">Pertanyaan</span>
                 </a>
+
+                <a href="{{ route('admin.criterias.index') }}" class="menu-item @yield('active-criterias')">
+                    <span class="menu-icon"><i class="fas fa-layer-group"></i></span>
+                    <span class="menu-text">Kriteria SAW</span>
+                </a>
                 
                 <a href="{{ route('admin.hasil-survey') }}" class="menu-item @yield('active-hasil-survey')">
                     <span class="menu-icon"><i class="fas fa-chart-bar"></i></span>

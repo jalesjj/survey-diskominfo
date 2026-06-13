@@ -13,6 +13,7 @@ use App\Http\Controllers\ContactInfoController;
 use App\Http\Controllers\SurveyPeriodController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportLaporanController;
+use App\Http\Controllers\CriteriaController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -132,3 +133,12 @@ Route::prefix('admin/periods')->name('admin.periods.')->group(function () {
 
 // Perbandingan Antar Periode (BARU)
 Route::get('/admin/saw/compare', [SurveyPeriodController::class, 'comparePeriods'])->name('admin.saw.compare');
+
+Route::prefix('admin/criterias')->name('admin.criterias.')->group(function () {
+    Route::get('/',        [CriteriaController::class, 'index'])->name('index');
+    Route::get('/create',  [CriteriaController::class, 'create'])->name('create');
+    Route::post('/',       [CriteriaController::class, 'store'])->name('store');
+    Route::get('/{id}/edit',   [CriteriaController::class, 'edit'])->name('edit');
+    Route::put('/{id}',        [CriteriaController::class, 'update'])->name('update');
+    Route::delete('/{id}',     [CriteriaController::class, 'destroy'])->name('destroy');
+});

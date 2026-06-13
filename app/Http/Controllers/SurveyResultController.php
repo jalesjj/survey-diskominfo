@@ -127,7 +127,7 @@ class SurveyResultController extends Controller
             // Tidak ada periode sama sekali
             $sawQuestions = SurveyQuestion::where('enable_saw', true)
                                 ->where('question_type', 'linear_scale')
-                                ->whereNotNull('criteria_name')
+                                ->whereNotNull('criteria_id')
                                 ->with('responses')
                                 ->get();
  
@@ -279,7 +279,7 @@ class SurveyResultController extends Controller
         // Ambil semua pertanyaan dengan enable_saw
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
-            ->whereNotNull('criteria_name')
+            ->whereNotNull('criteria_id')
             ->get();
 
         if ($sawQuestions->isEmpty()) {
@@ -427,7 +427,7 @@ class SurveyResultController extends Controller
         // Get SAW questions
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
                                     ->where('question_type', 'linear_scale')
-                                    ->whereNotNull('criteria_name')
+                                    ->whereNotNull('criteria_id')
                                     ->with(['responses' => function($q) use ($periodId) {
                                         if ($periodId) $q->where('period_id', $periodId);
                                     }])
@@ -545,7 +545,7 @@ class SurveyResultController extends Controller
         // ── 1. Ambil semua pertanyaan SAW ──────────────────────────────────────
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
-            ->whereNotNull('criteria_name')
+            ->whereNotNull('criteria_id')
             ->get();
  
         // ── 2. Kelompokkan per kriteria ────────────────────────────────────────
@@ -863,7 +863,7 @@ class SurveyResultController extends Controller
     } else {
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
-            ->whereNotNull('criteria_name')
+            ->whereNotNull('criteria_id')
             ->with('responses')
             ->get();
         $sawResults = $this->calculateAggregateSAWResults($sawQuestions);
@@ -957,7 +957,7 @@ class SurveyResultController extends Controller
         // ── 1. Ambil semua pertanyaan SAW ──────────────────────────────────────
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
-            ->whereNotNull('criteria_name')
+            ->whereNotNull('criteria_id')
             ->get();
  
         // ── 2. Kelompokkan per kriteria ────────────────────────────────────────

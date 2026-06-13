@@ -22,7 +22,7 @@ class SAWRespondentService
     {
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
-            ->whereNotNull('criteria_name')
+            ->whereNotNull('criteria_id')
             ->get();
 
         if ($sawQuestions->isEmpty()) {
@@ -121,7 +121,7 @@ class SAWRespondentService
     {
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
             ->where('question_type', 'linear_scale')
-            ->whereNotNull('criteria_name')
+            ->whereNotNull('criteria_id')
             ->get();
 
         $empty = fn($s) => [$s->id => ['score' => 0, 'has_saw' => false, 'interpretation' => '-']];

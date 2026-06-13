@@ -554,10 +554,8 @@
             @php
                 // Ambil bobot asli dari database berdasarkan criteria_name
                 $criteriaName = $result['criteria'];
-                $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
-                    ->where('criteria_name', $criteriaName)
-                    ->first();
-                $originalWeight = $firstQuestion ? $firstQuestion->criteria_weight : 0;
+                $criteria = \App\Models\Criteria::where('criteria_name', $criteriaName)->first();
+                $originalWeight = $criteria ? $criteria->criteria_weight : 0;
             @endphp
             <tr>
                 <td style="font-weight: bold;">{{ $result['criteria'] }}</td>
@@ -674,10 +672,8 @@ foreach ($questionsByCriteria as $criteriaName => $questions) {<br>
                             @php
                                 // Ambil bobot asli dari database berdasarkan criteria_name
                                 $criteriaName = $result['criteria'];
-                                $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
-                                    ->where('criteria_name', $criteriaName)
-                                    ->first();
-                                $originalWeight = $firstQuestion ? $firstQuestion->criteria_weight : 0;
+                                $criteria = \App\Models\Criteria::where('criteria_name', $criteriaName)->first();
+                            $originalWeight = $criteria ? $criteria->criteria_weight : 0;
                             @endphp
                             <strong>{{ number_format($originalWeight, 1) }}</strong>
                         </td>
@@ -717,12 +713,9 @@ $weightNormalized = $criteria['criteria_weight'] / $totalWeight;
                     });
                     
                     // Ambil dari pertanyaan pertama dengan criteria_name yang sama
-                    $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
-                        ->where('criteria_name', $criteriaName)
-                        ->first();
-                    
-                    if ($firstQuestion) {
-                        $criteriaWeights[$criteriaName] = $firstQuestion->criteria_weight;
+                    $criteria = \App\Models\Criteria::where('criteria_name', $criteriaName)->first();
+                    if ($criteria) {
+                        $criteriaWeights[$criteriaName] = $criteria->criteria_weight;
                     }
                 }
                 $totalOriginalWeight = array_sum($criteriaWeights);

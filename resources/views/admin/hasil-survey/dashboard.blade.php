@@ -959,7 +959,7 @@
         @php
             $sawQuestionsResp   = \App\Models\SurveyQuestion::where('enable_saw', true)
                                     ->where('question_type', 'linear_scale')
-                                    ->whereNotNull('criteria_name')
+                                    ->whereNotNull('criteria_id')
                                     ->get();
             $criteriaGroupsResp = $sawQuestionsResp->groupBy('criteria_name');
             $surveyRespAnswers  = \App\Models\SurveyResponse::where('survey_id', $resp['survey_id'])
@@ -1145,10 +1145,8 @@
                             <span class="detail-value">
                                 @php
                                     $criteriaName = $result['criteria'];
-                                    $firstQuestion = \App\Models\SurveyQuestion::where('enable_saw', true)
-                                        ->where('criteria_name', $criteriaName)
-                                        ->first();
-                                    $originalWeight = $firstQuestion ? $firstQuestion->criteria_weight : 0;
+                                    $criteria = \App\Models\Criteria::where('criteria_name', $criteriaName)->first();
+                                    $originalWeight = $criteria ? $criteria->criteria_weight : 0;
                                 @endphp
                                 {{ number_format($originalWeight, 1) }}
                             </span>

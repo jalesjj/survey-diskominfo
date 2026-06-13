@@ -337,7 +337,7 @@ class SurveyPeriodController extends Controller
         // Get all SAW enabled questions
         $sawQuestions = SurveyQuestion::where('enable_saw', true)
                                     ->where('question_type', 'linear_scale')
-                                    ->whereNotNull('criteria_name')
+                                    ->whereNotNull('criteria_id')
                                     ->get();
 
         if ($sawQuestions->isEmpty()) {

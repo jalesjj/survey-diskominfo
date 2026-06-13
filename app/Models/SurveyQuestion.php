@@ -1,5 +1,6 @@
 <?php
 // app/Models/SurveyQuestion.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ class SurveyQuestion extends Model
     protected $fillable = [
         'section_id',
         'question_text',
-        'question_description', // Field baru untuk deskripsi pertanyaan
+        'question_description',
         'question_type',
         'options',
         'settings',
@@ -20,17 +21,15 @@ class SurveyQuestion extends Model
         'is_required',
         'is_active',
         'enable_saw',
-        'criteria_name',
-        'criteria_weight',
-        'criteria_type'
+        'criteria_id',   // <-- ganti dari criteria_name/weight/type
     ];
 
     protected $casts = [
-        'options' => 'array',
-        'settings' => 'array',
-        'is_required' => 'boolean',
-        'is_active' => 'boolean',
-        'enable_saw' => 'boolean'
+        'options'    => 'array',
+        'settings'   => 'array',
+        'is_required'=> 'boolean',
+        'is_active'  => 'boolean',
+        'enable_saw' => 'boolean',
     ];
 
     public function section()
@@ -43,16 +42,43 @@ class SurveyQuestion extends Model
         return $this->hasMany(SurveyResponse::class, 'question_id');
     }
 
-    public function getQuestionTypeLabel()
+    /**
+     * Relasi ke tabel criterias
+     */
+    public function criteria()
+    {
+        return $this->belongsTo(Criteria::class, 'criteria_id');
+    }
+
+    // ─── Helper accessor agar kode lama tidak perlu banyak diubah ────────────
+
+    public function getCriteriaNameAttribute(): ?string
+    {
+        return $this->criteria?->criteria_name;
+    }
+
+    public function getCriteriaWeightAttribute(): ?float
+    {
+        return $this->criteria?->criteria_weight;
+    }
+
+    public function getCriteriaTypeAttribute(): ?string
+    {
+        return $this->criteria?->criteria_type;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function getQuestionTypeLabel(): string
     {
         $types = [
-            'short_text' => 'Jawaban Singkat',
-            'long_text' => 'Paragraf',
+            'short_text'      => 'Jawaban Singkat',
+            'long_text'       => 'Paragraf',
             'multiple_choice' => 'Pilihan Ganda',
-            'checkbox' => 'Kotak Centang',
-            'dropdown' => 'Drop-down',
-            'file_upload' => 'Upload File',
-            'linear_scale' => 'Skala Linier'
+            'checkbox'        => 'Kotak Centang',
+            'dropdown'        => 'Drop-down',
+            'file_upload'     => 'Upload File',
+            'linear_scale'    => 'Skala Linier',
         ];
 
         return $types[$this->question_type] ?? $this->question_type;
