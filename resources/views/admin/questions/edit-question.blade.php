@@ -744,6 +744,11 @@
         if (optionsContainer) optionsContainer.classList.remove('show');
         if (scaleContainer) scaleContainer.classList.remove('show');
         
+        // Saat scaleContainer disembunyikan, hapus required dari criteria_name
+        // agar browser tidak memblokir form submit untuk tipe selain linear_scale
+        const criteriaName = document.getElementById('criteria_name');
+        if (criteriaName) criteriaName.removeAttribute('required');
+
         if (selectedType) {
             const type = selectedType.value;
             
@@ -939,16 +944,19 @@
         }
 
         // Validate options for multiple choice, checkbox, dropdown
-        if (['multiple_choice', 'checkbox', 'dropdown'].includes(selectedType.value)) {
-            const options = document.querySelectorAll('.option-input');
-            const filledOptions = Array.from(options).filter(input => input.value.trim());
-            
-            if (filledOptions.length < 2) {
-                e.preventDefault();
-                alert('Pertanyaan pilihan harus memiliki minimal 2 opsi jawaban.');
-                return;
-            }
-        }
+if (['multiple_choice', 'checkbox', 'dropdown'].includes(selectedType.value)) {
+    const optionsContainer = document.getElementById('optionsContainer');
+    const options = optionsContainer 
+        ? optionsContainer.querySelectorAll('.option-input')  // ← hanya ambil dari container yang aktif
+        : document.querySelectorAll('.option-input');
+    const filledOptions = Array.from(options).filter(input => input.value.trim());
+    
+    if (filledOptions.length < 2) {
+        e.preventDefault();
+        alert('Pertanyaan pilihan harus memiliki minimal 2 opsi jawaban.');
+        return;
+    }
+}
 
         // Validate scale for linear_scale
         if (selectedType.value === 'linear_scale') {
