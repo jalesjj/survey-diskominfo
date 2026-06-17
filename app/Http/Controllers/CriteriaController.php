@@ -4,14 +4,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Criteria;
+use App\Models\SurveyPeriod;
 use Illuminate\Http\Request;
 
 class CriteriaController extends Controller
 {
     private function checkAdminAuth()
     {
-        if (!session('admin_id')) {
-            return redirect()->route('admin.login');
+        if (!session('admin_id') && !session('admin_user') && !session('admin')) {
+            return redirect()->route('admin.login')->with('error', 'Silakan login sebagai admin terlebih dahulu.');
         }
         return null;
     }
@@ -25,8 +26,9 @@ class CriteriaController extends Controller
         if ($authCheck) return $authCheck;
 
         $criterias = Criteria::withCount('questions')->orderBy('criteria_name')->get();
+        $activePeriod = SurveyPeriod::getActivePeriod();
 
-        return view('admin.criterias.index', compact('criterias'));
+        return view('admin.criterias.index', compact('criterias', 'activePeriod'));
     }
 
     /**
@@ -37,7 +39,9 @@ class CriteriaController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        return view('admin.criterias.create');
+        $activePeriod = SurveyPeriod::getActivePeriod();
+
+        return view('admin.criterias.create', compact('activePeriod'));
     }
 
     /**
@@ -47,6 +51,12 @@ class CriteriaController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Blokir jika ada periode aktif
+        if (SurveyPeriod::getActivePeriod()) {
+            return redirect()->route('admin.criterias.index')
+                             ->with('error', 'Tidak dapat menambah kriteria saat periode survei sedang aktif.');
+        }
 
         $request->validate([
             'criteria_name'   => 'required|string|max:255|unique:criterias,criteria_name',
@@ -71,8 +81,9 @@ class CriteriaController extends Controller
         if ($authCheck) return $authCheck;
 
         $criteria = Criteria::withCount('questions')->findOrFail($id);
+        $activePeriod = SurveyPeriod::getActivePeriod();
 
-        return view('admin.criterias.edit', compact('criteria'));
+        return view('admin.criterias.edit', compact('criteria', 'activePeriod'));
     }
 
     /**
@@ -82,6 +93,12 @@ class CriteriaController extends Controller
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
+
+        // Blokir jika ada periode aktif
+        if (SurveyPeriod::getActivePeriod()) {
+            return redirect()->route('admin.criterias.index')
+                             ->with('error', 'Tidak dapat mengubah kriteria saat periode survei sedang aktif.');
+        }
 
         $criteria = Criteria::findOrFail($id);
 
@@ -100,18 +117,24 @@ class CriteriaController extends Controller
     }
 
     /**
-     * Hapus kriteria — ditolak jika masih dipakai pertanyaan
+     * Hapus kriteria
      */
     public function destroy($id)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
+        // Blokir jika ada periode aktif
+        if (SurveyPeriod::getActivePeriod()) {
+            return redirect()->route('admin.criterias.index')
+                             ->with('error', 'Tidak dapat menghapus kriteria saat periode survei sedang aktif.');
+        }
+
         $criteria = Criteria::withCount('questions')->findOrFail($id);
 
-        if ($criteria->isInUse()) {
+        if ($criteria->questions_count > 0) {
             return redirect()->route('admin.criterias.index')
-                             ->with('error', "Kriteria \"{$criteria->criteria_name}\" tidak bisa dihapus karena masih digunakan oleh {$criteria->questions_count} pertanyaan. Pindahkan pertanyaan tersebut ke kriteria lain terlebih dahulu.");
+                             ->with('error', "Kriteria \"{$criteria->criteria_name}\" tidak bisa dihapus karena masih digunakan oleh {$criteria->questions_count} pertanyaan.");
         }
 
         $criteria->delete();

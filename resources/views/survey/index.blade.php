@@ -518,22 +518,42 @@
         }
 
         .linear-scale {
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "options options"
+        "labelmin labelmax";
+    align-items: start;
+    gap: 10px;
+}
 
-        .scale-options {
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+.scale-options {
+    grid-area: options;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
-        .scale-option label {
-            width: 48px;
-            height: 48px;
-            font-size: 16px;
-        }
+.scale-label {
+    white-space: normal;
+    font-size: 13px;
+}
+
+.scale-label:first-of-type {
+    grid-area: labelmin;
+    text-align: left;
+}
+
+.scale-label:last-of-type {
+    grid-area: labelmax;
+    text-align: right;
+}
+
+.scale-option label {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
 
         .radio-group, .checkbox-group {
             gap: 8px;

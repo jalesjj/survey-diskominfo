@@ -114,7 +114,7 @@ class ExportLaporanController extends Controller
             ['label' => 'Jenis Kelamin', 'data' => $this->getDistribusi('jenis_kelamin', $periodId, $safe)],
             ['label' => 'Pendidikan',    'data' => $this->getDistribusi('jenis_pendidikan', $periodId, $safe)],
             ['label' => 'Pekerjaan',     'data' => $this->getDistribusi('pekerjaan', $periodId, $safe)],
-            ['label' => 'Jenis Layanan', 'data' => $layananDist ?: [['label' => 'Tidak ada data', 'count' => 0, 'pct' => 0]]],
+            // ['label' => 'Jenis Layanan', 'data' => $layananDist ?: [['label' => 'Tidak ada data', 'count' => 0, 'pct' => 0]]],
         ];
     }
 

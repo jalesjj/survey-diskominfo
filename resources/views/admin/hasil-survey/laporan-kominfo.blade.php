@@ -213,7 +213,7 @@
         ['label' => 'Jenis Kelamin', 'data' => $getDist('jenis_kelamin')],
         ['label' => 'Pendidikan',    'data' => $getDist('jenis_pendidikan')],
         ['label' => 'Pekerjaan',     'data' => $getDist('pekerjaan')],
-        ['label' => 'Jenis Layanan', 'data' => $layananDist ?: [['label'=>'Tidak ada data','count'=>0,'pct'=>0]]],
+        // ['label' => 'Jenis Layanan', 'data' => $layananDist ?: [['label'=>'Tidak ada data','count'=>0,'pct'=>0]]],
     ];
 @endphp
 

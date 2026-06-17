@@ -1,9 +1,9 @@
 {{-- resources/views/admin/hasil-survey/dashboard.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Hasil Survey SAW - Admin')
+@section('title', 'Hasil Survey - Admin')
 @section('active-hasil-survey', 'active')
-@section('page-title', 'Hasil Survey SAW')
+@section('page-title', 'Hasil Survey')
 @section('page-subtitle', 'Dashboard Nilai Akhir Kriteria - Simple Additive Weighting')
 
 @section('breadcrumb')
@@ -764,7 +764,7 @@
         <!-- Table -->
         <div class="table-container">
             <div class="table-title" style="display:flex; align-items:center; justify-content:space-between;">
-                <h2>Hasil Perhitungan SAW</h2>
+                <h2>Kesimpulan Hasil</h2>
                 <div style="display:inline-flex; align-items:center; gap:8px;">
                     <button onclick="downloadCriteriaChartSAW()"
                         style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:#2563EB; color:white; border:none; border-radius:6px; cursor:pointer; transition:background 0.2s;"
@@ -904,7 +904,7 @@
                         <th class="text-center">Pekerjaan</th>
                         <th class="text-center">Total Skor</sub></th>
                         <th class="text-center">Keterangan</th>
-                        <th class="text-center">Detail</th>
+                        {{-- <th class="text-center">Detail</th> --}}
                     </tr>
                 </thead>
                 <tbody id="respondent-tbody">
@@ -935,11 +935,11 @@
                         <td class="text-center">
                             <span class="interp-badge {{ $interpClass }}">{{ $resp['interpretation'] }}</span>
                         </td>
-                        <td class="text-center">
+                        {{-- <td class="text-center">
                             <button class="btn-detail" onclick="showRespDetail{{ $i }}()">
                                 <i class="fas fa-eye"></i>
                             </button>
-                        </td>
+                        </td> --}}
                     </tr>
                     @endforeach
                 </tbody>
@@ -1041,7 +1041,7 @@
                         </div>
                     </div>
 
-                    {{-- Per kriteria --}}
+                    {{-- Per kriteria
                     @foreach($respRows as $rr)
                     <div class="detail-section">
                         <div class="detail-section-title">{{ $rr['name'] }} &nbsp;·&nbsp;
@@ -1076,15 +1076,15 @@
                             <span class="detail-value">{{ number_format($rr['vij'], 4) }}</span>
                         </div>
                     </div>
-                    @endforeach
+                    @endforeach --}}
 
                     {{-- Total Vi --}}
                     <div class="detail-section">
-                        <div class="detail-section-title">Nilai Preferensi Akhir</div>
+                        {{-- <div class="detail-section-title">Nilai Preferensi Akhir</div>
                         <div class="detail-row">
                             <span class="detail-label">V<sub>i</sub> = Σ V<sub>ij</sub></span>
                             <span class="detail-value" style="font-size:20px; color:#333;">{{ $respVi }}</span>
-                        </div>
+                        </div> --}}
                         <div class="detail-row">
                             <span class="detail-label">Keterangan</span>
                             <span class="detail-value">
@@ -1106,7 +1106,7 @@
         <div class="modal-overlay" id="modal{{ $index }}">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Detail Perhitungan: {{ $result['criteria'] }}</h3>
+                    <h3>{{ $result['criteria'] }}</h3>
                     <button class="modal-close" onclick="closeModal{{ $index }}()">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -1125,7 +1125,7 @@
                             </span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Jumlah Sub-Kriteria</span>
+                            <span class="detail-label">Pertanyaan per kriteria</span>
                             <span class="detail-value">{{ $result['questions_count'] }} pertanyaan</span>
                         </div>
                         <div class="detail-row">
@@ -1136,7 +1136,7 @@
 
                     <div class="detail-section">
                         <div class="detail-section-title">Nilai & Perhitungan</div>
-                        <div class="detail-row">
+                        {{-- <div class="detail-row">
                             <span class="detail-label">Skor Agregat (x)</span>
                             <span class="detail-value">{{ $result['score'] }}</span>
                         </div>
@@ -1154,15 +1154,15 @@
                         <div class="detail-row">
                             <span class="detail-label">Bobot Ternormalisasi (w<sub>ᵢ</sub>)</span>
                             <span class="detail-value">{{ number_format($result['weight_normalized'], 3) }}</span>
-                        </div>
+                        </div> --}}
                         <div class="detail-row">
-                            <span class="detail-label">Nilai Ternormalisasi (r<sub>ᵢ</sub>)</span>
+                            <span class="detail-label">Nilai Kriteria</span>
                             <span class="detail-value">{{ number_format($result['normalized'], 3) }}</span>
                         </div>
-                        <div class="detail-row">
+                        {{-- <div class="detail-row">
                             <span class="detail-label">Nilai Terbobot (w×r)</span>
                             <span class="detail-value">{{ number_format($result['weighted_score'], 4) }}</span>
-                        </div>
+                        </div> --}}
                     </div> 
 
                     <div class="detail-section">
