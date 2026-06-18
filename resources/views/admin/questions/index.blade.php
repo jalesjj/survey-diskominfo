@@ -479,7 +479,7 @@
             <i class="fas fa-lock"></i>
             <strong>SISTEM TERKUNCI</strong>
             <p style="margin: 5px 0 0 0;">
-                Pertanyaan dikunci untuk periode: <strong>{{ $activePeriod->period_name }}</strong> ({{ $activePeriod->year }})
+                Pertanyaan dikunci untuk periode: ({{ $activePeriod->year }})
                 <br>
                 <small>Dimulai: {{ $activePeriod->start_date->format('d F Y') }}</small>
             </p>
