@@ -660,7 +660,7 @@
         <div class="period-info-left">
             <i class="fas fa-calendar-check"></i>
             <span class="period-info-text">
-                Periode: {{ $selectedPeriod->period_name }} ({{ $selectedPeriod->year }})
+                Periode:  ({{ $selectedPeriod->year }})
                 @if($selectedPeriod->is_active) <span style="color: #f39c12;">⭐</span> @endif
             </span>
         </div>
@@ -795,9 +795,6 @@
                 <div class="action-row">
                     <button class="btn btn-info" onclick="viewDetail({{ $survey->id }})">
                         <i class="fas fa-eye"></i> Lihat Detail
-                    </button>
-                    <button class="btn btn-danger" onclick="confirmDelete({{ $survey->id }})">
-                        <i class="fas fa-trash"></i> Hapus
                     </button>
                 </div>
             </div>

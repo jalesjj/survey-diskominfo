@@ -439,7 +439,6 @@
     <div class="periode-info">
         <i class="fas fa-calendar-check"></i>
         <div class="periode-info-text">
-            <strong>{{ $selectedPeriod->period_name }}</strong>
             <span>Tahun {{ $selectedPeriod->year }} 
                 @if($selectedPeriod->is_active)
                     <span style="color: #059669; font-weight: 600;">● Aktif</span>

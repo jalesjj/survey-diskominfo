@@ -503,7 +503,7 @@
         <div style="display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-calendar-check" style="color: #5a9b9e;"></i>
             <span style="font-weight: 600; color: #2c3e50; font-size: 14px;">
-                Periode: {{ $selectedPeriod->period_name }} ({{ $selectedPeriod->year }})
+                Periode: ({{ $selectedPeriod->year }})
                 @if($selectedPeriod->is_active) <span style="color: #f39c12;">⭐</span> @endif
             </span>
         </div>
