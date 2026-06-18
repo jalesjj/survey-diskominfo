@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Admin - Survei Kepuasan Diskominfo Lamongan</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=1">
     <style>
         * {
             margin: 0;
