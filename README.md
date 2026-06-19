@@ -63,7 +63,7 @@ Sistem ini dibangun sebagai solusi digitalisasi proses Survei Kepuasan Masyaraka
 - **Tampilan responsif** — Dapat diakses dari perangkat mobile maupun desktop
 - **Guard periode aktif** — Survei hanya dapat diisi saat periode aktif; jika tidak ada periode aktif, muncul halaman informatif
 
-### 🛠️ Panel Admin
+### Panel Admin
 
 #### Manajemen Survei
 - **Kelola seksi & pertanyaan** — CRUD lengkap untuk seksi dan pertanyaan dengan drag-and-drop reordering
