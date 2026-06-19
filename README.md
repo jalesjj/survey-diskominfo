@@ -101,7 +101,7 @@ Sistem ini dibangun sebagai solusi digitalisasi proses Survei Kepuasan Masyaraka
 
 ---
 
-## 🛠️ Teknologi
+## Teknologi
 
 ### Backend
 | Teknologi | Kegunaan |
