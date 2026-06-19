@@ -503,7 +503,7 @@
         <div style="display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-calendar-check" style="color: #5a9b9e;"></i>
             <span style="font-weight: 600; color: #2c3e50; font-size: 14px;">
-                Periode: ({{ $selectedPeriod->year }})
+                Periode: {{ $selectedPeriod->period_name }} ({{ $selectedPeriod->year }})
                 @if($selectedPeriod->is_active) <span style="color: #f39c12;">⭐</span> @endif
             </span>
         </div>
@@ -647,20 +647,40 @@
                                             <canvas id="chart_{{ $stat['question']->id }}"></canvas>
                                         </div>
 
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 15px 0;">
-                                            <div class="stat-item">
-                                                <div class="stat-number">{{ $stat['data']['average'] ?? 0 }}</div>
-                                                <div class="stat-label">Rata-rata</div>
+                                        {{-- Keterangan Skor per Nilai --}}
+                                        @if(isset($stat['response_data']['distribution']))
+                                        <div style="margin-top: 12px;">
+                                            <h5 style="color: #475569; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
+                                                <i class="fas fa-info-circle"></i> Keterangan Skor
+                                            </h5>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                                @for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++)
+                                                    @php $scoreCount = $stat['response_data']['distribution'][$i] ?? 0; @endphp
+                                                    <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 14px; font-size: 13px; color: #334155; display: flex; align-items: center; gap: 6px;">
+                                                        <span style="font-weight: 700; color: #5a9b9e; min-width: 20px;">Skor {{ $i }}</span>
+                                                        <span style="color: #94a3b8;">=</span>
+                                                        <span style="font-weight: 600;">{{ $scoreCount }} jawaban</span>
+                                                    </div>
+                                                @endfor
                                             </div>
-                                            <div class="stat-item">
-                                                <div class="stat-number">{{ $stat['data']['min'] ?? 0 }}</div>
-                                                <div class="stat-label">Minimum</div>
+                                            @if(!empty($stat['question']->settings['scale_min_label']) || !empty($stat['question']->settings['scale_max_label']))
+                                            <div style="margin-top: 8px; font-size: 12px; color: #64748b; display: flex; gap: 12px; flex-wrap: wrap;">
+                                                @if(!empty($stat['question']->settings['scale_min_label']))
+                                                <span>
+                                                    <strong style="color: #5a9b9e;">{{ $stat['question']->settings['scale_min'] ?? 1 }}</strong>
+                                                    = {{ $stat['question']->settings['scale_min_label'] }}
+                                                </span>
+                                                @endif
+                                                @if(!empty($stat['question']->settings['scale_max_label']))
+                                                <span>
+                                                    <strong style="color: #5a9b9e;">{{ $stat['question']->settings['scale_max'] ?? 5 }}</strong>
+                                                    = {{ $stat['question']->settings['scale_max_label'] }}
+                                                </span>
+                                                @endif
                                             </div>
-                                            <div class="stat-item">
-                                                <div class="stat-number">{{ $stat['data']['max'] ?? 0 }}</div>
-                                                <div class="stat-label">Maximum</div>
-                                            </div>
+                                            @endif
                                         </div>
+                                        @endif
                                     </div>
                                 
                                 @elseif(in_array($stat['question']->question_type, ['multiple_choice', 'dropdown', 'checkbox']))
@@ -710,20 +730,40 @@
                                     <!-- Linear Scale Fallback Display (without chart) -->
                                     <div class="chart-container">
                                         <h4><i class="fas fa-chart-bar"></i> Statistik Skala</h4>
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 15px 0;">
-                                            <div class="stat-item">
-                                                <div class="stat-number">{{ $stat['data']['average'] ?? 0 }}</div>
-                                                <div class="stat-label">Rata-rata</div>
+                                        {{-- Keterangan Skor per Nilai (fallback) --}}
+                                        @if(isset($stat['data']['distribution']))
+                                        <div style="margin-top: 12px; margin-bottom: 12px;">
+                                            <h5 style="color: #475569; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
+                                                <i class="fas fa-info-circle"></i> Keterangan Skor
+                                            </h5>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                                @for($i = ($stat['question']->settings['scale_min'] ?? 1); $i <= ($stat['question']->settings['scale_max'] ?? 5); $i++)
+                                                    @php $scoreCount = $stat['data']['distribution'][$i] ?? 0; @endphp
+                                                    <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 14px; font-size: 13px; color: #334155; display: flex; align-items: center; gap: 6px;">
+                                                        <span style="font-weight: 700; color: #5a9b9e; min-width: 20px;">Skor {{ $i }}</span>
+                                                        <span style="color: #94a3b8;">=</span>
+                                                        <span style="font-weight: 600;">{{ $scoreCount }} jawaban</span>
+                                                    </div>
+                                                @endfor
                                             </div>
-                                            <div class="stat-item">
-                                                <div class="stat-number">{{ $stat['data']['min'] ?? 0 }}</div>
-                                                <div class="stat-label">Minimum</div>
+                                            @if(!empty($stat['question']->settings['scale_min_label']) || !empty($stat['question']->settings['scale_max_label']))
+                                            <div style="margin-top: 8px; font-size: 12px; color: #64748b; display: flex; gap: 12px; flex-wrap: wrap;">
+                                                @if(!empty($stat['question']->settings['scale_min_label']))
+                                                <span>
+                                                    <strong style="color: #5a9b9e;">{{ $stat['question']->settings['scale_min'] ?? 1 }}</strong>
+                                                    = {{ $stat['question']->settings['scale_min_label'] }}
+                                                </span>
+                                                @endif
+                                                @if(!empty($stat['question']->settings['scale_max_label']))
+                                                <span>
+                                                    <strong style="color: #5a9b9e;">{{ $stat['question']->settings['scale_max'] ?? 5 }}</strong>
+                                                    = {{ $stat['question']->settings['scale_max_label'] }}
+                                                </span>
+                                                @endif
                                             </div>
-                                            <div class="stat-item">
-                                                <div class="stat-number">{{ $stat['data']['max'] ?? 0 }}</div>
-                                                <div class="stat-label">Maximum</div>
-                                            </div>
+                                            @endif
                                         </div>
+                                        @endif
                                         @if(isset($stat['data']['distribution']))
                                             <h5 style="margin-top: 15px; color: #475569;">Distribusi Nilai:</h5>
                                             @foreach($stat['data']['distribution'] as $value => $count)
@@ -870,19 +910,36 @@
                                 @endphp
                                 <div class="chart-container">
                                     <h4><i class="fas fa-chart-bar"></i> Statistik Skala</h4>
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 15px 0;">
-                                        <div class="stat-item">
-                                            <div class="stat-number">{{ round($average, 2) }}</div>
-                                            <div class="stat-label">Rata-rata</div>
+                                    {{-- Keterangan Skor per Nilai --}}
+                                    <div style="margin-bottom: 12px;">
+                                        <h5 style="color: #475569; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
+                                            <i class="fas fa-info-circle"></i> Keterangan Skor
+                                        </h5>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                            @for($i = ($question->settings['scale_min'] ?? 1); $i <= ($question->settings['scale_max'] ?? 5); $i++)
+                                                <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 14px; font-size: 13px; color: #334155; display: flex; align-items: center; gap: 6px;">
+                                                    <span style="font-weight: 700; color: #5a9b9e; min-width: 20px;">Skor {{ $i }}</span>
+                                                    <span style="color: #94a3b8;">=</span>
+                                                    <span style="font-weight: 600;">{{ $distribution[$i] ?? 0 }} jawaban</span>
+                                                </div>
+                                            @endfor
                                         </div>
-                                        <div class="stat-item">
-                                            <div class="stat-number">{{ $responses->min() }}</div>
-                                            <div class="stat-label">Minimum</div>
+                                        @if(!empty($question->settings['scale_min_label']) || !empty($question->settings['scale_max_label']))
+                                        <div style="margin-top: 8px; font-size: 12px; color: #64748b; display: flex; gap: 12px; flex-wrap: wrap;">
+                                            @if(!empty($question->settings['scale_min_label']))
+                                            <span>
+                                                <strong style="color: #5a9b9e;">{{ $question->settings['scale_min'] ?? 1 }}</strong>
+                                                = {{ $question->settings['scale_min_label'] }}
+                                            </span>
+                                            @endif
+                                            @if(!empty($question->settings['scale_max_label']))
+                                            <span>
+                                                <strong style="color: #5a9b9e;">{{ $question->settings['scale_max'] ?? 5 }}</strong>
+                                                = {{ $question->settings['scale_max_label'] }}
+                                            </span>
+                                            @endif
                                         </div>
-                                        <div class="stat-item">
-                                            <div class="stat-number">{{ $responses->max() }}</div>
-                                            <div class="stat-label">Maximum</div>
-                                        </div>
+                                        @endif
                                     </div>
                                     <h5 style="margin-top: 15px; color: #475569;">Distribusi Nilai:</h5>
                                     @foreach($distribution as $value => $count)
