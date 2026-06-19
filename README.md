@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📊 Survei Kepuasan Masyarakat (SKM)
+# Survei Kepuasan Masyarakat (SKM)
 ### Dinas Komunikasi dan Informatika Kabupaten Lamongan
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ---
 
-## 📋 Daftar Isi
+## Daftar Isi
 
 - [Tentang Proyek](#-tentang-proyek)
 - [Fitur Utama](#-fitur-utama)
@@ -37,7 +37,7 @@
 
 ---
 
-## 🎯 Tentang Proyek
+## Tentang Proyek
 
 Sistem ini dibangun sebagai solusi digitalisasi proses Survei Kepuasan Masyarakat (SKM) yang sebelumnya dilakukan secara manual. Dengan memanfaatkan metode **Simple Additive Weighting (SAW)**, sistem mampu menghasilkan analisis kuantitatif yang terstandar sesuai pedoman penyusunan SKM dari Kementerian Pendayagunaan Aparatur Negara.
 
@@ -53,9 +53,9 @@ Sistem ini dibangun sebagai solusi digitalisasi proses Survei Kepuasan Masyaraka
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-### 🌐 Antarmuka Publik (Responden)
+### Antarmuka Publik (Responden)
 
 - **Form survei multi-seksi** — Pertanyaan dikelompokkan dalam seksi, navigasi antar seksi dengan progres bar real-time
 - **Beragam tipe pertanyaan** — Teks singkat, paragraf, pilihan ganda, checkbox, dropdown, upload file, dan **skala linier**
@@ -88,10 +88,10 @@ Sistem ini dibangun sebagai solusi digitalisasi proses Survei Kepuasan Masyaraka
 - **Analisis skala linier** — Keterangan distribusi skor per nilai untuk pertanyaan SKM
 
 #### Ekspor Laporan
-- 📄 **Export PDF** — Laporan SAW per responden berformat siap cetak dengan area tanda tangan
-- 📊 **Export Excel (Raw Data)** — Data mentah seluruh jawaban responden per periode
-- 📑 **Export Excel Laporan Kominfo** — Multi-sheet: karakteristik responden, nilai kriteria, hasil SAW, daftar pertanyaan
-- 📋 **Export PDF Laporan Kominfo** — Laporan lengkap berformat resmi: cover, grafik, tabel karakteristik, nilai kriteria, histori, dan hasil SAW
+- **Export PDF** — Laporan SAW per responden berformat siap cetak dengan area tanda tangan
+- **Export Excel (Raw Data)** — Data mentah seluruh jawaban responden per periode
+- **Export Excel Laporan Kominfo** — Multi-sheet: karakteristik responden, nilai kriteria, hasil SAW, daftar pertanyaan
+- **Export PDF Laporan Kominfo** — Laporan lengkap berformat resmi: cover, grafik, tabel karakteristik, nilai kriteria, histori, dan hasil SAW
 
 #### Manajemen Sistem
 - **Manajemen aset** — Upload dan kelola logo instansi yang ditampilkan di halaman survei
@@ -129,7 +129,7 @@ Sistem ini dibangun sebagai solusi digitalisasi proses Survei Kepuasan Masyaraka
 
 ---
 
-## 🏗️ Arsitektur Sistem
+## Arsitektur Sistem
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -208,18 +208,18 @@ Jawaban Responden (Skala 1–5)
 
 ---
 
-## 👥 Peran Pengguna
+## Peran Pengguna
 
-### 🌍 Publik (Responden)
+### Publik (Responden)
 Masyarakat yang mengisi survei kepuasan layanan. Tidak memerlukan akun; survei diisi secara anonim. Data demografis (nama, umur, jenis kelamin, pendidikan, pekerjaan) dikumpulkan sebagai bagian dari profil responden.
 
-### 👤 Admin
+### Admin
 Pengelola sistem dengan akses penuh ke panel admin. Dapat:
 - Mengelola pertanyaan, seksi, dan periode survei
 - Melihat dan mengunduh hasil survei dan laporan
 - Mengubah password akun sendiri
 
-### 🔑 Super Admin
+### Super Admin
 Memiliki seluruh hak akses Admin, ditambah:
 - Membuat dan menghapus akun admin lain
 - Mengubah role pengguna
@@ -227,7 +227,7 @@ Memiliki seluruh hak akses Admin, ditambah:
 
 ---
 
-## 📐 Metode Simple Additive Weighting (SAW)
+## Metode Simple Additive Weighting (SAW)
 
 Sistem menggunakan metode **SAW** sebagai Decision Support System (DSS) untuk mengolah data survei menjadi nilai kepuasan terstandar.
 
@@ -270,7 +270,7 @@ Di mana `scale_max = 5` dan `scale_min = 1` sesuai konfigurasi skala survei.
 
 ---
 
-## 🗄️ Struktur Database
+## Struktur Database
 
 ```
 ┌──────────────────┐       ┌──────────────────────┐
@@ -329,7 +329,7 @@ Di mana `scale_max = 5` dan `scale_min = 1` sesuai konfigurasi skala survei.
 
 ---
 
-## 📁 Struktur Proyek
+## Struktur Proyek
 
 ```
 survei_diskominfo/
@@ -386,7 +386,7 @@ survei_diskominfo/
 
 ---
 
-## 📌 Catatan Teknis
+## Catatan Teknis
 
 ### Kalkulasi SAW: Per-Respondent vs Agregat
 
@@ -408,7 +408,7 @@ Normalisasi menggunakan **batas skala tetap** (`scale_max=5`, `scale_min=1`), bu
 
 ---
 
-## 📝 Lisensi
+## Lisensi
 
 Proyek ini dikembangkan sebagai **Tugas Akhir / Skripsi** mahasiswa untuk keperluan akademik dan implementasi di **Dinas Komunikasi dan Informatika Kabupaten Lamongan**.
 
@@ -416,7 +416,7 @@ Penggunaan ulang kode dalam konteks non-akademik atau komersial tanpa izin tertu
 
 ---
 
-## 🙏 Ucapan Terima Kasih
+## capan Terima Kasih
 
 - **Dinas Komunikasi dan Informatika Kabupaten Lamongan** — atas kepercayaan dan kesempatan pengembangan sistem ini
 - **Laravel Community** — framework dan ekosistem yang luar biasa
