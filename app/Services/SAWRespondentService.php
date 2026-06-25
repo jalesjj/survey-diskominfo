@@ -162,7 +162,7 @@ class SAWRespondentService
                 continue;
             }
 
-            // STEP 1: kumpulkan kriteria yang benar-benar dijawab beserta skornya
+            // STEP 1: kumpulkan kriteria
             $answeredCriteria = [];
 
             foreach ($criteriaGroups as $criteriaName => $questions) {
@@ -178,7 +178,7 @@ class SAWRespondentService
                 }
 
                 if (empty($scores)) {
-                    continue; // skip kriteria yang tidak dijawab
+                    continue;
                 }
 
                 $answeredCriteria[] = [
@@ -194,7 +194,7 @@ class SAWRespondentService
                 continue;
             }
 
-            // STEP 2: totalWeight hanya dari kriteria yang dijawab
+            // STEP 2: totalWeight kriteria
             $answeredTotalWeight = array_sum(array_column($answeredCriteria, 'weight'));
 
             if ($answeredTotalWeight == 0) {

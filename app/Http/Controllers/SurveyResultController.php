@@ -298,7 +298,7 @@ class SurveyResultController extends Controller
             $criteriaType   = $firstQuestion->criteria_type ?? 'benefit';
             $settings       = $firstQuestion->settings ?? [];
 
-            // Ambil scale_max / scale_min dari settings pertanyaan (bukan hard-code)
+            // Ambil scale_max / scale_min dari settings pertanyaan
             $scaleMax = isset($settings['scale_max']) ? (float) $settings['scale_max'] : 5;
             $scaleMin = isset($settings['scale_min']) ? (float) $settings['scale_min'] : 1;
 
@@ -316,7 +316,6 @@ class SurveyResultController extends Controller
                 }
             }
 
-            // Lewati kriteria yang tidak ada jawabannya
             if ($totalCount == 0) {
                 continue;
             }
@@ -337,7 +336,7 @@ class SurveyResultController extends Controller
             return collect();
         }
 
-        // PASS 2: total bobot HANYA dari kriteria yang dijawab
+        // PASS 2: total bobot HANYA dari kriteria
         $answeredTotalWeight = array_sum(array_column($answeredCriteria, 'criteria_weight'));
 
         if ($answeredTotalWeight == 0) {
@@ -348,7 +347,7 @@ class SurveyResultController extends Controller
         $results = [];
 
         foreach ($answeredCriteria as $criteria) {
-            // Bobot ternormalisasi (dari kriteria yang dijawab saja)
+            // Bobot ternormalisasi
             $weightNormalized = $criteria['criteria_weight'] / $answeredTotalWeight;
 
             // Normalisasi SAW menggunakan scale dari settings pertanyaan

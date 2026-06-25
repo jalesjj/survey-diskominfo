@@ -1,14 +1,14 @@
 {{-- resources/views/admin/criterias/index.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Manajemen Kriteria - Admin')
+@section('title', 'Manajemen Kriteria SAW - Admin')
 @section('active-criterias', 'active')
-@section('page-title', 'Manajemen Kriteria')
+@section('page-title', 'Manajemen Kriteria SAW')
 @section('page-subtitle', 'Kelola kriteria untuk perhitungan Simple Additive Weighting')
 
 @section('breadcrumb')
 <div class="breadcrumb">
-    <span>Kriteria</span>
+    <span>Kriteria SAW</span>
 </div>
 @endsection
 
@@ -74,64 +74,15 @@
         color: #aaa;
     }
     .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; }
-
-    /* Banner periode aktif */
-    .locked-banner {
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        background: #fff8e1;
-        border: 1px solid #f0a500;
-        border-left: 4px solid #f0a500;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-bottom: 22px;
-        font-size: 14px;
-        color: #7a5c00;
-    }
-    .locked-banner i {
-        font-size: 22px;
-        color: #f0a500;
-        margin-top: 1px;
-        flex-shrink: 0;
-    }
-    .locked-banner strong { display: block; font-size: 15px; margin-bottom: 4px; color: #5a4000; }
 </style>
 @endpush
 
 @section('content')
-
-@if(session('success'))
-    <div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;padding:12px 16px;margin-bottom:20px;color:#155724;">
-        <i class="fas fa-check-circle"></i> {{ session('success') }}
-    </div>
-@endif
-
-@if(session('error'))
-    <div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:8px;padding:12px 16px;margin-bottom:20px;color:#721c24;">
-        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-    </div>
-@endif
-
-@if($activePeriod)
-    {{-- BANNER LOCKED: periode aktif --}}
-    {{-- <div class="locked-banner">
-        <i class="fas fa-lock"></i>
-        <div>
-            <strong>Kriteria terkunci selama periode aktif</strong>
-            Periode <strong>{{ $activePeriod->period_name }}</strong> sedang berjalan.
-            Kriteria tidak dapat ditambah, diubah, atau dihapus untuk menjaga konsistensi normalisasi bobot SAW.
-            Tutup periode terlebih dahulu di halaman <a href="{{ route('admin.periods.index') }}" style="color:#5a4000;font-weight:600;">Kelola Periode</a>.
-        </div>
-    </div> --}}
-@else
-    {{-- Tombol Tambah hanya muncul jika tidak ada periode aktif --}}
-    <div class="page-actions">
-        <a href="{{ route('admin.criterias.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Tambah Kriteria
-        </a>
-    </div>
-@endif
+<div class="page-actions">
+    <a href="{{ route('admin.criterias.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Tambah Kriteria
+    </a>
+</div>
 
 <div class="table-container">
     <table>
@@ -142,9 +93,7 @@
                 <th>Bobot</th>
                 <th>Tipe</th>
                 <th>Dipakai Pertanyaan</th>
-                @if(!$activePeriod)
-                    <th>Aksi</th>
-                @endif
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -152,7 +101,12 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td><strong>{{ $criteria->criteria_name }}</strong></td>
-                <td>{{ $criteria->criteria_weight }}</td>
+                <td>
+                    @php
+                        $weightLabels = [10 => 'Sangat Prioritas', 8 => 'Prioritas', 6 => 'Cukup Prioritas', 4 => 'Tidak Prioritas', 2 => 'Sangat Tidak Prioritas'];
+                    @endphp
+                    {{ $weightLabels[(int) $criteria->criteria_weight] ?? $criteria->criteria_weight }}
+                </td>
                 <td>
                     <span class="badge badge-{{ $criteria->criteria_type }}">
                         {{ $criteria->criteria_type === 'benefit' ? 'Benefit' : 'Cost' }}
@@ -163,7 +117,6 @@
                         {{ $criteria->questions_count }} pertanyaan
                     </span>
                 </td>
-                @if(!$activePeriod)
                 <td>
                     <a href="{{ route('admin.criterias.edit', $criteria->id) }}" class="btn btn-warning btn-sm">
                         <i class="fas fa-edit"></i> Edit
@@ -177,18 +130,13 @@
                         </button>
                     </form>
                 </td>
-                @endif
             </tr>
             @empty
             <tr>
-                <td colspan="{{ $activePeriod ? 5 : 6 }}">
+                <td colspan="6">
                     <div class="empty-state">
                         <i class="fas fa-layer-group"></i>
-                        @if($activePeriod)
-                            Belum ada kriteria.
-                        @else
-                            Belum ada kriteria. <a href="{{ route('admin.criterias.create') }}">Tambah kriteria pertama</a>
-                        @endif
+                        Belum ada kriteria. <a href="{{ route('admin.criterias.create') }}">Tambah kriteria pertama</a>
                     </div>
                 </td>
             </tr>
