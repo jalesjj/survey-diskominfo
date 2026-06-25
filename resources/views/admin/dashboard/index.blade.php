@@ -19,7 +19,7 @@
     <div class="period-filter-container">
         <form action="{{ route('admin.dashboard.new') }}" method="GET" id="periodFilterForm">
             <select name="period_id" class="period-select" onchange="document.getElementById('periodFilterForm').submit()">
-                <option value="">📅 Semua Periode</option>
+                <option value="">Semua Periode</option>
                 @foreach($allPeriods as $period)
                     <option value="{{ $period->id }}" 
                         {{ (isset($selectedPeriod) && $selectedPeriod && $selectedPeriod->id == $period->id) ? 'selected' : '' }}>
@@ -245,7 +245,7 @@
         color: #5a9b9e;
         margin-right: 8px;
     }
- 
+
     .comparison-header-left p {
         font-size: 13px;
         color: #64748b;
@@ -411,7 +411,186 @@
         white-space: nowrap;
     }
     .btn-unduh-png:hover { background: #1d4ed8; }
- 
+
+    /* ── Share Link Card ─────────────────────────────────────────── */
+    .share-link-card {
+        background: white;
+        border-radius: 12px;
+        padding: 18px 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+        border-left: 4px solid #8b5cf6;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .share-link-label {
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .share-link-label i { color: #8b5cf6; }
+
+    .share-link-url-wrap {
+        flex: 1;
+        min-width: 180px;
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-size: 13px;
+        color: #475569;
+        font-family: monospace;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .share-link-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-share-copy, .btn-share-native {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .btn-share-copy {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1.5px solid #e2e8f0;
+    }
+    .btn-share-copy:hover  { background: #e2e8f0; }
+    .btn-share-copy.copied { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+
+    .btn-share-native {
+        background: #8b5cf6;
+        color: white;
+    }
+    .btn-share-native:hover { background: #7c3aed; }
+
+    /* ── Modal Share ─────────────────────────────────────────────── */
+    .share-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    .share-modal-overlay.active { display: flex; }
+
+    .share-modal {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        width: 90%;
+        max-width: 380px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        animation: modalPop 0.2s ease;
+    }
+    @keyframes modalPop {
+        from { opacity:0; transform: scale(0.92) translateY(10px); }
+        to   { opacity:1; transform: scale(1)    translateY(0);     }
+    }
+
+    .share-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .share-modal-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    .share-modal-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 6px;
+        line-height: 1;
+        transition: all 0.2s;
+    }
+    .share-modal-close:hover { background: #f1f5f9; color: #475569; }
+
+    .share-modal-url {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 12px;
+        font-family: monospace;
+        color: #475569;
+        word-break: break-all;
+        margin-bottom: 20px;
+        transition: all 0.2s;
+    }
+
+    .share-modal-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .share-app-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 8px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .share-app-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .share-app-btn i { font-size: 24px; }
+
+    .share-app-wa       { background: #e7fbe6; color: #128C7E; }
+    .share-app-tg       { background: #e3f2fd; color: #0088cc; }
+    .share-app-email    { background: #fce4ec; color: #c62828; }
+    .share-app-x        { background: #f1f5f9; color: #14171A; }
+    .share-app-fb       { background: #e8f0fe; color: #1877F2; }
+    .share-app-copy-mod { background: #f3e8ff; color: #7c3aed; }
+
+    .share-modal-note {
+        text-align: center;
+        font-size: 12px;
+        color: #94a3b8;
+        margin: 4px 0 0;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
         .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
@@ -427,6 +606,8 @@
         .dashboard-container { padding: 15px; }
         .chart-body { max-height: 320px; }
         .chart-container { padding: 20px 15px; }
+        .share-link-card { flex-direction: column; align-items: stretch; }
+        .share-link-actions { justify-content: flex-end; }
     }
 </style>
 @endpush
@@ -439,6 +620,7 @@
     <div class="periode-info">
         <i class="fas fa-calendar-check"></i>
         <div class="periode-info-text">
+            <strong>{{ $selectedPeriod->period_name }}</strong>
             <span>Tahun {{ $selectedPeriod->year }} 
                 @if($selectedPeriod->is_active)
                     <span style="color: #059669; font-weight: 600;">● Aktif</span>
@@ -473,6 +655,22 @@
             <div class="stat-description">Responden periode ini</div>
         </div>
     </div>
+
+    {{-- SHARE LINK SURVEI --}}
+    <div class="share-link-card">
+        <div class="share-link-label">
+            <i class="fas fa-share-alt"></i> Link Survei
+        </div>
+        <div class="share-link-url-wrap">{{ url('/') }}</div>
+        <div class="share-link-actions">
+            <button class="btn-share-copy" id="btnCopyLink" onclick="copyShareLink()">
+                <i class="fas fa-copy"></i> Salin
+            </button>
+            <button class="btn-share-native" onclick="openShare()">
+                <i class="fas fa-share-alt"></i> Bagikan
+            </button>
+        </div>
+    </div>
  
     {{-- GRAFIK BAR CHART PER KRITERIA --}}
     @if($jumlahKriteriaAktif > 0)
@@ -482,7 +680,6 @@
                 <h3><i class="fas fa-chart-bar"></i> Grafik Nilai per Kriteria</h3>
                 <p>Diurutkan dari nilai tertinggi (terbaik) hingga terendah (terburuk)</p>
             </div>
-            {{-- TOMBOL UNDUH PNG - chart baru khusus download (biru, tipis, urut terbesar) --}}
             <button class="btn-unduh-png" onclick="downloadCriteriaChart()">
                 <i class="fas fa-download"></i> Unduh PNG
             </button>
@@ -504,7 +701,6 @@
                 <p>Ringkasan nilai SAW seluruh periode survey · Jumlah kriteria bisa berbeda tiap periode</p>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
-                {{-- TOMBOL UNDUH PNG - chart SKM historis biru, max 8 periode --}}
                 <button class="btn-unduh-png" onclick="downloadSKMChart()">
                     <i class="fas fa-download"></i> Unduh PNG
                 </button>
@@ -589,6 +785,39 @@
         </p>
     </div>
 </div>
+
+{{-- MODAL SHARE (fallback untuk desktop / browser tanpa Web Share API) --}}
+<div class="share-modal-overlay" id="shareModalOverlay" onclick="closeShareModal(event)">
+    <div class="share-modal">
+        <div class="share-modal-header">
+            <h3><i class="fas fa-share-alt" style="color:#8b5cf6; margin-right:8px;"></i> Bagikan Survei</h3>
+            <button class="share-modal-close" onclick="closeShareModal()">&times;</button>
+        </div>
+        <div class="share-modal-url" id="shareModalUrl">{{ url('/') }}</div>
+        <div class="share-modal-grid">
+            <a class="share-app-btn share-app-wa" id="shareWa" href="#" target="_blank" rel="noopener">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <a class="share-app-btn share-app-tg" id="shareTg" href="#" target="_blank" rel="noopener">
+                <i class="fab fa-telegram-plane"></i> Telegram
+            </a>
+            <a class="share-app-btn share-app-email" id="shareEmail" href="#" target="_blank" rel="noopener">
+                <i class="fas fa-envelope"></i> Email
+            </a>
+            <a class="share-app-btn share-app-x" id="shareX" href="#" target="_blank" rel="noopener">
+                <i class="fab fa-x-twitter"></i> X / Twitter
+            </a>
+            <a class="share-app-btn share-app-fb" id="shareFb" href="#" target="_blank" rel="noopener">
+                <i class="fab fa-facebook-f"></i> Facebook
+            </a>
+            <button class="share-app-btn share-app-copy-mod" onclick="copyFromModal()">
+                <i class="fas fa-copy"></i> Salin Link
+            </button>
+        </div>
+        <div class="share-modal-note">Atau salin link di atas secara manual</div>
+    </div>
+</div>
+
 @endsection
  
 @push('scripts')
@@ -615,7 +844,7 @@
         }
  
         // ============================================================
-        // GRAFIK BAR CHART PER KRITERIA (tampilan dashboard — tidak berubah)
+        // GRAFIK BAR CHART PER KRITERIA
         // ============================================================
         @if($jumlahKriteriaAktif > 0 && isset($criteriaChartData))
         const criteriaData = @json($criteriaChartData);
@@ -683,7 +912,7 @@
         @endif
  
         // ============================================================
-        // GRAFIK LINE CHART ANTAR PERIODE (tampilan dashboard — tidak berubah)
+        // GRAFIK LINE CHART ANTAR PERIODE
         // ============================================================
         @if(isset($periodeChartData) && count($periodeChartData) > 0)
         const periodeData = @json($periodeChartData);
@@ -769,25 +998,21 @@
 
     // ============================================================
     // DOWNLOAD GRAFIK KRITERIA SEBAGAI PNG
-    // Semua biru, bar tipis, urut terbesar ke terkecil
-    // Sumbu X mulai dari nilai minimum (bukan 0) — seperti Excel
     // ============================================================
     function downloadCriteriaChart() {
         @if($jumlahKriteriaAktif > 0 && isset($criteriaChartData))
         const rawData = @json($criteriaChartData);
 
-        // Urutkan terbesar ke terkecil
         const data = [...rawData].sort((a, b) => b.normalized_score - a.normalized_score);
         const values = data.map(d => d.normalized_score);
 
-        // Hitung min/max untuk sumbu X — mirip Excel (tidak mulai dari 0)
         const minVal = Math.min(...values);
         const maxVal = Math.max(...values);
-        const axisMin = Math.floor(minVal * 10) / 10;        // misal 0.7
-        const axisMax = Math.min(1.0, Math.ceil(maxVal * 10) / 10); // misal 1.0
+        const axisMin = Math.floor(minVal * 10) / 10;
+        const axisMax = Math.min(1.0, Math.ceil(maxVal * 10) / 10);
 
         const w = 720;
-        const h = Math.max(260, data.length * 32 + 120); // tambah 120px untuk judul + sumbu X bawah
+        const h = Math.max(260, data.length * 32 + 120);
 
         const offCanvas = document.createElement('canvas');
         offCanvas.width  = w;
@@ -795,7 +1020,6 @@
         offCanvas.style.display = 'none';
         document.body.appendChild(offCanvas);
 
-        // Background putih dulu sebelum chart
         const preCtx = offCanvas.getContext('2d');
         preCtx.fillStyle = '#ffffff';
         preCtx.fillRect(0, 0, w, h);
@@ -857,7 +1081,6 @@
         });
 
         setTimeout(() => {
-            // Ambil langsung dari offCanvas yang sudah berisi chart + background putih
             const link = document.createElement('a');
             link.download = 'grafik_nilai_kriteria.png';
             link.href = offCanvas.toDataURL('image/png');
@@ -874,22 +1097,19 @@
 
     // ============================================================
     // DOWNLOAD GRAFIK SKM HISTORIS SEBAGAI PNG
-    // Biru, max 8 periode terakhir, ada judul dan label sumbu X
     // ============================================================
     function downloadSKMChart() {
         @if(isset($periodeChartData) && count($periodeChartData) > 0)
         let rawPeriode = @json($periodeChartData);
 
-        // Ambil max 8 periode terakhir
         if (rawPeriode.length > 8) rawPeriode = rawPeriode.slice(-8);
 
         const offCanvas = document.createElement('canvas');
         offCanvas.width  = 720;
-        offCanvas.height = 400; // lebih tinggi agar label X bawah tidak terpotong
+        offCanvas.height = 400;
         offCanvas.style.display = 'none';
         document.body.appendChild(offCanvas);
 
-        // Background putih sebelum chart
         const preCtxS = offCanvas.getContext('2d');
         preCtxS.fillStyle = '#ffffff';
         preCtxS.fillRect(0, 0, 720, 400);
@@ -973,8 +1193,8 @@
     // TOGGLE TABEL / GRAFIK
     // ============================================================
     function showView(view) {
-        const tableEl = document.getElementById('viewTable');
-        const chartEl = document.getElementById('viewChart');
+        const tableEl  = document.getElementById('viewTable');
+        const chartEl  = document.getElementById('viewChart');
         const btnTable = document.getElementById('btnTable');
         const btnChart = document.getElementById('btnChart');
  
@@ -990,5 +1210,75 @@
             btnChart.classList.add('active');
         }
     }
+
+
+    // ============================================================
+    // SHARE LINK SURVEI
+    // ============================================================
+    (function () {
+        const SURVEY_URL  = '{{ url('/') }}';
+        const SHARE_TITLE = 'Survei Kepuasan Masyarakat — Diskominfo Lamongan';
+        const SHARE_TEXT  = 'Bantu kami meningkatkan pelayanan! Isi survei kepuasan masyarakat Diskominfo Kabupaten Lamongan di link berikut:';
+
+        /* Inject URL ke semua tombol share modal */
+        document.addEventListener('DOMContentLoaded', function () {
+            const enc = encodeURIComponent(SURVEY_URL);
+            const msg = encodeURIComponent(SHARE_TEXT + ' ' + SURVEY_URL);
+
+            const el = {
+                wa    : document.getElementById('shareWa'),
+                tg    : document.getElementById('shareTg'),
+                email : document.getElementById('shareEmail'),
+                x     : document.getElementById('shareX'),
+                fb    : document.getElementById('shareFb'),
+            };
+
+            if (el.wa)    el.wa.href    = 'https://wa.me/?text=' + msg;
+            if (el.tg)    el.tg.href    = 'https://t.me/share/url?url=' + enc + '&text=' + encodeURIComponent(SHARE_TEXT);
+            if (el.email) el.email.href = 'mailto:?subject=' + encodeURIComponent(SHARE_TITLE) + '&body=' + msg;
+            if (el.x)     el.x.href     = 'https://twitter.com/intent/tweet?text=' + msg;
+            if (el.fb)    el.fb.href    = 'https://www.facebook.com/sharer/sharer.php?u=' + enc;
+        });
+
+        /* Tombol Bagikan — native dulu, fallback modal */
+        window.openShare = function () {
+            if (navigator.share) {
+                navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SURVEY_URL })
+                    .catch(function () { /* user cancel */ });
+            } else {
+                document.getElementById('shareModalOverlay').classList.add('active');
+            }
+        };
+
+        /* Tutup modal (klik overlay atau tombol × ) */
+        window.closeShareModal = function (e) {
+            if (!e || e.target === document.getElementById('shareModalOverlay')) {
+                document.getElementById('shareModalOverlay').classList.remove('active');
+            }
+        };
+
+        /* Salin dari card utama */
+        window.copyShareLink = function () {
+            navigator.clipboard.writeText(SURVEY_URL).then(function () {
+                const btn = document.getElementById('btnCopyLink');
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+                setTimeout(function () {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i> Salin';
+                }, 2000);
+            });
+        };
+
+        /* Salin dari dalam modal */
+        window.copyFromModal = function () {
+            navigator.clipboard.writeText(SURVEY_URL).then(function () {
+                const box  = document.getElementById('shareModalUrl');
+                const orig = box.textContent;
+                box.textContent = '✅ Link berhasil disalin!';
+                setTimeout(function () { box.textContent = orig; }, 2000);
+            });
+        };
+    })();
 </script>
 @endpush
