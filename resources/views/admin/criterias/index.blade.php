@@ -78,10 +78,44 @@
 @endpush
 
 @section('content')
+
+{{-- FLASH MESSAGE --}}
+@if(session('error'))
+<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:14px 18px;margin-bottom:20px;color:#991b1b;font-size:14px;">
+    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+</div>
+@endif
+@if(session('success'))
+<div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:14px 18px;margin-bottom:20px;color:#065f46;font-size:14px;">
+    <i class="fas fa-check-circle"></i> {{ session('success') }}
+</div>
+@endif
+
+{{-- BANNER LOCKED --}}
+@if($isLocked)
+<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+    <i class="fas fa-lock" style="font-size:22px;color:#856404;flex-shrink:0;"></i>
+    <div>
+        <strong style="color:#856404;font-size:14px;">SISTEM TERKUNCI</strong>
+        <p style="margin:4px 0 0;font-size:13px;color:#856404;">
+            Kriteria tidak dapat ditambah, diedit, atau dihapus selama periode
+            <strong>{{ $activePeriod->period_name }} ({{ $activePeriod->year }})</strong> masih aktif.
+            Stop periode terlebih dahulu di halaman <a href="{{ route('admin.questions.index') }}" style="color:#856404;font-weight:600;">Pertanyaan</a> untuk membuka kunci.
+        </p>
+    </div>
+</div>
+@endif
+
 <div class="page-actions">
-    <a href="{{ route('admin.criterias.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Tambah Kriteria
-    </a>
+    @if($isLocked)
+        <button class="btn btn-primary" disabled style="opacity:0.5;cursor:not-allowed;" title="Sistem terkunci">
+            <i class="fas fa-lock"></i> Tambah Kriteria
+        </button>
+    @else
+        <a href="{{ route('admin.criterias.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tambah Kriteria
+        </a>
+    @endif
 </div>
 
 <div class="table-container">
@@ -98,15 +132,13 @@
         </thead>
         <tbody>
             @forelse($criterias as $criteria)
+            @php
+                $weightLabels = [10 => 'Sangat Prioritas', 8 => 'Prioritas', 6 => 'Cukup Prioritas', 4 => 'Tidak Prioritas', 2 => 'Sangat Tidak Prioritas'];
+            @endphp
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td><strong>{{ $criteria->criteria_name }}</strong></td>
-                <td>
-                    @php
-                        $weightLabels = [10 => 'Sangat Prioritas', 8 => 'Prioritas', 6 => 'Cukup Prioritas', 4 => 'Tidak Prioritas', 2 => 'Sangat Tidak Prioritas'];
-                    @endphp
-                    {{ $weightLabels[(int) $criteria->criteria_weight] ?? $criteria->criteria_weight }}
-                </td>
+                <td>{{ $weightLabels[(int) $criteria->criteria_weight] ?? $criteria->criteria_weight }}</td>
                 <td>
                     <span class="badge badge-{{ $criteria->criteria_type }}">
                         {{ $criteria->criteria_type === 'benefit' ? 'Benefit' : 'Cost' }}
@@ -118,17 +150,26 @@
                     </span>
                 </td>
                 <td>
-                    <a href="{{ route('admin.criterias.edit', $criteria->id) }}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <form action="{{ route('admin.criterias.destroy', $criteria->id) }}" method="POST" style="display:inline"
-                          onsubmit="return confirmDelete('{{ $criteria->criteria_name }}', {{ $criteria->questions_count }})">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash"></i> Hapus
+                    @if($isLocked)
+                        <button class="btn btn-warning btn-sm" disabled style="opacity:0.5;cursor:not-allowed;" title="Sistem terkunci">
+                            <i class="fas fa-lock"></i> Edit
                         </button>
-                    </form>
+                        <button class="btn btn-danger btn-sm" disabled style="opacity:0.5;cursor:not-allowed;" title="Sistem terkunci">
+                            <i class="fas fa-lock"></i> Hapus
+                        </button>
+                    @else
+                        <a href="{{ route('admin.criterias.edit', $criteria->id) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form action="{{ route('admin.criterias.destroy', $criteria->id) }}" method="POST" style="display:inline"
+                              onsubmit="return confirmDelete('{{ $criteria->criteria_name }}', {{ $criteria->questions_count }})">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </form>
+                    @endif
                 </td>
             </tr>
             @empty
@@ -136,7 +177,10 @@
                 <td colspan="6">
                     <div class="empty-state">
                         <i class="fas fa-layer-group"></i>
-                        Belum ada kriteria. <a href="{{ route('admin.criterias.create') }}">Tambah kriteria pertama</a>
+                        Belum ada kriteria.
+                        @if(!$isLocked)
+                            <a href="{{ route('admin.criterias.create') }}">Tambah kriteria pertama</a>
+                        @endif
                     </div>
                 </td>
             </tr>

@@ -11,10 +11,18 @@ class CriteriaController extends Controller
 {
     private function checkAdminAuth()
     {
-        if (!session('admin_id') && !session('admin_user') && !session('admin')) {
-            return redirect()->route('admin.login')->with('error', 'Silakan login sebagai admin terlebih dahulu.');
+        if (!session('admin_id')) {
+            return redirect()->route('admin.login');
         }
         return null;
+    }
+
+    /**
+     * Cek apakah sistem sedang terkunci (ada periode aktif)
+     */
+    private function isLocked(): bool
+    {
+        return SurveyPeriod::where('is_active', true)->exists();
     }
 
     /**
@@ -25,45 +33,49 @@ class CriteriaController extends Controller
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        $criterias = Criteria::withCount('questions')->orderBy('criteria_name')->get();
-        $activePeriod = SurveyPeriod::getActivePeriod();
+        $criterias     = Criteria::withCount('questions')->orderBy('criteria_name')->get();
+        $isLocked      = $this->isLocked();
+        $activePeriod  = SurveyPeriod::where('is_active', true)->first();
 
-        return view('admin.criterias.index', compact('criterias', 'activePeriod'));
+        return view('admin.criterias.index', compact('criterias', 'isLocked', 'activePeriod'));
     }
 
     /**
-     * Form tambah kriteria
+     * Form tambah kriteria — ditolak jika sistem locked
      */
     public function create()
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        $activePeriod = SurveyPeriod::getActivePeriod();
+        if ($this->isLocked()) {
+            return redirect()->route('admin.criterias.index')
+                             ->with('error', 'Sistem sedang terkunci. Kriteria tidak dapat ditambah selama periode survey aktif.');
+        }
 
-        return view('admin.criterias.create', compact('activePeriod'));
+        return view('admin.criterias.create');
     }
 
     /**
-     * Simpan kriteria baru
+     * Simpan kriteria baru — ditolak jika sistem locked
      */
     public function store(Request $request)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        // Blokir jika ada periode aktif
-        if (SurveyPeriod::getActivePeriod()) {
+        if ($this->isLocked()) {
             return redirect()->route('admin.criterias.index')
-                             ->with('error', 'Tidak dapat menambah kriteria saat periode survei sedang aktif.');
+                             ->with('error', 'Sistem sedang terkunci. Kriteria tidak dapat ditambah selama periode survey aktif.');
         }
 
         $request->validate([
             'criteria_name'   => 'required|string|max:255|unique:criterias,criteria_name',
-            'criteria_weight' => 'required|numeric|min:0.1|max:10',
+            'criteria_weight' => 'required|integer|in:2,4,6,8,10',
             'criteria_type'   => 'required|in:benefit,cost',
         ], [
-            'criteria_name.unique' => 'Nama kriteria sudah ada, gunakan nama lain.',
+            'criteria_name.unique'   => 'Nama kriteria sudah ada, gunakan nama lain.',
+            'criteria_weight.in'     => 'Bobot harus salah satu dari: 2, 4, 6, 8, atau 10.',
         ]);
 
         Criteria::create($request->only('criteria_name', 'criteria_weight', 'criteria_type'));
@@ -73,41 +85,45 @@ class CriteriaController extends Controller
     }
 
     /**
-     * Form edit kriteria
+     * Form edit kriteria — ditolak jika sistem locked
      */
     public function edit($id)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        $criteria = Criteria::withCount('questions')->findOrFail($id);
-        $activePeriod = SurveyPeriod::getActivePeriod();
+        if ($this->isLocked()) {
+            return redirect()->route('admin.criterias.index')
+                             ->with('error', 'Sistem sedang terkunci. Kriteria tidak dapat diedit selama periode survey aktif.');
+        }
 
-        return view('admin.criterias.edit', compact('criteria', 'activePeriod'));
+        $criteria = Criteria::withCount('questions')->findOrFail($id);
+
+        return view('admin.criterias.edit', compact('criteria'));
     }
 
     /**
-     * Update kriteria — semua pertanyaan yang pakai otomatis ikut karena relasi FK
+     * Update kriteria — ditolak jika sistem locked
      */
     public function update(Request $request, $id)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        // Blokir jika ada periode aktif
-        if (SurveyPeriod::getActivePeriod()) {
+        if ($this->isLocked()) {
             return redirect()->route('admin.criterias.index')
-                             ->with('error', 'Tidak dapat mengubah kriteria saat periode survei sedang aktif.');
+                             ->with('error', 'Sistem sedang terkunci. Kriteria tidak dapat diubah selama periode survey aktif.');
         }
 
         $criteria = Criteria::findOrFail($id);
 
         $request->validate([
             'criteria_name'   => 'required|string|max:255|unique:criterias,criteria_name,' . $id,
-            'criteria_weight' => 'required|numeric|min:0.1|max:10',
+            'criteria_weight' => 'required|integer|in:2,4,6,8,10',
             'criteria_type'   => 'required|in:benefit,cost',
         ], [
             'criteria_name.unique' => 'Nama kriteria sudah dipakai oleh kriteria lain.',
+            'criteria_weight.in'   => 'Bobot harus salah satu dari: 2, 4, 6, 8, atau 10.',
         ]);
 
         $criteria->update($request->only('criteria_name', 'criteria_weight', 'criteria_type'));
@@ -117,24 +133,23 @@ class CriteriaController extends Controller
     }
 
     /**
-     * Hapus kriteria
+     * Hapus kriteria — ditolak jika sistem locked atau masih dipakai
      */
     public function destroy($id)
     {
         $authCheck = $this->checkAdminAuth();
         if ($authCheck) return $authCheck;
 
-        // Blokir jika ada periode aktif
-        if (SurveyPeriod::getActivePeriod()) {
+        if ($this->isLocked()) {
             return redirect()->route('admin.criterias.index')
-                             ->with('error', 'Tidak dapat menghapus kriteria saat periode survei sedang aktif.');
+                             ->with('error', 'Sistem sedang terkunci. Kriteria tidak dapat dihapus selama periode survey aktif.');
         }
 
         $criteria = Criteria::withCount('questions')->findOrFail($id);
 
-        if ($criteria->questions_count > 0) {
+        if ($criteria->isInUse()) {
             return redirect()->route('admin.criterias.index')
-                             ->with('error', "Kriteria \"{$criteria->criteria_name}\" tidak bisa dihapus karena masih digunakan oleh {$criteria->questions_count} pertanyaan.");
+                             ->with('error', "Kriteria \"{$criteria->criteria_name}\" tidak bisa dihapus karena masih digunakan oleh {$criteria->questions_count} pertanyaan. Pindahkan pertanyaan tersebut ke kriteria lain terlebih dahulu.");
         }
 
         $criteria->delete();

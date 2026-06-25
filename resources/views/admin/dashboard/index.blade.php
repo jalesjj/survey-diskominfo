@@ -12,7 +12,7 @@
 </div>
 @endsection
  
-@section('header-actions')
+@section('headebrrtir-actions')
 <div class="header-actions">
     {{-- DROPDOWN FILTER PERIODE --}}
     @if(isset($allPeriods) && $allPeriods->count() > 0)
